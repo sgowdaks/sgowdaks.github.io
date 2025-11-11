@@ -675,24 +675,11 @@
       <h2><i class="icon fas fa-blog"></i>Latest Posts</h2>
       <p>Thoughts on technology, cloud engineering, and life experiences</p>
       
-      <div class="blog-preview">
-        <div class="blog-card">
-          <span class="category">Technology</span>
-          <h4>Azure Cognitive Services in Network Monitoring</h4>
-          <p>Exploring how to integrate AI with network monitoring systems for intelligent alerting and anomaly detection solutions.</p>
-          <a href="blog.html">Read More <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="blog-card">
-          <span class="category" style="background: var(--success-color);">Life & Thoughts</span>
-          <h4>The Art of Continuous Learning in Tech</h4>
-          <p>Reflecting on staying current in the rapidly evolving tech landscape and finding balance between depth and breadth.</p>
-          <a href="blog.html">Read More <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="blog-card">
-          <span class="category">Technology</span>
-          <h4>Optimizing VNet and ExpressRoute</h4>
-          <p>Best practices and lessons learned from optimizing Azure networking for enterprise workloads and performance.</p>
-          <a href="blog.html">Read More <i class="fas fa-arrow-right"></i></a>
+      <div class="blog-preview" id="featured-posts">
+        <!-- Featured posts will be rendered dynamically from js/blog-manager.js -->
+        <div style="text-align:center; color:var(--text-light); padding:2rem;">
+          <i class="fas fa-spinner fa-spin" style="font-size:2rem; margin-bottom:1rem;"></i>
+          <div>Loading featured posts...</div>
         </div>
       </div>
       
@@ -819,7 +806,6 @@
     }
 
     // ===== INITIALIZE EFFECTS =====
-    document.addEventListener('DOMContentLoaded', function() {
       // Start matrix rain effect
       createMatrixRain();
       
@@ -835,7 +821,24 @@
         subtitle.style.whiteSpace = 'nowrap';
         subtitle.style.animation = 'typing 3s steps(40, end), blink-caret 0.75s step-end infinite';
       }
-    });
+
+      // Render featured posts (if BlogManager available)
+      const featuredContainer = document.getElementById('featured-posts');
+      if (featuredContainer && window.BlogManager) {
+        const featured = window.BlogManager.getFeaturedPosts(3);
+        if (!featured || featured.length === 0) {
+          featuredContainer.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:1rem;">No featured posts yet.</p>';
+        } else {
+          featuredContainer.innerHTML = featured.map(post => `
+            <div class="blog-card">
+              <span class="category" style="background:${post.category === 'life' ? 'var(--success-color)' : 'var(--primary-color)'}">${post.categoryLabel}</span>
+              <h4>${post.title}</h4>
+              <p style="color:var(--text-light);">${post.excerpt}</p>
+              <a href="posts/${post.id}.html">Read More <i class="fas fa-arrow-right"></i></a>
+            </div>
+          `).join('');
+        }
+      }
 
     // ===== TYPING ANIMATION =====
     const style = document.createElement('style');

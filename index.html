@@ -719,6 +719,7 @@
     <p>&copy; 2025 Shivani Gowda KS. Built with passion for technology and continuous learning.</p>
   </footer>
 
+  <script src="js/blog-manager.js"></script>
   <script>
     // ===== MATRIX DIGITAL RAIN EFFECT =====
     function createMatrixRain() {
@@ -822,14 +823,14 @@
         subtitle.style.animation = 'typing 3s steps(40, end), blink-caret 0.75s step-end infinite';
       }
 
-      // Render featured posts (if BlogManager available)
+      // Render latest posts (if BlogManager available)
       const featuredContainer = document.getElementById('featured-posts');
       if (featuredContainer && window.BlogManager) {
-        const featured = window.BlogManager.getFeaturedPosts(3);
-        if (!featured || featured.length === 0) {
-          featuredContainer.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:1rem;">No featured posts yet.</p>';
+        const latest = window.BlogManager.getRecentPosts(3);
+        if (!latest || latest.length === 0) {
+          featuredContainer.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:1rem;">No posts yet.</p>';
         } else {
-          featuredContainer.innerHTML = featured.map(post => `
+          featuredContainer.innerHTML = latest.map(post => `
             <div class="blog-card">
               <span class="category" style="background:${post.category === 'life' ? 'var(--success-color)' : 'var(--primary-color)'}">${post.categoryLabel}</span>
               <h4>${post.title}</h4>

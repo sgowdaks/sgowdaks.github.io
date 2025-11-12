@@ -17,67 +17,67 @@ const blogPosts = [
     author: 'Shivani Gowda KS',
     tags: ['Azure', 'AI', 'Networking', 'Cognitive Services'],
     featured: true
+  },
+  {
+    id: 'continuous-learning-in-tech',
+    title: 'lorem ipsum',
+    excerpt: 'lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    category: 'life',
+    categoryLabel: 'Life & Thoughts',
+    date: '2025-11-05',
+    readTime: '3 min',
+    author: 'Shivani Gowda KS',
+    tags: ['Career', 'Learning', 'Personal Growth'],
+    featured: true
+  },
+  {
+    id: 'vnet-expressroute-optimization',
+    title: 'lorem ipsum',
+    excerpt: 'lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    category: 'tech',
+    categoryLabel: 'Technology',
+    date: '2025-11-02',
+    readTime: '7 min',
+    author: 'Shivani Gowda KS',
+    tags: ['Azure', 'Networking', 'Enterprise', 'Performance'],
+    featured: true
+  },
+  {
+    id: 'inspiration-everyday-problems',
+    title: 'Finding Inspiration in Everyday Problems',
+    excerpt: 'How everyday challenges in cloud engineering often lead to the most innovative solutions and personal growth opportunities. Sometimes the best ideas come from the most mundane tasks.',
+    category: 'life',
+    categoryLabel: 'Life & Thoughts',
+    date: '2025-10-30',
+    readTime: '4 min',
+    author: 'Shivani Gowda KS',
+    tags: ['Innovation', 'Problem Solving', 'Creativity'],
+    featured: false
+  },
+  {
+    id: 'ml-network-anomaly-detection',
+    title: 'Building ML-Powered Network Anomaly Detection',
+    excerpt: 'A deep dive into creating a machine learning prototype for network anomaly detection using Python and Azure ML services. From data collection to model deployment in production.',
+    category: 'tech',
+    categoryLabel: 'Technology',
+    date: '2025-10-28',
+    readTime: '6 min',
+    author: 'Shivani Gowda KS',
+    tags: ['Machine Learning', 'Python', 'Azure ML', 'Security'],
+    featured: false
+  },
+  {
+    id: 'work-life-balance-cloud-engineering',
+    title: 'Work-Life Balance in the Cloud Engineering World',
+    excerpt: 'Thoughts on maintaining sanity and personal relationships while working in the fast-paced world of cloud technology. How to disconnect from always-on infrastructure.',
+    category: 'life',
+    categoryLabel: 'Life & Thoughts',
+    date: '2025-10-25',
+    readTime: '3 min',
+    author: 'Shivani Gowda KS',
+    tags: ['Work Life Balance', 'Mental Health', 'Career'],
+    featured: false
   }
-//   {
-//     id: 'continuous-learning-in-tech',
-//     title: 'lorem ipsum',
-//     excerpt: 'lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-//     category: 'life',
-//     categoryLabel: 'Life & Thoughts',
-//     date: '2025-11-05',
-//     readTime: '3 min',
-//     author: 'Shivani Gowda KS',
-//     tags: ['Career', 'Learning', 'Personal Growth'],
-//     featured: true
-//   },
-//   {
-//     id: 'vnet-expressroute-optimization',
-//     title: 'lorem ipsum',
-//     excerpt: 'lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-//     category: 'tech',
-//     categoryLabel: 'Technology',
-//     date: '2025-11-02',
-//     readTime: '7 min',
-//     author: 'Shivani Gowda KS',
-//     tags: ['Azure', 'Networking', 'Enterprise', 'Performance'],
-//     featured: true
-//   }
-//   {
-//     id: 'inspiration-everyday-problems',
-//     title: 'Finding Inspiration in Everyday Problems',
-//     excerpt: 'How everyday challenges in cloud engineering often lead to the most innovative solutions and personal growth opportunities. Sometimes the best ideas come from the most mundane tasks.',
-//     category: 'life',
-//     categoryLabel: 'Life & Thoughts',
-//     date: '2025-10-30',
-//     readTime: '4 min',
-//     author: 'Shivani Gowda KS',
-//     tags: ['Innovation', 'Problem Solving', 'Creativity'],
-//     featured: false
-//   },
-//   {
-//     id: 'ml-network-anomaly-detection',
-//     title: 'Building ML-Powered Network Anomaly Detection',
-//     excerpt: 'A deep dive into creating a machine learning prototype for network anomaly detection using Python and Azure ML services. From data collection to model deployment in production.',
-//     category: 'tech',
-//     categoryLabel: 'Technology',
-//     date: '2025-10-28',
-//     readTime: '6 min',
-//     author: 'Shivani Gowda KS',
-//     tags: ['Machine Learning', 'Python', 'Azure ML', 'Security'],
-//     featured: false
-//   },
-//   {
-//     id: 'work-life-balance-cloud-engineering',
-//     title: 'Work-Life Balance in the Cloud Engineering World',
-//     excerpt: 'Thoughts on maintaining sanity and personal relationships while working in the fast-paced world of cloud technology. How to disconnect from always-on infrastructure.',
-//     category: 'life',
-//     categoryLabel: 'Life & Thoughts',
-//     date: '2025-10-25',
-//     readTime: '3 min',
-//     author: 'Shivani Gowda KS',
-//     tags: ['Work Life Balance', 'Mental Health', 'Career'],
-//     featured: false
-//   }
 ];
 
 // Blog Manager Class

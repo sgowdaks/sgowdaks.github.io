@@ -6,25 +6,30 @@
   <title>Shivani Gowda KS - Cloud Engineer & Tech Enthusiast</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="css/common.css">
+  
   <style>
     :root {
-      /* Elegant Dark Theme */
-      --primary-color: #00d4ff;
-      --secondary-color: #0099cc;
-      --accent-color: #ff6b35;
-      --success-color: #00c896;
-      --warning-color: #ffc107;
-      --text-color: #e8eaed;
-      --text-light: #9aa0a6;
-      --text-dim: #5f6368;
-      --bg-color: #0f1419;
-      --bg-secondary: #1a1f2e;
-      --bg-tertiary: #2d3748;
-      --surface-color: #1e2936;
-      --border-color: #3c4043;
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.1);
-      --glow: 0 0 20px rgba(0, 212, 255, 0.3);
+      /* Light Monochrome Theme */
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --success-color: #777777;
+      --warning-color: #888888;
+      --text-color: #222222;
+      --text-light: #666666;
+      --text-muted: #666666;
+      --text-dim: #999999;
+      --bg-color: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-tertiary: #e9ecef;
+      --surface-color: #f1f3f4;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.05);
+      --glow: 0 0 20px rgba(51, 51, 51, 0.1);
       --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     }
 
@@ -37,7 +42,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--bg-color);
+      background: var(--bg-primary);
       color: var(--text-color);
       line-height: 1.6;
       position: relative;
@@ -53,96 +58,11 @@
       width: 100%;
       height: 100%;
       background: 
-        radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 60%, rgba(0, 200, 150, 0.05) 0%, transparent 50%);
+        radial-gradient(circle at 20% 20%, rgba(51, 51, 51, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(102, 102, 102, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(85, 85, 85, 0.02) 0%, transparent 50%);
       z-index: -2;
-      animation: float 20s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
-    }
-
-    /* ===== HEADER & NAVIGATION ===== */
-    header {
-      background: rgba(30, 41, 54, 0.95);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border-color);
-      box-shadow: var(--shadow-light);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .logo {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary-color);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    .logo::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: var(--gradient);
-      transition: width 0.3s ease;
-    }
-
-    .logo:hover::after {
-      width: 100%;
-    }
-
-    .logo:hover {
-      transform: translateY(-2px);
-      color: var(--accent-color);
-    }
-
-    nav {
-      display: flex;
-      gap: 2rem;
-      align-items: center;
-    }
-
-    nav a {
-      text-decoration: none;
-      color: var(--text-light);
-      font-weight: 500;
-      font-size: 0.95rem;
-      transition: all 0.3s ease;
-      position: relative;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-    }
-
-    nav a:hover {
-      color: var(--primary-color);
-      background: rgba(0, 212, 255, 0.1);
-      transform: translateY(-2px);
-    }
-
-    nav a.active {
-      color: var(--primary-color);
-      background: rgba(0, 212, 255, 0.15);
-      font-weight: 600;
+      pointer-events: none;
     }
 
     /* ===== HERO SECTION ===== */
@@ -162,7 +82,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300d4ff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23333333' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
       opacity: 0.5;
       pointer-events: none;
     }
@@ -369,53 +289,519 @@
       margin-bottom: 0.3rem;
     }
 
+    /* Skills Section */
+    .skills-section {
+      margin-top: 3rem;
+    }
+
+    .skills-section h3 {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+      justify-content: center;
+    }
+
     .skills-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+
+    .skills-category {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .skills-category:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
+      transform: translateY(-3px);
+    }
+
+    .skills-category h4 {
+      color: var(--text-color);
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .skills-category h4 i {
+      color: var(--primary-color);
+      font-size: 1rem;
+    }
+
+    .skills-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .skill-tag {
+      display: inline-block;
+      padding: 0.4rem 0.9rem;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      cursor: default;
+    }
+
+    .skill-tag:hover {
+      background: var(--primary-color);
+      color: var(--bg-primary);
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    .experience-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      margin-top: 2rem;
+    }
+
+    .experience-section h3 {
+      color: var(--primary-color);
+      font-size: 1.4rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .experience-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 1.2rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+      position: relative;
+      border-left: 4px solid var(--primary-color);
+      cursor: pointer;
+    }
+
+    .experience-item:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 8px 30px rgba(0, 212, 255, 0.2);
+      transform: translateY(-3px);
+      background: var(--surface-color);
+    }
+
+    .experience-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+    }
+
+    .experience-header::after {
+      content: '\f078';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 0;
+      color: var(--text-light);
+      transition: transform 0.3s ease;
+    }
+
+    .experience-item.expanded .experience-header::after {
+      transform: rotate(180deg);
+    }
+
+    .experience-logo {
+      width: 50px;
+      height: 50px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .experience-logo i {
+      font-size: 1.8rem;
+      color: var(--primary-color);
+    }
+
+    .experience-logo.microsoft {
+      background: #333333;
+    }
+
+    .experience-logo.microsoft i {
+      color: white;
+    }
+
+    .experience-logo.education {
+      background: var(--accent-color);
+    }
+
+    .experience-logo.education i {
+      color: white;
+    }
+
+    .experience-basic-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .experience-basic-info h4 {
+      color: var(--text-color);
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      font-size: 1rem;
+    }
+
+    .experience-basic-info .company {
+      color: var(--accent-color);
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+      font-size: 0.9rem;
+    }
+
+    .experience-basic-info .duration {
+      color: var(--text-light);
+      font-size: 0.8rem;
+      font-style: italic;
+    }
+
+    .experience-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding-top 0.3s ease;
+      padding-top: 0;
+    }
+
+    .experience-item.expanded .experience-details {
+      max-height: 300px;
+      padding-top: 1rem;
+    }
+
+    .experience-details p {
+      color: var(--text-light);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .experience-details ul {
+      color: var(--text-light);
+      font-size: 0.8rem;
+      line-height: 1.4;
+      padding-left: 1.2rem;
+      margin: 0;
+    }
+
+    .experience-details li {
+      margin-bottom: 0.2rem;
+    }
+
+    /* ===== PROJECTS SECTION ===== */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 2rem;
       margin-top: 2rem;
     }
 
-    .skill-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      padding: 2rem;
-      border-radius: 12px;
+    /* Ensure the projects section can host an overlay positioned inside it */
+    #projects {
+      position: relative;
+      z-index: 1;
+      isolation: isolate;
+    }
+
+    /* Hide projects beyond initial display */
+    .project-card.hidden {
+      display: none;
+    }
+
+    /* Load More Button */
+    .load-more-container {
       text-align: center;
+      margin-top: 2rem;
+    }
+
+    .load-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 14px 32px;
+      background: var(--gradient);
+      color: white;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
     }
 
-    .skill-card:hover {
-      border-color: var(--primary-color);
-      box-shadow: 0 8px 30px rgba(0, 212, 255, 0.2);
-      transform: translateY(-8px);
-      background: var(--surface-color);
+    .load-more-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
     }
 
-    .skill-card i {
-      font-size: 2.5rem;
+    .load-more-btn:hover::before {
+      left: 100%;
+    }
+
+    .load-more-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+    }
+
+    .load-more-btn i {
+      transition: transform 0.3s ease;
+    }
+
+    .load-more-btn:hover i {
+      transform: translateY(2px);
+    }
+
+    .load-more-btn.hidden {
+      display: none;
+    }
+
+    .project-card {
+      background: var(--bg-color);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      min-height: 200px;
+      box-shadow: var(--shadow-light);
+    }
+
+    .project-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+      border-color: var(--primary-color);
+      background: var(--bg-color);
+    }
+
+    /* ===== PROJECT MODAL ===== */
+    .project-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .project-modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-color);
+      border: 3px solid var(--primary-color);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 650px;
+      width: 95%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      position: relative;
+      margin: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-light);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-secondary);
       color: var(--primary-color);
-      margin-bottom: 1rem;
+      transform: rotate(90deg);
+    }
+
+    .modal-title {
+      margin: 0;
+      color: var(--primary-color);
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .modal-tech-tag {
+      background: var(--primary-color);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .modal-description {
+      color: var(--text-color);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+    }
+
+    .modal-features {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-features h4 {
+      color: var(--primary-color);
+      margin-bottom: 0.8rem;
+      font-size: 1.1rem;
+    }
+
+    .modal-features ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .modal-features li {
+      color: var(--text-color);
+      padding: 0.4rem 0;
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    .modal-features li::before {
+      content: '•';
+      color: var(--primary-color);
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+      font-size: 1.2rem;
+    }
+
+    .modal-links {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .modal-link {
+      background: var(--primary-color);
+      color: white;
+      text-decoration: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       transition: all 0.3s ease;
     }
 
-    .skill-card:hover i {
-      color: var(--accent-color);
-      transform: scale(1.1);
+    .modal-link:hover {
+      background: var(--accent-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
-    .skill-card h4 {
-      margin-bottom: 0.8rem;
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--gradient);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .project-card h4 {
       color: var(--text-color);
       font-weight: 600;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .skill-card p {
-      color: var(--text-light);
-      font-size: 0.9rem;
+    .project-card .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .project-card .tech-tag {
+      background: var(--primary-color);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1px solid var(--border-color);
+    }
+
+    .project-card p {
+      color: var(--text-color);
+      font-size: 0.95rem;
       line-height: 1.6;
+      margin-bottom: 1rem;
     }
 
     /* ===== BLOG PREVIEW & CONTACT SECTIONS ===== */
@@ -426,6 +812,11 @@
       margin-top: 2rem;
     }
 
+    .contact-grid {
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
     .blog-card, .contact-card {
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
@@ -434,6 +825,86 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+    }
+
+    .contact-card {
+      text-align: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .contact-card i {
+      font-size: 1.6rem;
+      color: var(--primary-color);
+      margin-bottom: 0.6rem;
+      transition: all 0.2s ease;
+    }
+
+    /* Compact contact section styling */
+    #contact {
+      padding: 2rem 3rem;
+    }
+
+    #contact h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    #contact p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .contact-links {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-color);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .contact-link i {
+      font-size: 1.2rem;
+      color: var(--primary-color);
+    }
+
+    .contact-link:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .contact-link:hover i {
+      color: white;
+    }
+
+    .contact-card h4 {
+      margin-bottom: 0.5rem;
+    .contact-card h4 {
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
+      font-weight: 600;
+      font-size: 1rem;
     }
 
     .blog-card::after {
@@ -448,8 +919,8 @@
     }
 
     .blog-card:hover, .contact-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 30px rgba(0, 212, 255, 0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
       border-color: var(--primary-color);
       background: var(--surface-color);
     }
@@ -465,7 +936,7 @@
       margin-bottom: 1rem;
     }
 
-    .blog-card h4, .contact-card h4 {
+    .blog-card h4 {
       margin-bottom: 1rem;
       color: var(--text-color);
       font-weight: 600;
@@ -484,45 +955,20 @@
       text-decoration: none;
       font-weight: 600;
       transition: all 0.3s ease;
+      font-size: 0.9rem;
     }
 
     .blog-card a:hover, .contact-card a:hover {
       color: var(--accent-color);
     }
 
-    .contact-card {
-      text-align: center;
-      padding: 2.5rem 2rem;
-    }
-
-    .contact-card i {
-      font-size: 2.5rem;
-      color: var(--primary-color);
-      margin-bottom: 1rem;
-      transition: all 0.3s ease;
-    }
-
     .contact-card:hover i {
       color: var(--accent-color);
-      transform: scale(1.1);
-    }
-
-    /* ===== FOOTER ===== */
-    footer {
-      background: var(--surface-color);
-      border-top: 1px solid var(--border-color);
-      color: var(--text-light);
-      text-align: center;
-      padding: 2rem;
+      transform: scale(1.05);
     }
 
     /* ===== RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) {
-      .header-content {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
       .hero h1 {
         font-size: 2.5rem;
       }
@@ -538,15 +984,6 @@
 
       .section {
         padding: 2rem;
-      }
-
-      nav {
-        gap: 1rem;
-      }
-
-      nav a {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.9rem;
       }
     }
 
@@ -566,41 +1003,44 @@
       animation: fadeInUp 0.6s ease-out;
     }
 
-    .skill-card, .blog-card, .contact-card {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+      .skills-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
 
-    /* ===== SCROLLBAR STYLING ===== */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
+      .skills-category {
+        padding: 1.2rem;
+      }
 
-    ::-webkit-scrollbar-track {
-      background: var(--bg-color);
-    }
+      .skills-tags {
+        gap: 0.5rem;
+      }
 
-    ::-webkit-scrollbar-thumb {
-      background: var(--primary-color);
-      border-radius: 4px;
-    }
+      .skill-tag {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+      }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--secondary-color);
+      .experience-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .contact-links {
+        flex-direction: column;
+        gap: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <a href="index.html" class="logo">Shivani Gowda KS</a>
-      <nav>
-        <a href="index.html" class="active">Home</a>
-        <a href="blog.html">Blog</a>
-        <a href="#about">About</a>
-        <a href="#contact">Contact</a>
-      </nav>
-    </div>
-  </header>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
 
   <section class="hero">
     <h1><span class="highlight">Shivani</span> Gowda KS</h1>
@@ -620,53 +1060,478 @@
 
   <div class="main-content">
     <section id="about" class="section">
-      <h2><i class="icon fas fa-user-circle"></i>About Me</h2>
-      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellendus aliquam modi, soluta sit provident vel minus pariatur blanditiis, officiis, suscipit placeat sed facere odio voluptas corrupti itaque repellat rerum porro!</p>
-      
+      <h2>About Me</h2>      
       <div class="about-content">
         <div class="profile-card">
           <div class="profile-image">SG</div>
-          <h3>Shivani Gowda KS</h3>
-          <p>Cloud Engineer (Contractor)</p>
-          <p>Microsoft</p>
         </div>
         
         <div>
           <p style="text-align: left; font-size: 1.1rem; margin-bottom: 2rem; color: var(--text-color);">
             Lorem ipsum, dolor sit amet consectetur adipisicing elit. Error, nemo iure unde molestiae dignissimos totam ducimus, sequi nesciunt iusto libero labore quam consectetur officiis, inventore modi et possimus voluptatibus non!
           </p>
-          
-          <h3 style="color: var(--primary-color); margin-bottom: 1rem;">What I Do</h3>
-          <ul style="text-align: left; margin: 1rem 0; padding-left: 2rem; color: var(--text-light);">
-            <li style="margin-bottom: 0.5rem;">Design and optimize </li>
-            <li style="margin-bottom: 0.5rem;">Implement</li>
-            <li style="margin-bottom: 0.5rem;">Integrate Azure</li>
-            <li style="margin-bottom: 0.5rem;">Develop cloud architecture</li>
-            <li style="margin-bottom: 0.5rem;">Write about technology</li>
-          </ul>
         </div>
       </div>
 
-      <div class="skills-grid">
-        <div class="skill-card">
-          <i class="fab fa-microsoft"></i>
-          <h4>Azure Cloud Platform</h4>
-          <p>Virtual Networks, ExpressRoute, Azure AI Services, and enterprise-grade cloud solutions</p>
+      <div class="experience-grid">
+        <div class="experience-section">
+          <h3><i class="fas fa-briefcase"></i> Professional Experience</h3>
+          
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo microsoft">
+                <i class="fab fa-microsoft"></i>
+              </div>
+              <div class="experience-basic-info">
+                <h4>Cloud Engineer (Contractor)</h4>
+                <div class="company">Microsoft</div>
+                <div class="duration">Present</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p>Designing Azure cloud infrastructure and networking solutions for enterprise clients.</p>
+              <ul>
+                <li>Azure Virtual Networks and ExpressRoute optimization</li>
+                <li>AI integration with network monitoring systems</li>
+                <li>Enterprise cloud architecture design</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo">
+                <i class="fas fa-network-wired"></i>
+              </div>
+              <div class="experience-basic-info">
+                <h4>Network Engineer</h4>
+                <div class="company">Previous Role</div>
+                <div class="duration">2020 - 2023</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p>Network infrastructure design and cloud migration projects.</p>
+              <ul>
+                <li>Enterprise network design and maintenance</li>
+                <li>Network automation and monitoring</li>
+                <li>Cloud migration support</li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <div class="skill-card">
-          <i class="fas fa-network-wired"></i>
-          <h4>Network Engineering</h4>
-          <p>tructure design</p>
+
+        <div class="experience-section">
+          <h3><i class="fas fa-graduation-cap"></i> Education & Certifications</h3>
+          
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo education">
+                <i class="fas fa-graduation-cap"></i>
+              </div>
+              <div class="experience-basic-info">
+                <h4>Bachelor's Degree</h4>
+                <div class="company">Computer Science / Engineering</div>
+                <div class="duration">Graduation Year</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p>Foundation in computer science, networking, and software development.</p>
+            </div>
+          </div>
+
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo microsoft">
+                <i class="fab fa-microsoft"></i>
+              </div>
+              <div class="experience-basic-info">
+                <h4>Azure Certifications</h4>
+                <div class="company">Microsoft</div>
+                <div class="duration">Current</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <ul>
+                <li>Azure Solutions Architect</li>
+                <li>Azure Network Engineer</li>
+                <li>Azure AI Engineer (in progress)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo">
+                <i class="fas fa-book-open"></i>
+              </div>
+              <div class="experience-basic-info">
+                <h4>Continuous Learning</h4>
+                <div class="company">Self-Directed</div>
+                <div class="duration">Ongoing</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p>Staying current with cloud technologies and AI integration.</p>
+            </div>
+          </div>
         </div>
-        <div class="skill-card">
-          <i class="fas fa-brain"></i>
-          <h4>AI Integration</h4>
-          <p>Azure Cognitive Services, machine learning models, and intelligent automation</p>
+      </div>
+
+      <!-- Skills Section -->
+      <div class="skills-section">
+        <h3><i class="fas fa-code"></i> Skills & Technologies</h3>
+        
+        <div class="skills-grid">
+          <div class="skills-category">
+            <h4><i class="fas fa-cloud"></i> Cloud & Infrastructure</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">Azure</span>
+              <span class="skill-tag">AWS</span>
+              <span class="skill-tag">Kubernetes</span>
+              <span class="skill-tag">Docker</span>
+              <span class="skill-tag">Terraform</span>
+              <span class="skill-tag">CI/CD</span>
+            </div>
+          </div>
+
+          <div class="skills-category">
+            <h4><i class="fas fa-network-wired"></i> Networking</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">Azure VNet</span>
+              <span class="skill-tag">ExpressRoute</span>
+              <span class="skill-tag">Load Balancers</span>
+              <span class="skill-tag">VPN</span>
+              <span class="skill-tag">DNS</span>
+              <span class="skill-tag">Firewall</span>
+            </div>
+          </div>
+
+          <div class="skills-category">
+            <h4><i class="fas fa-terminal"></i> Programming & Tools</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">Python</span>
+              <span class="skill-tag">PowerShell</span>
+              <span class="skill-tag">Bash</span>
+              <span class="skill-tag">Git</span>
+              <span class="skill-tag">Linux</span>
+              <span class="skill-tag">Automation</span>
+            </div>
+          </div>
+
+          <div class="skills-category">
+            <h4><i class="fas fa-robot"></i> AI & Data</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">Azure AI</span>
+              <span class="skill-tag">Machine Learning</span>
+              <span class="skill-tag">OpenAI</span>
+              <span class="skill-tag">Data Analytics</span>
+              <span class="skill-tag">Monitoring</span>
+            </div>
+          </div>
         </div>
-        <div class="skill-card">
-          <i class="fas fa-code"></i>
-          <h4>Development</h4>
-          <p>Python, Infrastructure as Code, and automation scripting</p>
+      </div>
+    </section>
+
+    <section id="projects" class="section">
+      <h2><i class="icon fas fa-code"></i>Projects</h2>
+      <p>Some of the projects I've worked on in cloud engineering and automation</p>
+      
+      <div class="projects-grid">
+        <div class="project-card" onclick="openProjectModal('project1')">
+          <h4><i class="fab fa-microsoft"></i> Azure Network Automation</h4>
+          <div class="tech-stack">
+            <span class="tech-tag">Azure</span>
+            <span class="tech-tag">Python</span>
+            <span class="tech-tag">PowerShell</span>
+          </div>
+          <p>Automated network provisioning and monitoring system for enterprise Azure deployments.</p>
+        </div>
+
+        <div class="project-card" onclick="openProjectModal('project2')">
+          <h4><i class="fas fa-brain"></i> AI-Powered Network Analytics</h4>
+          <div class="tech-stack">
+            <span class="tech-tag">Azure AI</span>
+            <span class="tech-tag">Python</span>
+            <span class="tech-tag">ML</span>
+          </div>
+          <p>Machine learning solution for predictive network performance analysis and optimization.</p>
+        </div>
+
+        <div class="project-card" onclick="openProjectModal('project3')">
+          <h4><i class="fas fa-cloud"></i> Multi-Cloud Integration Platform</h4>
+          <div class="tech-stack">
+            <span class="tech-tag">Azure</span>
+            <span class="tech-tag">AWS</span>
+            <span class="tech-tag">Terraform</span>
+          </div>
+          <p>Cross-platform solution for managing resources across multiple cloud providers.</p>
+        </div>
+
+        <div class="project-card" onclick="openProjectModal('project4')">
+          <h4><i class="fas fa-shield-alt"></i> Security Compliance Automation</h4>
+          <div class="tech-stack">
+            <span class="tech-tag">Azure Policy</span>
+            <span class="tech-tag">Security Center</span>
+            <span class="tech-tag">PowerShell</span>
+          </div>
+          <p>Automated compliance monitoring and remediation system for enterprise security policies.</p>
+        </div>
+
+        <div class="project-card" onclick="openProjectModal('project5')">
+          <h4><i class="fas fa-robot"></i> DevOps Pipeline Optimizer</h4>
+          <div class="tech-stack">
+            <span class="tech-tag">Azure DevOps</span>
+            <span class="tech-tag">CI/CD</span>
+            <span class="tech-tag">YAML</span>
+          </div>
+          <p>Automated pipeline optimization tool that reduces build times and improves deployment efficiency.</p>
+        </div>
+
+        <div class="project-card" onclick="openProjectModal('project6')">
+          <h4><i class="fas fa-database"></i> Cloud Cost Analytics Dashboard</h4>
+          <div class="tech-stack">
+            <span class="tech-tag">Power BI</span>
+            <span class="tech-tag">Azure Cost Management</span>
+            <span class="tech-tag">Python</span>
+          </div>
+          <p>Real-time cost analytics and forecasting dashboard for multi-cloud resource optimization.</p>
+        </div>
+      </div>
+
+      <!-- Load More Button -->
+      <div class="load-more-container">
+        <button class="load-more-btn hidden" id="loadMoreProjects" onclick="loadMoreProjects()">
+          <i class="fas fa-plus-circle"></i>
+          More Projects
+        </button>
+      </div>
+
+      <!-- Project Modals -->
+      <div id="project1" class="project-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fab fa-microsoft"></i> Azure Network Automation</h3>
+            <button class="modal-close" onclick="closeProjectModal('project1')">×</button>
+          </div>
+          <div class="modal-tech-stack">
+            <span class="modal-tech-tag">Azure</span>
+            <span class="modal-tech-tag">Python</span>
+            <span class="modal-tech-tag">PowerShell</span>
+            <span class="modal-tech-tag">ARM Templates</span>
+            <span class="modal-tech-tag">Logic Apps</span>
+          </div>
+          <p class="modal-description">
+            Developed a comprehensive automated network provisioning system that revolutionizes how enterprise Azure deployments are managed. This solution reduces manual configuration time by 80% and significantly improves reliability through automated monitoring and alerting systems.
+          </p>
+          <div class="modal-features">
+            <h4>Key Features & Achievements:</h4>
+            <ul>
+              <li>Automated VNet and subnet provisioning with intelligent IP allocation</li>
+              <li>ExpressRoute configuration automation with failover capabilities</li>
+              <li>Real-time network monitoring dashboards with custom metrics</li>
+              <li>Automated incident response workflows reducing MTTR by 60%</li>
+              <li>Cost optimization recommendations saving 30% on network resources</li>
+              <li>Integration with existing ITSM tools for seamless operations</li>
+            </ul>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-external-link-alt"></i> Live Demo
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div id="project2" class="project-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-brain"></i> AI-Powered Network Analytics</h3>
+            <button class="modal-close" onclick="closeProjectModal('project2')">×</button>
+          </div>
+          <div class="modal-tech-stack">
+            <span class="modal-tech-tag">Azure AI</span>
+            <span class="modal-tech-tag">Python</span>
+            <span class="modal-tech-tag">Machine Learning</span>
+            <span class="modal-tech-tag">Cognitive Services</span>
+            <span class="modal-tech-tag">Power BI</span>
+          </div>
+          <p class="modal-description">
+            Built an intelligent machine learning pipeline that analyzes network traffic patterns to predict potential bottlenecks and automatically suggest optimization strategies. This system revolutionizes proactive network management through predictive analytics.
+          </p>
+          <div class="modal-features">
+            <h4>Key Achievements:</h4>
+            <ul>
+              <li>95% accuracy in predicting network issues 24-48 hours in advance</li>
+              <li>40% reduction in downtime incidents through proactive intervention</li>
+              <li>Automated performance optimization recommendations</li>
+              <li>Real-time anomaly detection with intelligent alerting</li>
+              <li>Custom ML models trained on historical network performance data</li>
+              <li>Integration with Azure Monitor and Log Analytics for comprehensive insights</li>
+            </ul>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-chart-bar"></i> Analytics Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div id="project3" class="project-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-cloud"></i> Multi-Cloud Integration Platform</h3>
+            <button class="modal-close" onclick="closeProjectModal('project3')">×</button>
+          </div>
+          <div class="modal-tech-stack">
+            <span class="modal-tech-tag">Azure</span>
+            <span class="modal-tech-tag">AWS</span>
+            <span class="modal-tech-tag">Terraform</span>
+            <span class="modal-tech-tag">Docker</span>
+            <span class="modal-tech-tag">Kubernetes</span>
+          </div>
+          <p class="modal-description">
+            Designed and implemented a unified platform for managing infrastructure across multiple cloud providers, providing centralized monitoring, cost optimization, and seamless resource orchestration between Azure and AWS environments.
+          </p>
+          <div class="modal-features">
+            <h4>Platform Features:</h4>
+            <ul>
+              <li>Cross-cloud resource provisioning with unified templates</li>
+              <li>Centralized monitoring and alerting across all cloud platforms</li>
+              <li>Intelligent cost optimization with automated recommendations</li>
+              <li>Automated backup and disaster recovery across regions</li>
+              <li>Single-pane-of-glass dashboard for multi-cloud visibility</li>
+              <li>Compliance monitoring and automated remediation</li>
+            </ul>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-book"></i> Documentation
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div id="project4" class="project-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-shield-alt"></i> Security Compliance Automation</h3>
+            <button class="modal-close" onclick="closeProjectModal('project4')">×</button>
+          </div>
+          <div class="modal-tech-stack">
+            <span class="modal-tech-tag">Azure Policy</span>
+            <span class="modal-tech-tag">Security Center</span>
+            <span class="modal-tech-tag">PowerShell</span>
+            <span class="modal-tech-tag">Log Analytics</span>
+            <span class="modal-tech-tag">Sentinel</span>
+          </div>
+          <p class="modal-description">
+            Developed a comprehensive automated system for monitoring security compliance across enterprise Azure environments with intelligent remediation capabilities. This solution ensures continuous compliance and dramatically reduces security risks.
+          </p>
+          <div class="modal-features">
+            <h4>Security Impact:</h4>
+            <ul>
+              <li>99% compliance score achievement across all enterprise environments</li>
+              <li>Automated remediation of 500+ policy violations daily</li>
+              <li>Real-time security posture monitoring and reporting</li>
+              <li>Reduced manual audit time by 90% through automation</li>
+              <li>Custom security policies tailored to industry requirements</li>
+              <li>Integration with SIEM tools for enhanced threat detection</li>
+            </ul>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-shield-alt"></i> Security Report
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div id="project5" class="project-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-robot"></i> DevOps Pipeline Optimizer</h3>
+            <button class="modal-close" onclick="closeProjectModal('project5')">×</button>
+          </div>
+          <div class="modal-tech-stack">
+            <span class="modal-tech-tag">Azure DevOps</span>
+            <span class="modal-tech-tag">CI/CD</span>
+            <span class="modal-tech-tag">YAML</span>
+            <span class="modal-tech-tag">PowerShell</span>
+            <span class="modal-tech-tag">Docker</span>
+          </div>
+          <p class="modal-description">
+            Built an intelligent pipeline optimization tool that analyzes build and deployment patterns to automatically suggest and implement efficiency improvements, reducing overall CI/CD cycle times significantly.
+          </p>
+          <div class="modal-features">
+            <h4>Key Features:</h4>
+            <ul>
+              <li>Automated pipeline analysis and bottleneck detection</li>
+              <li>Smart caching strategies reducing build times by 50%</li>
+              <li>Parallel execution optimization across multiple agents</li>
+              <li>Automated test suite optimization and selection</li>
+              <li>Cost optimization through efficient resource utilization</li>
+              <li>Integration with Azure Boards for automated tracking</li>
+            </ul>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-external-link-alt"></i> Documentation
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div id="project6" class="project-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-database"></i> Cloud Cost Analytics Dashboard</h3>
+            <button class="modal-close" onclick="closeProjectModal('project6')">×</button>
+          </div>
+          <div class="modal-tech-stack">
+            <span class="modal-tech-tag">Power BI</span>
+            <span class="modal-tech-tag">Azure Cost Management</span>
+            <span class="modal-tech-tag">Python</span>
+            <span class="modal-tech-tag">Azure Functions</span>
+            <span class="modal-tech-tag">SQL</span>
+          </div>
+          <p class="modal-description">
+            Developed a comprehensive cost analytics platform providing real-time insights into cloud spending patterns, forecasting future costs, and identifying optimization opportunities across multi-cloud environments.
+          </p>
+          <div class="modal-features">
+            <h4>Dashboard Capabilities:</h4>
+            <ul>
+              <li>Real-time cost tracking across Azure, AWS, and GCP</li>
+              <li>AI-powered cost forecasting and trend analysis</li>
+              <li>Automated anomaly detection for unexpected spending spikes</li>
+              <li>Department and project-level cost allocation</li>
+              <li>Actionable optimization recommendations saving 25% on average</li>
+              <li>Customizable alerts and automated reporting</li>
+            </ul>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-chart-line"></i> Live Demo
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -692,35 +1557,140 @@
     </section>
 
     <section id="contact" class="section">
-      <h2><i class="icon fas fa-envelope"></i>Let's Connect</h2>
-      <p>I'd love to discuss cloud engineering, AI, or share thoughts on technology and life</p>
+      <h2>Contact</h2>
+      <p>Let's connect — reach out via email, LinkedIn, or check out my work on GitHub.</p>
       
-      <div class="contact-grid">
-        <div class="contact-card">
+      <div class="contact-links">
+        <a href="mailto:gowdaks.shivani@gmail.com" class="contact-link">
           <i class="fas fa-envelope"></i>
-          <h4>Email</h4>
-          <a href="mailto:gowdaks.shivani@gmail.com">gowdaks.shivani@gmail.com</a>
-        </div>
-        <div class="contact-card">
+          <span>Email</span>
+        </a>
+        <a href="https://www.linkedin.com/in/sgowdaks/" target="_blank" class="contact-link">
           <i class="fab fa-linkedin"></i>
-          <h4>LinkedIn</h4>
-          <a href="https://www.linkedin.com/in/sgowdaks/" target="_blank">Connect professionally</a>
-        </div>
-        <div class="contact-card">
+          <span>LinkedIn</span>
+        </a>
+        <a href="https://github.com/sgowdaks" target="_blank" class="contact-link">
           <i class="fab fa-github"></i>
-          <h4>GitHub</h4>
-          <a href="https://github.com/sgowdaks" target="_blank">View my projects</a>
-        </div>
+          <span>GitHub</span>
+        </a>
       </div>
     </section>
   </div>
 
-  <footer>
-    <p>&copy; 2025 Shivani Gowda KS. Built with passion for technology and continuous learning.</p>
-  </footer>
+  <footer></footer>
 
+  <!-- Common JavaScript (generates header/footer) -->
+  <script src="js/common.js"></script>
   <script src="js/blog-manager.js"></script>
   <script>
+    // ===== EXPERIENCE TOGGLE FUNCTIONALITY =====
+    function toggleExperience(element) {
+      element.classList.toggle('expanded');
+    }
+
+    // ===== LOAD MORE PROJECTS FUNCTIONALITY =====
+    let visibleProjects = 4; // Initially show 4 projects
+    const projectsPerLoad = 2; // Load 2 more each time
+
+    function initializeProjects() {
+      const projectCards = document.querySelectorAll('.project-card');
+      const loadMoreBtn = document.getElementById('loadMoreProjects');
+      
+      // Hide projects beyond initial count
+      projectCards.forEach((card, index) => {
+        if (index >= visibleProjects) {
+          card.classList.add('hidden');
+        }
+      });
+      
+      // Show load more button if there are hidden projects
+      if (projectCards.length > visibleProjects) {
+        loadMoreBtn.classList.remove('hidden');
+      }
+    }
+
+    function loadMoreProjects() {
+      const projectCards = document.querySelectorAll('.project-card');
+      const loadMoreBtn = document.getElementById('loadMoreProjects');
+      const hiddenProjects = document.querySelectorAll('.project-card.hidden');
+      
+      // Show next batch of projects
+      let shown = 0;
+      hiddenProjects.forEach((card) => {
+        if (shown < projectsPerLoad) {
+          card.classList.remove('hidden');
+          // Add a nice fade-in animation
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(20px)';
+          setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, 50);
+          shown++;
+        }
+      });
+      
+      visibleProjects += shown;
+      
+      // Hide button if all projects are visible
+      if (visibleProjects >= projectCards.length) {
+        loadMoreBtn.classList.add('hidden');
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeProjects);
+
+    // ===== PROJECT MODAL FUNCTIONALITY =====
+    function openProjectModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('active');
+      }
+    }
+
+    function closeProjectModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
+    // Close modal when clicking outside the content
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('project-modal') && e.target.classList.contains('active')) {
+        closeProjectModal(e.target.id);
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const activeModal = document.querySelector('.project-modal.active');
+        if (activeModal) {
+          closeProjectModal(activeModal.id);
+        }
+      }
+    });
+
+    // Auto-close modal when scrolling away from projects section
+    window.addEventListener('scroll', function() {
+      const activeModal = document.querySelector('.project-modal.active');
+      if (!activeModal) return; // No modal open, nothing to do
+      
+      const projectsSection = document.getElementById('projects');
+      if (!projectsSection) return;
+      
+      const rect = projectsSection.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      
+      // Close modal if projects section is completely out of view
+      if (rect.bottom < 0 || rect.top > viewportHeight) {
+        closeProjectModal(activeModal.id);
+      }
+    });
+
     // ===== MATRIX DIGITAL RAIN EFFECT =====
     function createMatrixRain() {
       const matrixBg = document.getElementById('matrix-bg');
@@ -763,7 +1733,14 @@
     });
 
     // ===== NAVIGATION ACTIVE STATE =====
+    // Temporarily disabled to prevent modal conflicts
+    /*
     window.addEventListener('scroll', function() {
+      // Don't update navigation when modal is open
+      if (document.querySelector('.project-modal.active')) {
+        return;
+      }
+      
       const sections = document.querySelectorAll('.section');
       const navLinks = document.querySelectorAll('nav a');
       
@@ -782,6 +1759,7 @@
         }
       });
     });
+    */
 
     // ===== GLITCH TEXT EFFECT =====
     function glitchText(element) {
@@ -807,6 +1785,8 @@
     }
 
     // ===== INITIALIZE EFFECTS =====
+    // Temporarily disabled to prevent modal conflicts
+    /*
       // Start matrix rain effect
       createMatrixRain();
       
@@ -822,6 +1802,7 @@
         subtitle.style.whiteSpace = 'nowrap';
         subtitle.style.animation = 'typing 3s steps(40, end), blink-caret 0.75s step-end infinite';
       }
+    */
 
       // Render latest posts (if BlogManager available)
       const featuredContainer = document.getElementById('featured-posts');
@@ -857,7 +1838,14 @@
     document.head.appendChild(style);
 
     // ===== TERMINAL CURSOR BLINK =====
+    // Temporarily disabled to prevent modal conflicts
+    /*
     setInterval(() => {
+      // Don't run cursor blink when modal is open
+      if (document.querySelector('.project-modal.active')) {
+        return;
+      }
+      
       const cursors = document.querySelectorAll('.hero h1, .section h2');
       cursors.forEach(cursor => {
         if (cursor.textContent.endsWith('_')) {
@@ -867,6 +1855,7 @@
         }
       });
     }, 1000);
+    */
   </script>
 </body>
 </html>

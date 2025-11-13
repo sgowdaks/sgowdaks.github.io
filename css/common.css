@@ -69,6 +69,8 @@ footer p {
   
   header nav {
     gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   
   header nav a {

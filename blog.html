@@ -2071,22 +2071,439 @@
   <script>
 
 
-    // Navigation functionality
+    // Blog rendering functionality
 
 
     document.addEventListener('DOMContentLoaded', function() {
 
 
-      // Load recent posts in sidebar
+      if (!window.BlogManager) {
 
 
-      const recentPostsContainer = document.getElementById('recent-posts');
+        console.error('BlogManager not loaded');
 
 
-      if (recentPostsContainer && window.BlogManager) {
+        return;
+
+
+      }
+
+
+
+
+
+      // Helper function to format date
+
+
+      function formatDate(dateStr) {
+
+
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+
+
+        return new Date(dateStr).toLocaleDateString('en-US', options);
+
+
+      }
+
+
+
+
+
+      // Render all blog posts
+
+
+      function renderBlogPosts(posts) {
+
+
+        const blogPostsContainer = document.getElementById('blog-posts');
+
+
+        if (!blogPostsContainer) return;
+
+
+
+
+
+        if (posts.length === 0) {
+
+
+          blogPostsContainer.innerHTML = `
+
+
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+
+
+              <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+
+
+              <p>No posts found.</p>
+
+
+            </div>
+
+
+          `;
+
+
+          return;
+
+
+        }
+
+
+
+
+
+        blogPostsContainer.innerHTML = posts.map(post => `
+
+
+          <article class="blog-post">
+
+
+            <div class="post-meta">
+
+
+              <span class="post-category ${post.category}">${post.categoryLabel}</span>
+
+
+              <span><i class="far fa-calendar"></i> ${formatDate(post.date)}</span>
+
+
+            </div>
+
+
+            <h3><a href="posts/${post.id}.html">${post.title}</a></h3>
+
+
+            <p class="post-excerpt">${post.excerpt}</p>
+
+
+            <a href="posts/${post.id}.html" class="read-more">
+
+
+              Read More <i class="fas fa-arrow-right"></i>
+
+
+            </a>
+
+
+          </article>
+
+
+        `).join('');
+
+
+      }
+
+
+
+
+
+      // Render category filter buttons
+
+
+      function renderCategoryFilter() {
+
+
+        const categoryFilterContainer = document.getElementById('category-filter');
+
+
+        if (!categoryFilterContainer) return;
+
+
+
+
+
+        const allPosts = window.BlogManager.getAllPosts();
+
+
+        const categories = {};
+
+
+        
+
+
+        allPosts.forEach(post => {
+
+
+          if (!categories[post.category]) {
+
+
+            categories[post.category] = {
+
+
+              label: post.categoryLabel,
+
+
+              count: 0
+
+
+            };
+
+
+          }
+
+
+          categories[post.category].count++;
+
+
+        });
+
+
+
+
+
+        let filterHTML = '<a href="#" class="category-btn active" data-category="all">All Posts</a>';
+
+
+        Object.keys(categories).forEach(key => {
+
+
+          filterHTML += `<a href="#" class="category-btn" data-category="${key}">${categories[key].label} (${categories[key].count})</a>`;
+
+
+        });
+
+
+
+
+
+        categoryFilterContainer.innerHTML = filterHTML;
+
+
+
+
+
+        // Add click handlers
+
+
+        categoryFilterContainer.querySelectorAll('.category-btn').forEach(btn => {
+
+
+          btn.addEventListener('click', function(e) {
+
+
+            e.preventDefault();
+
+
+            const category = this.getAttribute('data-category');
+
+
+            
+
+
+            // Update active state
+
+
+            categoryFilterContainer.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+
+
+            this.classList.add('active');
+
+
+
+
+
+            // Filter posts
+
+
+            if (category === 'all') {
+
+
+              renderBlogPosts(window.BlogManager.getAllPosts());
+
+
+            } else {
+
+
+              renderBlogPosts(window.BlogManager.getPostsByCategory(category));
+
+
+            }
+
+
+          });
+
+
+        });
+
+
+      }
+
+
+
+
+
+      // Render sidebar categories
+
+
+      function renderSidebarCategories() {
+
+
+        const sidebarCategories = document.getElementById('sidebar-categories');
+
+
+        if (!sidebarCategories) return;
+
+
+
+
+
+        const allPosts = window.BlogManager.getAllPosts();
+
+
+        const categories = {};
+
+
+        
+
+
+        allPosts.forEach(post => {
+
+
+          if (!categories[post.category]) {
+
+
+            categories[post.category] = {
+
+
+              label: post.categoryLabel,
+
+
+              count: 0
+
+
+            };
+
+
+          }
+
+
+          categories[post.category].count++;
+
+
+        });
+
+
+
+
+
+        sidebarCategories.innerHTML = Object.keys(categories).map(key => `
+
+
+          <li>
+
+
+            <a href="#" data-category="${key}">${categories[key].label}</a>
+
+
+            <span class="post-count">${categories[key].count}</span>
+
+
+          </li>
+
+
+        `).join('');
+
+
+
+
+
+        // Add click handlers
+
+
+        sidebarCategories.querySelectorAll('a').forEach(link => {
+
+
+          link.addEventListener('click', function(e) {
+
+
+            e.preventDefault();
+
+
+            const category = this.getAttribute('data-category');
+
+
+            renderBlogPosts(window.BlogManager.getPostsByCategory(category));
+
+
+            
+
+
+            // Update category filter
+
+
+            const categoryFilter = document.getElementById('category-filter');
+
+
+            if (categoryFilter) {
+
+
+              categoryFilter.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+
+
+              const btn = categoryFilter.querySelector(`[data-category="${category}"]`);
+
+
+              if (btn) btn.classList.add('active');
+
+
+            }
+
+
+            
+
+
+            // Scroll to blog section
+
+
+            document.querySelector('#blog').scrollIntoView({ behavior: 'smooth' });
+
+
+          });
+
+
+        });
+
+
+      }
+
+
+
+
+
+      // Render recent posts in sidebar
+
+
+      function renderRecentPosts() {
+
+
+        const recentPostsContainer = document.getElementById('recent-posts');
+
+
+        if (!recentPostsContainer) return;
+
+
+
 
 
         const recentPosts = window.BlogManager.getRecentPosts(5);
+
+
+        if (recentPosts.length === 0) {
+
+
+          recentPostsContainer.innerHTML = '<li style="color: var(--text-muted); font-size: 0.9rem;">No posts yet.</li>';
+
+
+          return;
+
+
+        }
+
+
+
 
 
         recentPostsContainer.innerHTML = recentPosts.map(post => 
@@ -2099,6 +2516,129 @@
 
 
       }
+
+
+
+
+
+      // Render popular tags
+
+
+      function renderTags() {
+
+
+        const tagCloudContainer = document.getElementById('tag-cloud');
+
+
+        if (!tagCloudContainer) return;
+
+
+
+
+
+        const allPosts = window.BlogManager.getAllPosts();
+
+
+        const tagCounts = {};
+
+
+        
+
+
+        allPosts.forEach(post => {
+
+
+          post.tags.forEach(tag => {
+
+
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+
+
+          });
+
+
+        });
+
+
+
+
+
+        if (Object.keys(tagCounts).length === 0) {
+
+
+          tagCloudContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">No tags yet.</span>';
+
+
+          return;
+
+
+        }
+
+
+
+
+
+        tagCloudContainer.innerHTML = Object.keys(tagCounts).map(tag => 
+
+
+          `<a href="#" class="tag" data-tag="${tag}">${tag}</a>`
+
+
+        ).join('');
+
+
+
+
+
+        // Add click handlers
+
+
+        tagCloudContainer.querySelectorAll('.tag').forEach(tagEl => {
+
+
+          tagEl.addEventListener('click', function(e) {
+
+
+            e.preventDefault();
+
+
+            const tag = this.getAttribute('data-tag');
+
+
+            renderBlogPosts(window.BlogManager.getPostsByTag(tag));
+
+
+            document.querySelector('#blog').scrollIntoView({ behavior: 'smooth' });
+
+
+          });
+
+
+        });
+
+
+      }
+
+
+
+
+
+      // Initial render
+
+
+      renderBlogPosts(window.BlogManager.getAllPosts());
+
+
+      renderCategoryFilter();
+
+
+      renderSidebarCategories();
+
+
+      renderRecentPosts();
+
+
+      renderTags();
 
 
 

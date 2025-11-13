@@ -1,0 +1,78 @@
+/**
+ * Common Styles
+ * Shared styles for header and footer across all pages
+ */
+
+/* ===== HEADER ===== */
+header {
+  background: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header nav {
+  display: flex;
+  gap: 2rem;
+}
+
+header nav a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
+header nav a:hover {
+  color: var(--primary-color);
+  background: var(--bg-secondary);
+}
+
+header nav a.active {
+  color: var(--primary-color);
+  background: var(--bg-secondary);
+}
+
+/* ===== FOOTER ===== */
+footer {
+  background: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+  padding: 2rem;
+  text-align: center;
+  margin-top: 4rem;
+}
+
+footer p {
+  color: var(--text-light);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  header {
+    padding: 1rem;
+  }
+  
+  header nav {
+    gap: 1rem;
+  }
+  
+  header nav a {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}

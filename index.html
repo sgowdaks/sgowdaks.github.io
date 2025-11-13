@@ -958,14 +958,15 @@
     }
 
     .blog-card .category {
-      background: var(--primary-color);
-      color: white;
+      background: transparent;
+      color: #6b9bd1;
       padding: 6px 14px;
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
       display: inline-block;
       margin-bottom: 1rem;
+      border: 1px solid #6b9bd1;
     }
 
     .blog-card h4 {
@@ -1075,7 +1076,7 @@
   <header></header>
 
   <section class="hero">
-    <h1><span class="highlight">Shivani</span> Gowda KS</h1>
+    <h1>Shivani <span class="highlight">Gowda KS</span></h1>
     <div class="subtitle">Cloud Engineer & ML Enthusiast</div>
     <p style="max-width: 700px; margin: 1rem auto 2rem; font-size: 1rem;">
       Building ML tools and exploring the world of LLMs—because who isn’t thrilled by agents redefining how tasks get done?
@@ -1916,7 +1917,7 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
         } else {
           featuredContainer.innerHTML = latest.map(post => `
             <div class="blog-card">
-              <span class="category" style="background:${post.category === 'life' ? 'var(--success-color)' : 'var(--primary-color)'}">${post.categoryLabel}</span>
+              <span class="category" style="color:${post.category === 'life' ? '#a78bce' : '#6b9bd1'}; border-color:${post.category === 'life' ? '#a78bce' : '#6b9bd1'};">${post.categoryLabel}</span>
               <h4>${post.title}</h4>
               <p style="color:var(--text-light);">${post.excerpt}</p>
               <a href="posts/${post.id}.html">Read More <i class="fas fa-arrow-right"></i></a>

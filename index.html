@@ -291,13 +291,13 @@
 
     /* Skills Section */
     .skills-section {
-      margin-top: 3rem;
+      margin-top: 2rem;
     }
 
     .skills-section h3 {
       color: var(--primary-color);
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
+      font-size: 1.3rem;
+      margin-bottom: 1.2rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -308,14 +308,14 @@
     .skills-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 2rem;
+      gap: 1rem;
     }
 
     .skills-category {
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.5rem;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
       transition: all 0.3s ease;
     }
 
@@ -327,8 +327,8 @@
 
     .skills-category h4 {
       color: var(--text-color);
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      margin-bottom: 0.7rem;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -337,33 +337,56 @@
 
     .skills-category h4 i {
       color: var(--primary-color);
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
     .skills-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
 
     .skill-tag {
       display: inline-block;
-      padding: 0.4rem 0.9rem;
+      padding: 0.3rem 0.75rem;
       background: var(--surface-color);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-light);
-      font-size: 0.85rem;
+      border-radius: 5px;
+      color: #555555;
+      font-size: 0.8rem;
       transition: all 0.2s ease;
       cursor: default;
     }
 
     .skill-tag:hover {
-      background: var(--primary-color);
-      color: var(--bg-primary);
-      border-color: var(--primary-color);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+    
+    /* Subtle color variations for different skill categories */
+    .skills-category:nth-child(1) h4 { color: #4a5568; }
+    .skills-category:nth-child(1) h4 i { color: #5a6c7d; }
+    .skills-category:nth-child(1) .skill-tag { color: #4a5568; border-color: #b8c5d0; background: #f7fafc; }
+    
+    .skills-category:nth-child(2) h4 { color: #2d3748; }
+    .skills-category:nth-child(2) h4 i { color: #4a5568; }
+    .skills-category:nth-child(2) .skill-tag { color: #2d3748; border-color: #b8c5d0; background: #f7fafc; }
+    
+    .skills-category:nth-child(3) h4 { color: #1a202c; }
+    .skills-category:nth-child(3) h4 i { color: #2d3748; }
+    .skills-category:nth-child(3) .skill-tag { color: #1a202c; border-color: #b8c5d0; background: #f7fafc; }
+    
+    .skills-category:nth-child(4) h4 { color: #3d4852; }
+    .skills-category:nth-child(4) h4 i { color: #5a6c7d; }
+    .skills-category:nth-child(4) .skill-tag { color: #3d4852; border-color: #b8c5d0; background: #f7fafc; }
+    
+    .skills-category:nth-child(5) h4 { color: #2c3e50; }
+    .skills-category:nth-child(5) h4 i { color: #475569; }
+    .skills-category:nth-child(5) .skill-tag { color: #2c3e50; border-color: #b8c5d0; background: #f7fafc; }
+    
+    .skills-category:nth-child(6) h4 { color: #1e293b; }
+    .skills-category:nth-child(6) h4 i { color: #334155; }
+    .skills-category:nth-child(6) .skill-tag { color: #1e293b; border-color: #b8c5d0; background: #f7fafc; }
 
     .experience-grid {
       display: grid;
@@ -437,6 +460,15 @@
     .experience-logo i {
       font-size: 1.8rem;
       color: var(--primary-color);
+    }
+
+    /* Logo images inside experience blocks */
+    .experience-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      border-radius: 6px;
     }
 
     .experience-logo.microsoft {
@@ -1044,12 +1076,31 @@
 
   <section class="hero">
     <h1><span class="highlight">Shivani</span> Gowda KS</h1>
-    <div class="subtitle">Cloud Engineer & AI Enthusiast</div>
-    <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Rerum aperiam quae, deserunt laudantium illo voluptatem quisquam, dolorum neque veniam ut veritatis? Commodi, dolores. Possimus officia veritatis fuga nihil delectus veniam.</p>
+    <div class="subtitle">Cloud Engineer & ML Enthusiast</div>
+    <p style="max-width: 700px; margin: 1rem auto 2rem; font-size: 1rem;">
+      Building ML tools and exploring the world of LLMs—because who isn’t thrilled by agents redefining how tasks get done?
+    </p>
+    
+    <!-- Social Links -->
+    <div style="display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;">
+      <a href="https://github.com/sgowdaks" target="_blank" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-color)'">
+        <i class="fab fa-github" style="font-size: 1.3rem;"></i>
+        <span>GitHub</span>
+      </a>
+      <a href="https://www.linkedin.com/in/sgowdaks/" target="_blank" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-color)'">
+        <i class="fab fa-linkedin" style="font-size: 1.3rem;"></i>
+        <span>LinkedIn</span>
+      </a>
+      <a href="https://scholar.google.com/citations?user=YOUR_ID" target="_blank" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-color)'">
+        <i class="fas fa-graduation-cap" style="font-size: 1.3rem;"></i>
+        <span>Google Scholar</span>
+      </a>
+    </div>
+    
     <div class="hero-buttons">
-      <a href="blog.html" class="btn btn-primary">
-        <i class="fas fa-blog"></i>
-        Explore My Blog
+      <a href="#contact" class="btn btn-primary">
+        <i class="fas fa-envelope"></i>
+        Contact Me
       </a>
       <a href="#about" class="btn btn-secondary">
         <i class="fas fa-user"></i>
@@ -1068,15 +1119,21 @@
         
         <div>
           <p style="text-align: left; font-size: 1.1rem; margin-bottom: 2rem; color: var(--text-color);">
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Error, nemo iure unde molestiae dignissimos totam ducimus, sequi nesciunt iusto libero labore quam consectetur officiis, inventore modi et possimus voluptatibus non!
-          </p>
+            Hey there — I’m the kind of engineer who enjoys understanding why things work just as much as how they work. My career has taken me through AI/ML and Azure networking (L3/L7), where I learned to make systems both intelligent and reliable.
+            <br>
+            <br>
+These days, I’m knee-deep in personal projects around ONNX, C++ inference, and model optimization — chasing performance improvements the way some people chase coffee refills. I’m not a fast learner by nature; I prefer to slow down, get the fundamentals rock solid, and then move fast with confidence. Once something clicks, I dive all in.
+I love the blend of research and engineering — building ML tools, experimenting with agents, and learning how to make complex ideas work in the real world. My favorite feeling is when something I built finally runs just right — and I immediately start thinking about how to make it better.
+
+If you’re into thoughtful engineering, LLM experiments, or the art of making models a little smarter (and a lot faster), we’ll probably get along.
         </div>
       </div>
 
       <div class="experience-grid">
         <div class="experience-section">
           <h3><i class="fas fa-briefcase"></i> Professional Experience</h3>
-          
+
+          <!-- Cloud Engineer (left intentionally blank per request) -->
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
               <div class="experience-logo microsoft">
@@ -1089,57 +1146,101 @@
               </div>
             </div>
             <div class="experience-details">
-              <p>Designing Azure cloud infrastructure and networking solutions for enterprise clients.</p>
-              <ul>
-                <li>Azure Virtual Networks and ExpressRoute optimization</li>
-                <li>AI integration with network monitoring systems</li>
-                <li>Enterprise cloud architecture design</li>
-              </ul>
+              <p>Details to be added.</p>
             </div>
           </div>
 
+          <!-- PixStory -->
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
               <div class="experience-logo">
-                <i class="fas fa-network-wired"></i>
+                <img src="https://pixstory.com/favicon.ico" alt="PixStory logo" />
               </div>
               <div class="experience-basic-info">
-                <h4>Network Engineer</h4>
-                <div class="company">Previous Role</div>
-                <div class="duration">2020 - 2023</div>
+                <h4>Software Engineer (Intern → Full-time)</h4>
+                <div class="company">PixStory · Remote, USA</div>
+                <div class="duration">Jan 2023 – Dec 2023</div>
               </div>
             </div>
             <div class="experience-details">
-              <p>Network infrastructure design and cloud migration projects.</p>
-              <ul>
-                <li>Enterprise network design and maintenance</li>
-                <li>Network automation and monitoring</li>
-                <li>Cloud migration support</li>
-              </ul>
+              <p><strong>Tools:</strong> Python, Flask, SQLite, Apache Airflow, BERT, NLLB, Transformers</p>
+              <p>Built ETL pipelines with Airflow (31% performance boost) and a Flask/SQLite annotation platform with RESTful APIs for real-time labeling (15% increase in data collection). Fine-tuned multilingual transformer models for hate speech classification and benchmarked embedding models for unstructured data indexing.</p>
+            </div>
+          </div>
+
+          <!-- Loyola Marymount University (Graduate Research Assistant) -->
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo education">
+                <img src="https://www.lmu.edu/favicon.ico" alt="LMU logo" />
+              </div>
+              <div class="experience-basic-info">
+                <h4>Graduate Research Assistant</h4>
+                <div class="company">Loyola Marymount University · Los Angeles, CA, USA</div>
+                <div class="duration">Jun 2022 – Dec 2022</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p><strong>Tools:</strong> PyTorch, Transformers, Data Processing</p>
+              <p>Improved diet tracking system performance by 21.8% by replacing RNN+LSTM with transformer architecture. Collected and analyzed large datasets, identified bottlenecks, and boosted F1-score by 5.2%. Published a paper at ICASSP 2023 on multi-modal food classification.</p>
+            </div>
+          </div>
+
+          <!-- IBM -->
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" alt="IBM logo" />
+              </div>
+              <div class="experience-basic-info">
+                <h4>Application Developer</h4>
+                <div class="company">IBM · India</div>
+                <div class="duration">Dec 2019 – May 2021</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p><strong>Tools:</strong> Java, Spring Boot, OpenShift, GitLab, Jenkins</p>
+              <p>Developed backend logic for a CPQ system using Java and Spring Boot. Assisted in migrating legacy services to cloud-native microservices on OpenShift and used CI/CD pipelines (GitLab, Jenkins) to execute deployments and run validation scripts.</p>
             </div>
           </div>
         </div>
 
         <div class="experience-section">
-          <h3><i class="fas fa-graduation-cap"></i> Education & Certifications</h3>
-          
+          <h3><i class="fas fa-graduation-cap"></i> Education</h3>
+
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo education">
+                <i class="fas fa-university"></i>
+              </div>
+              <div class="experience-basic-info">
+                <h4>Loyola Marymount University</h4>
+                <div class="company">Master of Science in Computer Science</div>
+                <div class="duration">Aug 2021 – May 2023</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p>Los Angeles, CA, USA. Received 'Outstanding Graduate Award in Computer Science' from Frank R. Seaver College of Science and Engineering.</p>
+            </div>
+          </div>
+
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
               <div class="experience-logo education">
                 <i class="fas fa-graduation-cap"></i>
               </div>
               <div class="experience-basic-info">
-                <h4>Bachelor's Degree</h4>
-                <div class="company">Computer Science / Engineering</div>
-                <div class="duration">Graduation Year</div>
+                <h4>Amrita School of Engineering</h4>
+                <div class="company">Bachelor of Technology in Electrical and Electronics Engineering</div>
+                <div class="duration">Jun 2015 – May 2019</div>
               </div>
             </div>
             <div class="experience-details">
-              <p>Foundation in computer science, networking, and software development.</p>
+              <p>Bengaluru, KA, India.</p>
             </div>
           </div>
 
-          <div class="experience-item" onclick="toggleExperience(this)">
+          <!-- <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
               <div class="experience-logo microsoft">
                 <i class="fab fa-microsoft"></i>
@@ -1157,75 +1258,81 @@
                 <li>Azure AI Engineer (in progress)</li>
               </ul>
             </div>
-          </div>
-
-          <div class="experience-item" onclick="toggleExperience(this)">
-            <div class="experience-header">
-              <div class="experience-logo">
-                <i class="fas fa-book-open"></i>
-              </div>
-              <div class="experience-basic-info">
-                <h4>Continuous Learning</h4>
-                <div class="company">Self-Directed</div>
-                <div class="duration">Ongoing</div>
-              </div>
-            </div>
-            <div class="experience-details">
-              <p>Staying current with cloud technologies and AI integration.</p>
-            </div>
-          </div>
+          </div> -->
         </div>
       </div>
 
       <!-- Skills Section -->
       <div class="skills-section">
         <h3><i class="fas fa-code"></i> Skills & Technologies</h3>
-        
+
         <div class="skills-grid">
           <div class="skills-category">
-            <h4><i class="fas fa-cloud"></i> Cloud & Infrastructure</h4>
-            <div class="skills-tags">
-              <span class="skill-tag">Azure</span>
-              <span class="skill-tag">AWS</span>
-              <span class="skill-tag">Kubernetes</span>
-              <span class="skill-tag">Docker</span>
-              <span class="skill-tag">Terraform</span>
-              <span class="skill-tag">CI/CD</span>
-            </div>
-          </div>
-
-          <div class="skills-category">
-            <h4><i class="fas fa-network-wired"></i> Networking</h4>
-            <div class="skills-tags">
-              <span class="skill-tag">Azure VNet</span>
-              <span class="skill-tag">ExpressRoute</span>
-              <span class="skill-tag">Load Balancers</span>
-              <span class="skill-tag">VPN</span>
-              <span class="skill-tag">DNS</span>
-              <span class="skill-tag">Firewall</span>
-            </div>
-          </div>
-
-          <div class="skills-category">
-            <h4><i class="fas fa-terminal"></i> Programming & Tools</h4>
+            <h4><i class="fas fa-laptop-code"></i> Programming Languages</h4>
             <div class="skills-tags">
               <span class="skill-tag">Python</span>
-              <span class="skill-tag">PowerShell</span>
+              <span class="skill-tag">C</span>
+              <span class="skill-tag">C#</span>
+              <span class="skill-tag">Java</span>
               <span class="skill-tag">Bash</span>
-              <span class="skill-tag">Git</span>
-              <span class="skill-tag">Linux</span>
-              <span class="skill-tag">Automation</span>
+              <span class="skill-tag">SQL</span>
             </div>
           </div>
 
           <div class="skills-category">
-            <h4><i class="fas fa-robot"></i> AI & Data</h4>
+            <h4><i class="fas fa-robot"></i> AI / ML</h4>
             <div class="skills-tags">
-              <span class="skill-tag">Azure AI</span>
-              <span class="skill-tag">Machine Learning</span>
-              <span class="skill-tag">OpenAI</span>
-              <span class="skill-tag">Data Analytics</span>
-              <span class="skill-tag">Monitoring</span>
+              <span class="skill-tag">PyTorch</span>
+              <span class="skill-tag">Hugging Face</span>
+              <span class="skill-tag">ONNX</span>
+              <span class="skill-tag">LangChain</span>
+              <span class="skill-tag">Pandas</span>
+              <span class="skill-tag">scikit-learn</span>
+            </div>
+          </div>
+
+          <div class="skills-category">
+            <h4><i class="fas fa-tools"></i> Tools & Platforms</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">Linux</span>
+              <span class="skill-tag">Git</span>
+              <span class="skill-tag">Wireshark</span>
+              <span class="skill-tag">Postman</span>
+              <span class="skill-tag">PySpark</span>
+              <span class="skill-tag">Grafana</span>
+            </div>
+          </div>
+
+          <div class="skills-category">
+            <h4><i class="fas fa-database"></i> Databases / Data</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">SQLite</span>
+              <span class="skill-tag">MySQL</span>
+              <span class="skill-tag">Pandas</span>
+            </div>
+          </div>
+
+          <div class="skills-category">
+            <h4><i class="fas fa-cloud"></i> Cloud & DevOps</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">Microsoft Azure</span>
+              <span class="skill-tag">AWS</span>
+              <span class="skill-tag">OpenShift</span>
+              <span class="skill-tag">Docker</span>
+              <span class="skill-tag">Azure DevOps</span>
+              <span class="skill-tag">Jenkins</span>
+            </div>
+          </div>
+
+          <div class="skills-category">
+            <h4><i class="fas fa-globe"></i> Web Development</h4>
+            <div class="skills-tags">
+              <span class="skill-tag">Flask</span>
+              <span class="skill-tag">FastAPI</span>
+              <span class="skill-tag">Spring Boot</span>
+              <span class="skill-tag">RESTful APIs</span>
+              <span class="skill-tag">HTML / CSS / JS</span>
+              <span class="skill-tag">React</span>
             </div>
           </div>
         </div>
@@ -1248,23 +1355,23 @@
         </div>
 
         <div class="project-card" onclick="openProjectModal('project2')">
-          <h4><i class="fas fa-brain"></i> AI-Powered Network Analytics</h4>
+          <h4><i class="fas fa-apple-alt"></i> Multi-Modal Food Classification in a Diet Tracking System</h4>
           <div class="tech-stack">
-            <span class="tech-tag">Azure AI</span>
-            <span class="tech-tag">Python</span>
-            <span class="tech-tag">ML</span>
+            <span class="tech-tag">PyTorch</span>
+            <span class="tech-tag">Vision</span>
+            <span class="tech-tag">Speech</span>
           </div>
-          <p>Machine learning solution for predictive network performance analysis and optimization.</p>
+          <p>Leveraged multi-modal deep learning techniques (vision + spoken inputs) to classify food items for a diet-tracking system. Built data pipelines and preprocessing for large-scale training.</p>
         </div>
 
         <div class="project-card" onclick="openProjectModal('project3')">
-          <h4><i class="fas fa-cloud"></i> Multi-Cloud Integration Platform</h4>
+          <h4><i class="fas fa-spider"></i> Nichirin: Webcrawler + Retrieval-Augmented Generator</h4>
           <div class="tech-stack">
-            <span class="tech-tag">Azure</span>
-            <span class="tech-tag">AWS</span>
-            <span class="tech-tag">Terraform</span>
+            <span class="tech-tag">Apache Solr</span>
+            <span class="tech-tag">Apache Spark</span>
+            <span class="tech-tag">Python</span>
           </div>
-          <p>Cross-platform solution for managing resources across multiple cloud providers.</p>
+          <p>Multi-level web crawler with Solr-powered indexing and retrieval; integrates Spark for parallel processing and scalable text indexing. Open sourced and published to PyPI.</p>
         </div>
 
         <div class="project-card" onclick="openProjectModal('project4')">
@@ -1348,36 +1455,33 @@
       <div id="project2" class="project-modal">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title"><i class="fas fa-brain"></i> AI-Powered Network Analytics</h3>
+            <h3 class="modal-title"><i class="fas fa-apple-alt"></i> Multi-Modal Food Classification in a Diet Tracking System</h3>
             <button class="modal-close" onclick="closeProjectModal('project2')">×</button>
           </div>
           <div class="modal-tech-stack">
-            <span class="modal-tech-tag">Azure AI</span>
-            <span class="modal-tech-tag">Python</span>
-            <span class="modal-tech-tag">Machine Learning</span>
-            <span class="modal-tech-tag">Cognitive Services</span>
-            <span class="modal-tech-tag">Power BI</span>
+            <span class="modal-tech-tag">PyTorch</span>
+            <span class="modal-tech-tag">TensorFlow</span>
+            <span class="modal-tech-tag">Vision</span>
+            <span class="modal-tech-tag">Speech</span>
+            <span class="modal-tech-tag">Data Pipelines</span>
           </div>
           <p class="modal-description">
-            Built an intelligent machine learning pipeline that analyzes network traffic patterns to predict potential bottlenecks and automatically suggest optimization strategies. This system revolutionizes proactive network management through predictive analytics.
+            Leveraged multi-modal deep learning (vision + spoken inputs) to accurately classify food items for a diet-tracking system. As part of this work I gathered large-scale datasets, engineered preprocessing pipelines, and trained transformer-based models to improve classification accuracy.
           </p>
           <div class="modal-features">
             <h4>Key Achievements:</h4>
             <ul>
-              <li>95% accuracy in predicting network issues 24-48 hours in advance</li>
-              <li>40% reduction in downtime incidents through proactive intervention</li>
-              <li>Automated performance optimization recommendations</li>
-              <li>Real-time anomaly detection with intelligent alerting</li>
-              <li>Custom ML models trained on historical network performance data</li>
-              <li>Integration with Azure Monitor and Log Analytics for comprehensive insights</li>
+              <li>Applied multi-modal architectures for image+speech inputs to improve food classification accuracy.</li>
+              <li>Built scalable data collection and preprocessing pipelines; created a web scraper to gather training data at scale.</li>
+              <li>Improved model robustness and F1 scores through careful dataset cleaning and augmentation.</li>
             </ul>
           </div>
           <div class="modal-links">
-            <a href="#" class="modal-link">
-              <i class="fab fa-github"></i> View on GitHub
+            <a href="https://github.com/sgowdaks/food-detection" class="modal-link" target="_blank">
+              <i class="fab fa-github"></i> GitHub Repo
             </a>
-            <a href="#" class="modal-link">
-              <i class="fas fa-chart-bar"></i> Analytics Dashboard
+            <a href="https://github.com/sgowdaks/food-detection" class="modal-link" target="_blank">
+              <i class="fas fa-book"></i> Project Details
             </a>
           </div>
         </div>
@@ -1386,36 +1490,35 @@
       <div id="project3" class="project-modal">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title"><i class="fas fa-cloud"></i> Multi-Cloud Integration Platform</h3>
+            <h3 class="modal-title"><i class="fas fa-spider"></i> Nichirin: Webcrawler + Retrieval Augmented Generator</h3>
             <button class="modal-close" onclick="closeProjectModal('project3')">×</button>
           </div>
           <div class="modal-tech-stack">
-            <span class="modal-tech-tag">Azure</span>
-            <span class="modal-tech-tag">AWS</span>
-            <span class="modal-tech-tag">Terraform</span>
-            <span class="modal-tech-tag">Docker</span>
-            <span class="modal-tech-tag">Kubernetes</span>
+            <span class="modal-tech-tag">Apache Solr</span>
+            <span class="modal-tech-tag">Apache Spark</span>
+            <span class="modal-tech-tag">Python</span>
+            <span class="modal-tech-tag">Scrapy</span>
+            <span class="modal-tech-tag">Selenium</span>
           </div>
           <p class="modal-description">
-            Designed and implemented a unified platform for managing infrastructure across multiple cloud providers, providing centralized monitoring, cost optimization, and seamless resource orchestration between Azure and AWS environments.
+            Nichirin is a multi-level web crawler and retrieval-augmented generator that uses Apache Solr for text indexing and retrieval. It integrates Apache Spark for parallel processing to scale web crawling and indexing, and includes preprocessing steps to structure raw inputs for downstream embedding and retrieval.
           </p>
           <div class="modal-features">
             <h4>Platform Features:</h4>
             <ul>
-              <li>Cross-cloud resource provisioning with unified templates</li>
-              <li>Centralized monitoring and alerting across all cloud platforms</li>
-              <li>Intelligent cost optimization with automated recommendations</li>
-              <li>Automated backup and disaster recovery across regions</li>
-              <li>Single-pane-of-glass dashboard for multi-cloud visibility</li>
-              <li>Compliance monitoring and automated remediation</li>
+              <li>Multi-level crawling with configurable depth and rate limits.</li>
+              <li>Apache Solr-based indexing for fast full-text retrieval.</li>
+              <li>Spark integration for parallel processing and scalable indexing.</li>
+              <li>Preprocessing strategies to clean and structure raw HTML/text for embeddings.</li>
+              <li>Published to PyPI (pip install nichirin) and open sourced on GitHub.</li>
             </ul>
           </div>
           <div class="modal-links">
-            <a href="#" class="modal-link">
-              <i class="fab fa-github"></i> View on GitHub
+            <a href="https://github.com/sgowdaks/nichirin" class="modal-link" target="_blank">
+              <i class="fab fa-github"></i> GitHub Repo
             </a>
-            <a href="#" class="modal-link">
-              <i class="fas fa-book"></i> Documentation
+            <a href="https://pypi.org/project/nichirin/" class="modal-link" target="_blank">
+              <i class="fas fa-box"></i> PyPI (pip install nichirin)
             </a>
           </div>
         </div>

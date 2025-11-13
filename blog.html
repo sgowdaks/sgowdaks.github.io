@@ -934,7 +934,7 @@
       flex-direction: column;
 
 
-      gap: 2rem;
+      gap: 3rem;
 
 
     }
@@ -1777,30 +1777,6 @@
 
 
 
-      <div class="sidebar-card">
-
-
-        <h3>Newsletter</h3>
-
-
-        <p style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-muted);">Get notified about new posts and tech insights.</p>
-
-
-        <form class="newsletter-form">
-
-
-          <input type="email" placeholder="Your email" required>
-
-
-          <button type="submit"><i class="fas fa-paper-plane"></i> Subscribe</button>
-
-
-        </form>
-
-
-      </div>
-
-
     </aside>
 
 
@@ -2338,7 +2314,25 @@
 
 
 
-        tagCloudContainer.innerHTML = Object.keys(tagCounts).map(tag => 
+        // Sort tags by count and limit to top 10
+
+
+        const sortedTags = Object.entries(tagCounts)
+
+
+          .sort((a, b) => b[1] - a[1])
+
+
+          .slice(0, 10)
+
+
+          .map(([tag]) => tag);
+
+
+
+
+
+        tagCloudContainer.innerHTML = sortedTags.map(tag => 
 
 
           `<a href="#" class="tag" data-tag="${tag}">${tag}</a>`

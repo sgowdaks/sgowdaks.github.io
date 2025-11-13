@@ -934,7 +934,7 @@
       flex-direction: column;
 
 
-      gap: 3rem;
+      gap: 4rem;
 
 
     }
@@ -965,6 +965,21 @@
 
 
       transition: all 0.3s ease;
+
+
+      margin-bottom: 3rem;
+
+
+    }
+
+
+
+
+
+    .sidebar-card:last-child {
+
+
+      margin-bottom: 0;
 
 
     }
@@ -1621,10 +1636,10 @@
   <section class="hero" id="home">
 
 
-    <h1>Cloud Engineering & Life Thoughts</h1>
+    <h1>Notes on tech & life</h1>
 
 
-    <p>Exploring Azure, AI, networking, and personal reflections on the tech journey</p>
+    <p>Collection of notes on my tech exploration and the insights gained throughout the journey.</p>
 
 
     <div class="hero-buttons">
@@ -1660,7 +1675,7 @@
           <h2><i class="fas fa-blog"></i> Latest Posts</h2>
 
 
-          <p>Thoughts on technology, cloud engineering, and life</p>
+          <p>Thoughts on technology and life</p>
 
 
           <div class="category-filter" id="category-filter">
@@ -2218,13 +2233,28 @@
         const recentPostsContainer = document.getElementById('recent-posts');
 
 
-        if (!recentPostsContainer) return;
+        if (!recentPostsContainer) {
+
+
+          console.error('Recent posts container not found');
+
+
+          return;
+
+
+        }
 
 
 
 
 
         const recentPosts = window.BlogManager.getRecentPosts(5);
+
+
+        console.log('Recent posts to render:', recentPosts.length, recentPosts);
+
+
+        
 
 
         if (recentPosts.length === 0) {
@@ -2249,6 +2279,12 @@
 
 
         ).join('');
+
+
+        
+
+
+        console.log('Recent posts rendered, HTML:', recentPostsContainer.innerHTML);
 
 
       }

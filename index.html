@@ -1006,16 +1006,17 @@
         font-size: 2.8rem;
       }
       
+      /* Keep 2-column layouts on tablets */
       .skills-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
       }
       
       .experience-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
       }
       
       .projects-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
       }
     }
 
@@ -1053,10 +1054,27 @@
         justify-content: center;
       }
 
+      /* About section - photo first, then content */
       .about-content {
-        grid-template-columns: 1fr;
+        display: flex !important;
+        flex-direction: column !important;
         text-align: center;
-        gap: 2rem;
+      }
+
+      .about-content > div:first-child {
+        order: -1;
+      }
+      
+      .about-content > div {
+        margin-bottom: 2rem;
+      }
+
+      .profile-card {
+        margin: 0 auto 2rem auto;
+      }
+      
+      .about-content > div:last-child {
+        margin-bottom: 0;
       }
 
       .main-content {
@@ -1092,6 +1110,32 @@
 
       .profile-card p {
         font-size: 0.85rem;
+      }
+
+      /* Experience and Education - stack vertically */
+      .experience-grid {
+        display: block !important;
+      }
+      
+      .experience-grid > div {
+        margin-bottom: 2.5rem;
+      }
+      
+      .experience-grid > div:last-child {
+        margin-bottom: 0;
+      }
+
+      /* Skills grid - one column */
+      .skills-grid {
+        display: block !important;
+      }
+      
+      .skills-grid > div {
+        margin-bottom: 1rem;
+      }
+      
+      .skills-grid > div:last-child {
+        margin-bottom: 0;
       }
 
       .skills-section h3 {
@@ -1148,6 +1192,19 @@
         font-size: 0.75rem;
       }
 
+      /* Projects - one column */
+      .projects-grid {
+        display: block !important;
+      }
+      
+      .projects-grid > div {
+        margin-bottom: 1.5rem;
+      }
+      
+      .projects-grid > div:last-child {
+        margin-bottom: 0;
+      }
+
       .project-card {
         padding: 1.5rem;
         min-height: 180px;
@@ -1182,8 +1239,18 @@
         justify-content: center;
       }
 
+      /* Latest Posts - one column */
       .blog-preview {
         grid-template-columns: 1fr;
+      }
+      
+      .section h2 {
+        font-size: 1.5rem;
+      }
+      
+      .section p {
+        font-size: 0.85rem;
+        line-height: 1.5;
       }
 
       .blog-card h4 {
@@ -1192,6 +1259,12 @@
 
       .blog-card p {
         font-size: 0.85rem;
+        line-height: 1.5;
+      }
+
+      .blog-card .category {
+        font-size: 0.75rem;
+        padding: 5px 12px;
       }
 
       .modal-content {

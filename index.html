@@ -720,12 +720,13 @@
     }
 
     .modal-tech-tag {
-      background: var(--primary-color);
-      color: white;
-      padding: 6px 12px;
-      border-radius: 15px;
+      background: transparent;
+      color: var(--text-color);
+      padding: 6px 14px;
+      border-radius: 999px;
       font-size: 0.8rem;
       font-weight: 500;
+      border: 1px solid var(--border-color);
     }
 
     .modal-description {
@@ -768,27 +769,25 @@
 
     .modal-links {
       display: flex;
-      gap: 1rem;
       flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
 
     .modal-link {
-      background: var(--primary-color);
-      color: white;
+      color: var(--primary-color);
       text-decoration: none;
-      padding: 0.8rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 500;
-      display: flex;
+      font-weight: 600;
+      display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      transition: all 0.3s ease;
+      gap: 0.4rem;
+      padding: 0;
     }
 
     .modal-link:hover {
-      background: var(--accent-color);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      text-decoration: underline;
+      transform: none;
+      box-shadow: none;
     }
 
     .project-card::before {
@@ -820,10 +819,10 @@
     }
 
     .project-card .tech-tag {
-      background: var(--primary-color);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 12px;
+      background: transparent;
+      color: var(--text-color);
+      padding: 4px 10px;
+      border-radius: 999px;
       font-size: 0.8rem;
       font-weight: 500;
       border: 1px solid var(--border-color);
@@ -930,8 +929,6 @@
       color: white;
     }
 
-    .contact-card h4 {
-      margin-bottom: 0.5rem;
     .contact-card h4 {
       margin-bottom: 0.5rem;
       color: var(--text-color);
@@ -1058,7 +1055,9 @@
       .about-content {
         display: flex !important;
         flex-direction: column !important;
+        align-items: center;
         text-align: center;
+        gap: 1.5rem;
       }
 
       .about-content > div:first-child {
@@ -1066,15 +1065,15 @@
       }
       
       .about-content > div {
-        margin-bottom: 2rem;
+        width: 100%;
+      }
+
+      .about-content p {
+        text-align: left;
       }
 
       .profile-card {
-        margin: 0 auto 2rem auto;
-      }
-      
-      .about-content > div:last-child {
-        margin-bottom: 0;
+        margin: 0 auto;
       }
 
       .main-content {
@@ -1114,28 +1113,16 @@
 
       /* Experience and Education - stack vertically */
       .experience-grid {
-        display: block !important;
-      }
-      
-      .experience-grid > div {
-        margin-bottom: 2.5rem;
-      }
-      
-      .experience-grid > div:last-child {
-        margin-bottom: 0;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2rem;
       }
 
       /* Skills grid - one column */
       .skills-grid {
-        display: block !important;
-      }
-      
-      .skills-grid > div {
-        margin-bottom: 1rem;
-      }
-      
-      .skills-grid > div:last-child {
-        margin-bottom: 0;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1rem;
       }
 
       .skills-section h3 {
@@ -1194,15 +1181,9 @@
 
       /* Projects - one column */
       .projects-grid {
-        display: block !important;
-      }
-      
-      .projects-grid > div {
-        margin-bottom: 1.5rem;
-      }
-      
-      .projects-grid > div:last-child {
-        margin-bottom: 0;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.5rem;
       }
 
       .project-card {
@@ -1767,6 +1748,14 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
             <h3 class="modal-title"><i class="fab fa-microsoft"></i> Azure Network Automation</h3>
             <button class="modal-close" onclick="closeProjectModal('project1')">×</button>
           </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-external-link-alt"></i> Live Demo
+            </a>
+          </div>
           <div class="modal-tech-stack">
             <span class="modal-tech-tag">Azure</span>
             <span class="modal-tech-tag">Python</span>
@@ -1788,14 +1777,7 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
               <li>Integration with existing ITSM tools for seamless operations</li>
             </ul>
           </div>
-          <div class="modal-links">
-            <a href="#" class="modal-link">
-              <i class="fab fa-github"></i> View on GitHub
-            </a>
-            <a href="#" class="modal-link">
-              <i class="fas fa-external-link-alt"></i> Live Demo
-            </a>
-          </div>
+          
         </div>
       </div>
 
@@ -1804,6 +1786,14 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
           <div class="modal-header">
             <h3 class="modal-title"><i class="fas fa-apple-alt"></i> Multi-Modal Food Classification in a Diet Tracking System</h3>
             <button class="modal-close" onclick="closeProjectModal('project2')">×</button>
+          </div>
+          <div class="modal-links">
+            <a href="https://github.com/sgowdaks/food-detection" class="modal-link" target="_blank">
+              <i class="fab fa-github"></i> GitHub Repo
+            </a>
+            <a href="https://github.com/sgowdaks/food-detection" class="modal-link" target="_blank">
+              <i class="fas fa-book"></i> Project Details
+            </a>
           </div>
           <div class="modal-tech-stack">
             <span class="modal-tech-tag">PyTorch</span>
@@ -1823,14 +1813,6 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
               <li>Improved model robustness and F1 scores through careful dataset cleaning and augmentation.</li>
             </ul>
           </div>
-          <div class="modal-links">
-            <a href="https://github.com/sgowdaks/food-detection" class="modal-link" target="_blank">
-              <i class="fab fa-github"></i> GitHub Repo
-            </a>
-            <a href="https://github.com/sgowdaks/food-detection" class="modal-link" target="_blank">
-              <i class="fas fa-book"></i> Project Details
-            </a>
-          </div>
         </div>
       </div>
 
@@ -1839,6 +1821,14 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
           <div class="modal-header">
             <h3 class="modal-title"><i class="fas fa-spider"></i> Nichirin: Webcrawler + Retrieval Augmented Generator</h3>
             <button class="modal-close" onclick="closeProjectModal('project3')">×</button>
+          </div>
+          <div class="modal-links">
+            <a href="https://github.com/sgowdaks/nichirin" class="modal-link" target="_blank">
+              <i class="fab fa-github"></i> GitHub Repo
+            </a>
+            <a href="https://pypi.org/project/nichirin/" class="modal-link" target="_blank">
+              <i class="fas fa-box"></i> PyPI (pip install nichirin)
+            </a>
           </div>
           <div class="modal-tech-stack">
             <span class="modal-tech-tag">Apache Solr</span>
@@ -1860,14 +1850,6 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
               <li>Published to PyPI (pip install nichirin) and open sourced on GitHub.</li>
             </ul>
           </div>
-          <div class="modal-links">
-            <a href="https://github.com/sgowdaks/nichirin" class="modal-link" target="_blank">
-              <i class="fab fa-github"></i> GitHub Repo
-            </a>
-            <a href="https://pypi.org/project/nichirin/" class="modal-link" target="_blank">
-              <i class="fas fa-box"></i> PyPI (pip install nichirin)
-            </a>
-          </div>
         </div>
       </div>
 
@@ -1876,6 +1858,14 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
           <div class="modal-header">
             <h3 class="modal-title"><i class="fas fa-shield-alt"></i> Security Compliance Automation</h3>
             <button class="modal-close" onclick="closeProjectModal('project4')">×</button>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-shield-alt"></i> Security Report
+            </a>
           </div>
           <div class="modal-tech-stack">
             <span class="modal-tech-tag">Azure Policy</span>
@@ -1898,14 +1888,6 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
               <li>Integration with SIEM tools for enhanced threat detection</li>
             </ul>
           </div>
-          <div class="modal-links">
-            <a href="#" class="modal-link">
-              <i class="fab fa-github"></i> View on GitHub
-            </a>
-            <a href="#" class="modal-link">
-              <i class="fas fa-shield-alt"></i> Security Report
-            </a>
-          </div>
         </div>
       </div>
 
@@ -1914,6 +1896,14 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
           <div class="modal-header">
             <h3 class="modal-title"><i class="fas fa-robot"></i> DevOps Pipeline Optimizer</h3>
             <button class="modal-close" onclick="closeProjectModal('project5')">×</button>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-external-link-alt"></i> Documentation
+            </a>
           </div>
           <div class="modal-tech-stack">
             <span class="modal-tech-tag">Azure DevOps</span>
@@ -1936,14 +1926,6 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
               <li>Integration with Azure Boards for automated tracking</li>
             </ul>
           </div>
-          <div class="modal-links">
-            <a href="#" class="modal-link">
-              <i class="fab fa-github"></i> View on GitHub
-            </a>
-            <a href="#" class="modal-link">
-              <i class="fas fa-external-link-alt"></i> Documentation
-            </a>
-          </div>
         </div>
       </div>
 
@@ -1952,6 +1934,14 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
           <div class="modal-header">
             <h3 class="modal-title"><i class="fas fa-database"></i> Cloud Cost Analytics Dashboard</h3>
             <button class="modal-close" onclick="closeProjectModal('project6')">×</button>
+          </div>
+          <div class="modal-links">
+            <a href="#" class="modal-link">
+              <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a href="#" class="modal-link">
+              <i class="fas fa-chart-line"></i> Live Demo
+            </a>
           </div>
           <div class="modal-tech-stack">
             <span class="modal-tech-tag">Power BI</span>
@@ -1973,14 +1963,6 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
               <li>Actionable optimization recommendations saving 25% on average</li>
               <li>Customizable alerts and automated reporting</li>
             </ul>
-          </div>
-          <div class="modal-links">
-            <a href="#" class="modal-link">
-              <i class="fab fa-github"></i> View on GitHub
-            </a>
-            <a href="#" class="modal-link">
-              <i class="fas fa-chart-line"></i> Live Demo
-            </a>
           </div>
         </div>
       </div>
@@ -2309,4 +2291,3 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
   </script>
 </body>
 </html>
-

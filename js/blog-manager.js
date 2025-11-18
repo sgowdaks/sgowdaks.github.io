@@ -9,6 +9,24 @@
   // Blog posts database
   const blogPosts = [
     {
+      id: 'kv-caching-llm-inference-optimization',
+      title: 'KV Caching: The Hidden Engine Behind Fast LLM Inference',
+      date: '2025-11-17',
+      category: 'tech',
+      categoryLabel: 'Technology',
+      excerpt: 'Deep dive into how Key-Value caching transforms LLM inference from impossibly slow to lightning fast, with practical examples and memory trade-offs.',
+      tags: ['LLM', 'Caching', 'Performance', 'AI', 'Optimization']
+    },
+    {
+      id: 'grouped-query-attention-llm-efficiency',
+      title: 'Understanding Grouped Query Attention: The Secret Behind Efficient LLM Inference',
+      date: '2025-11-17',
+      category: 'tech',
+      categoryLabel: 'Technology',
+      excerpt: 'How reducing 32 KV heads to just 4 speeds up language models without breaking them. A deep dive into the memory optimization technique behind modern LLMs.',
+      tags: ['LLM', 'MachineLearning', 'Attention', 'Optimization', 'AI']
+    },
+    {
       id: 'azure-cognitive-services-network-monitoring',
       title: 'Getting Started with Azure Cognitive Services in Network Monitoring',
       date: '2025-11-08',

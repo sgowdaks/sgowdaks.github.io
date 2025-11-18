@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Understanding Grouped Query Attention: The Secret Behind Efficient LLM Inference - Shivani Gowda KS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+  
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Source Serif 4', 'Georgia', serif;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .post-category {
+      background: var(--accent-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-light);
+      background: var(--bg-secondary);
+      padding: 1rem 1rem 1rem 2rem;
+      border-radius: 4px;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .back-to-blog {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px 24px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .post-content table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .post-title {
+        font-size: 2rem;
+      }
+      
+      .post-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      
+      .post-content {
+        font-size: 1rem;
+      }
+      
+      .post-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+      
+      .visual-box {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
+
+  <div class="container">
+    <div class="post-header">
+      <h1 class="post-title">Understanding Grouped Query Attention: The Secret Behind Efficient LLM Inference</h1>
+      <div class="post-subtitle">How reducing 32 KV heads to just 4 speeds up language models without breaking them</div>
+      <div class="post-meta">
+        <span class="post-category">Technology</span>
+        <span><i class="far fa-calendar"></i> November 17, 2025</span>
+        <span><i class="far fa-clock"></i> 15 min read</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+      <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p>
+      
+      <h2>The Problem: LLMs Are Memory Hungry</h2>
+      
+      <p>When you chat with ChatGPT or generate text with any large language model (LLM), something interesting happens behind the scenes. The model doesn't just process your entire conversation from scratch every time it generates a new word. That would be incredibly slow!</p>
+
+      <p>Instead, it uses a clever trick called <strong>KV caching</strong>. But even with caching, there's a problem: <strong>memory</strong>.</p>
+
+      <h2>A Quick Refresher: How Transformers Work</h2>
+
+      <p>Transformer models (like GPT, Llama, Qwen) use something called <strong>attention</strong>. Think of it like this:</p>
+
+      <p>When writing the next word, the model asks:</p>
+      <ul>
+        <li><strong>Query (Q):</strong> "What should I focus on?"</li>
+        <li><strong>Key (K):</strong> "What information is available?"</li>
+        <li><strong>Value (V):</strong> "What are the actual values of that information?"</li>
+      </ul>
+
+      <p>For each word, we compute:</p>
+      <pre><code>Attention = softmax(Q × K^T) × V</code></pre>
+
+      <p>This tells the model which previous words to "pay attention to" when generating the next one.</p>
+
+      <h3>Multi-Head Attention: Looking from Multiple Perspectives</h3>
+
+      <p>Instead of doing this once, we do it <strong>32 times in parallel</strong> (in Qwen3-8B). Each is called a "head."</p>
+
+      <p><strong>Why?</strong> Each head can learn to focus on different things:</p>
+      <ul>
+        <li>Head 1 might focus on grammar</li>
+        <li>Head 2 might focus on topics</li>
+        <li>Head 3 might focus on entities</li>
+        <li>... and so on</li>
+      </ul>
+
+      <p>This is called <strong>Multi-Head Attention (MHA)</strong>.</p>
+
+      <h2>The Traditional Approach: Multi-Head Attention (MHA)</h2>
+
+      <p>In classic transformers:</p>
+      <pre><code>32 Query heads (Q)
+32 Key heads (K)
+32 Value heads (V)</code></pre>
+
+      <p>Every Q head gets its own K and V head. Simple and powerful!</p>
+
+      <h3>The Memory Problem</h3>
+
+      <p>Let's say you're generating a 1000-word response. For <strong>each layer</strong> (Qwen3-8B has 36 layers):</p>
+
+      <p><strong>Memory needed for KV cache:</strong></p>
+      <pre><code>32 K heads × 1000 tokens × 128 dimensions × 4 bytes = 16.4 MB
+32 V heads × 1000 tokens × 128 dimensions × 4 bytes = 16.4 MB
+
+Per layer: 32.8 MB
+Total (36 layers): 1.18 GB just for the cache!</code></pre>
+
+      <p>For longer conversations (10,000 tokens), you'd need <strong>11.8 GB</strong> just for KV cache!</p>
+
+      <p><strong>Problem:</strong> This limits:</p>
+      <ul>
+        <li>How much you can fit on a GPU</li>
+        <li>How many users you can serve simultaneously</li>
+        <li>How long conversations can be</li>
+      </ul>
+
+      <h2>The Solution: Grouped Query Attention (GQA)</h2>
+
+      <p>Here's the brilliant insight: <strong>Not every Q head needs its own K and V!</strong></p>
+
+      <p>Instead of 32 separate K/V heads, what if we used just <strong>8 K/V heads</strong> and <strong>shared</strong> them across query heads?</p>
+
+      <blockquote>
+        <p>From the Qwen3-8B configuration:</p>
+        <pre><code>"num_attention_heads": 32,
+"num_key_value_heads": 8,
+
+groups = num_attention_heads / num_key_value_heads
+       = 32 / 8 = 4
+
+So each K/V head serves 4 query heads → GQA</code></pre>
+      </blockquote>
+
+      <h3>Grouped Query Attention in Qwen3-8B</h3>
+
+      <pre><code>32 Query heads (Q)  ←──┐
+                       │
+8 Key heads (K)        │ Share!
+8 Value heads (V)  ←───┘
+
+Each K/V head serves 4 Q heads (32 ÷ 8 = 4)</code></pre>
+
+      <p><strong>Grouping:</strong></p>
+      <pre><code>Q heads 0-3   → Use K head 0, V head 0
+Q heads 4-7   → Use K head 1, V head 1
+Q heads 8-11  → Use K head 2, V head 2
+...and so on</code></pre>
+
+      <h3>Memory Savings</h3>
+
+      <p><strong>With GQA:</strong></p>
+      <pre><code>8 K heads × 1000 tokens × 128 dimensions × 4 bytes = 4.1 MB
+8 V heads × 1000 tokens × 128 dimensions × 4 bytes = 4.1 MB
+
+Per layer: 8.2 MB (was 32.8 MB)
+Total (36 layers): 295.2 MB (was 1.18 GB)
+
+4× less memory! 🎉</code></pre>
+
+      <h2>How Does This Actually Work? A Step-by-Step Example</h2>
+
+      <p>Let's trace through an example with the prompt: <strong>"What is AI?"</strong></p>
+
+      <h3>Iteration 1: Processing the Prompt</h3>
+
+      <p><strong>Input:</strong> 3 tokens: ["What", "is", "AI"]</p>
+
+      <h4>Step 1: Create Q, K, V</h4>
+
+      <pre><code># Each token gets transformed into Q, K, V
+hidden_states = embed(["What", "is", "AI"])  # Shape: [3, 4096]
+
+# Project to Query (32 heads)
+Q = q_proj(hidden_states)
+# Result: [3 tokens, 32 heads, 128 dimensions]
+
+# Project to Key (only 8 heads!)
+K = k_proj(hidden_states)
+# Result: [3 tokens, 8 heads, 128 dimensions]
+
+# Project to Value (only 8 heads!)
+V = v_proj(hidden_states)
+# Result: [3 tokens, 8 heads, 128 dimensions]</code></pre>
+
+      <p><strong>Key point:</strong> K and V only have 8 heads instead of 32!</p>
+
+      <h4>Step 2: Normalize and Add Position</h4>
+
+      <pre><code># Normalize Q and K (for stability)
+Q = normalize(Q)
+K = normalize(K)
+
+# Add position encoding to K using RoPE
+# This tells K "where" each token is
+K = apply_rotary_position_encoding(K, positions=[0, 1, 2])</code></pre>
+
+      <h4>Step 3: Cache K and V</h4>
+
+      <pre><code># First iteration: cache is empty
+past_K = []  # Empty
+past_V = []  # Empty
+
+# Concatenate (but past is empty, so just keep new)
+K_cached = concat(past_K, K)  # = K (3 tokens)
+V_cached = concat(past_V, V)  # = V (3 tokens)
+
+# Save for next iteration!
+save_for_next_iteration(K_cached, V_cached)</code></pre>
+
+      <h4>Step 4: Repeat K and V for All Q Heads</h4>
+
+      <p>Here's where the "grouping" happens:</p>
+
+      <pre><code># We have 8 K/V heads but need 32 to match Q
+K_repeated = repeat_each_kv_4_times(K_cached)
+V_repeated = repeat_each_kv_4_times(V_cached)
+
+# Now shapes match:
+# Q: [3 tokens, 32 heads, 128 dim]
+# K: [3 tokens, 32 heads, 128 dim] (but only 8 unique!)
+# V: [3 tokens, 32 heads, 128 dim] (but only 8 unique!)</code></pre>
+
+      <p><strong>What this looks like:</strong></p>
+      <pre><code>K head 0 → copied to K[0], K[1], K[2], K[3]
+K head 1 → copied to K[4], K[5], K[6], K[7]
+K head 2 → copied to K[8], K[9], K[10], K[11]
+...and so on</code></pre>
+
+      <h2>Visualizing the Grouping</h2>
+
+      <p>Here's what happens in the attention computation:</p>
+
+      <div class="visual-box">
+┌─────────────────────────────────────────────────────────┐
+│ QUERY HEADS (32 total)                                  │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  Q0  Q1  Q2  Q3  ← Group 1                             │
+│   └───┴───┴───┘                                         │
+│         ↓                                               │
+│     K0, V0  ← One K/V head shared by 4 Q heads         │
+│                                                          │
+│  Q4  Q5  Q6  Q7  ← Group 2                             │
+│   └───┴───┴───┘                                         │
+│         ↓                                               │
+│     K1, V1  ← One K/V head shared by 4 Q heads         │
+│                                                          │
+│  Q8  Q9  Q10 Q11 ← Group 3                             │
+│   └───┴───┴───┘                                         │
+│         ↓                                               │
+│     K2, V2  ← One K/V head shared by 4 Q heads         │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+      </div>
+
+      <p><strong>Each Q head still operates independently!</strong> They just share K and V.</p>
+
+      <h2>Why Does This Work?</h2>
+
+      <h3>Intuition</h3>
+
+      <p>Think of it like a study group:</p>
+
+      <p><strong>Multi-Head Attention (MHA):</strong></p>
+      <ul>
+        <li>32 students, each with their own textbook</li>
+        <li>Everyone can study independently</li>
+        <li>But you need 32 textbooks (expensive!)</li>
+      </ul>
+
+      <p><strong>Grouped Query Attention (GQA):</strong></p>
+      <ul>
+        <li>32 students, but only 8 textbooks</li>
+        <li>Students form groups of 4 to share textbooks</li>
+        <li>Each student still takes their own notes (queries)</li>
+        <li>But they reference shared material (keys/values)</li>
+      </ul>
+
+      <h3>What Gets Shared vs What's Unique</h3>
+
+      <p><strong>Shared (K and V):</strong></p>
+      <ul>
+        <li>The "context" - what information is available</li>
+        <li>The "content" - the actual values to attend to</li>
+        <li>4× memory savings!</li>
+      </ul>
+
+      <p><strong>Unique (Q):</strong></p>
+      <ul>
+        <li>Each head still has its own query</li>
+        <li>Each head can focus on different aspects</li>
+        <li>Model capacity mostly preserved!</li>
+      </ul>
+
+      <h3>The Trade-off</h3>
+
+      <p><strong>Benefits:</strong></p>
+      <ul>
+        <li>4× less KV cache memory</li>
+        <li>Faster inference (less data to move)</li>
+        <li>Can handle longer contexts</li>
+        <li>Can serve more users simultaneously</li>
+      </ul>
+
+      <p><strong>Cost:</strong></p>
+      <ul>
+        <li>Slight decrease in model quality (~1-3%)</li>
+        <li>Less diversity in what different heads can attend to</li>
+      </ul>
+
+      <p><strong>In practice:</strong> The trade-off is worth it! Models like Llama 2, Mistral, and Qwen use GQA.</p>
+
+      <h2>Comparing the Approaches</h2>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Multi-Head Attention (MHA)</th>
+              <th>Multi-Query Attention (MQA)</th>
+              <th>Grouped Query Attention (GQA)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Q heads</td>
+              <td>32</td>
+              <td>32</td>
+              <td>32</td>
+            </tr>
+            <tr>
+              <td>K heads</td>
+              <td>32</td>
+              <td>1</td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td>V heads</td>
+              <td>32</td>
+              <td>1</td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td>KV Memory</td>
+              <td>100% (baseline)</td>
+              <td>3.125% (32× savings)</td>
+              <td>25% (4× savings)</td>
+            </tr>
+            <tr>
+              <td>Quality</td>
+              <td>100% (best)</td>
+              <td>~95% (some loss)</td>
+              <td>~98% (minimal loss)</td>
+            </tr>
+            <tr>
+              <td>Used in</td>
+              <td>GPT-3, BERT</td>
+              <td>PaLM, Falcon</td>
+              <td>Llama 2, Mistral, Qwen</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>GQA is the sweet spot:</strong> Great memory savings with minimal quality loss!</p>
+
+      <h2>Code Example: The Key Lines</h2>
+
+      <p>Here's the actual code that implements GQA:</p>
+
+      <pre><code># Step 1: Create Q, K, V with different head counts
+q = layer.q_proj(hidden_states).view(-1, 32, 128)  # 32 heads
+k = layer.k_proj(hidden_states).view(-1, 8, 128)   # Only 8 heads!
+v = layer.v_proj(hidden_states).view(-1, 8, 128)   # Only 8 heads!
+
+# Step 2: Apply position encoding to K
+k = k * cos_emb + rotate_half(k) * sin_emb
+
+# Step 3: Concatenate with cached K and V (THE CACHING!)
+k = torch.cat((past_k, k), dim=-1)  # Reuse + new
+v = torch.cat((past_v, v), dim=-1)  # Reuse + new
+
+# Step 4: Save for next iteration
+save_key[i] = k  # Will be past_k next time
+save_value[i] = v  # Will be past_v next time
+
+# Step 5: Repeat K and V to match 32 Q heads (THE GROUPING!)
+k = repeat_kv(k, num_groups=4, num_heads=32)  # 8 → 32 (4× repetition)
+v = repeat_kv(v, num_groups=4, num_heads=32)  # 8 → 32 (4× repetition)
+
+# Step 6: Compute attention (now dimensions match!)
+attention_scores = q @ k.transpose(-2, -1)
+attention_weights = softmax(attention_scores)
+output = attention_weights @ v</code></pre>
+
+      <p>The magic happens in:</p>
+      <ol>
+        <li><strong>Line 2-3:</strong> Creating only 8 K/V heads instead of 32</li>
+        <li><strong>Line 8:</strong> Concatenating with cache (reusing old K/V)</li>
+        <li><strong>Line 13-14:</strong> Repeating 8 K/V heads to become 32 (grouping)</li>
+      </ol>
+
+      <h2>Real-World Impact</h2>
+
+      <h3>Before GQA (Traditional MHA)</h3>
+
+      <p><strong>Serving Llama 2 70B:</strong></p>
+      <ul>
+        <li>KV cache per user: ~5 GB</li>
+        <li>GPU memory: 80 GB (A100)</li>
+        <li>Max concurrent users: ~10</li>
+      </ul>
+
+      <h3>After GQA</h3>
+
+      <p><strong>Serving Llama 2 70B with GQA:</strong></p>
+      <ul>
+        <li>KV cache per user: ~1.25 GB (4× less!)</li>
+        <li>GPU memory: 80 GB (A100)</li>
+        <li>Max concurrent users: ~35+ (3.5× more!)</li>
+      </ul>
+
+      <p><strong>Real cost savings:</strong></p>
+      <ul>
+        <li>Fewer GPUs needed</li>
+        <li>Longer conversations possible</li>
+        <li>Better user experience</li>
+      </ul>
+
+      <h2>When to Use What?</h2>
+
+      <p><strong>Use Multi-Head Attention (MHA) when:</strong></p>
+      <ul>
+        <li>Model quality is paramount</li>
+        <li>Memory is not a constraint</li>
+        <li>You're training (not inference)</li>
+      </ul>
+
+      <p><strong>Use Grouped Query Attention (GQA) when:</strong></p>
+      <ul>
+        <li>Serving many users simultaneously</li>
+        <li>Working with long contexts (>2K tokens)</li>
+        <li>Memory is limited</li>
+        <li>Slight quality trade-off is acceptable</li>
+      </ul>
+
+      <p><strong>Use Multi-Query Attention (MQA) when:</strong></p>
+      <ul>
+        <li>Extreme memory constraints</li>
+        <li>Maximum throughput needed</li>
+        <li>Can tolerate more quality loss</li>
+      </ul>
+
+      <h2>Summary</h2>
+
+      <p>Grouped Query Attention is a clever trick that:</p>
+
+      <ol>
+        <li><strong>Reduces KV cache memory by 4×</strong> (from 32 to 8 heads in Qwen3-8B)</li>
+        <li><strong>Shares K/V across query groups</strong> (each K/V serves 4 Q heads)</li>
+        <li><strong>Preserves most model quality</strong> (~1-3% drop)</li>
+        <li><strong>Enables longer contexts and more users</strong></li>
+      </ol>
+
+      <blockquote>
+        The key insight: <strong>Not every query head needs unique keys and values!</strong>
+      </blockquote>
+
+      <p>By grouping queries to share K/V heads, we get most of the benefits of multi-head attention with a fraction of the memory cost.</p>
+
+      <p>This optimization is crucial for making large language models practical in production environments, where memory efficiency directly translates to cost savings and better user experience.</p>
+    </div>
+
+    <div class="post-footer-nav">
+      <a href="azure-cognitive-services-network-monitoring.html" class="nav-btn nav-btn-prev">
+        <i class="fas fa-arrow-left"></i>
+        <div class="nav-btn-text">
+          <span class="nav-label">Previous Post</span>
+          <span class="nav-title">Getting Started with Azure Cognitive Services</span>
+        </div>
+      </a>
+      <a href="kv-caching-llm-inference-optimization.html" class="nav-btn nav-btn-next">
+        <div class="nav-btn-text">
+          <span class="nav-label">Next Post</span>
+          <span class="nav-title">KV Caching: The Hidden Engine Behind Fast LLM Inference</span>
+        </div>
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="post-tags">
+      <span class="tag">LLM</span>
+      <span class="tag">Machine Learning</span>
+      <span class="tag">Attention</span>
+      <span class="tag">Optimization</span>
+      <span class="tag">AI</span>
+    </div>
+
+  </div>
+
+  <!-- Footer (auto-generated by common.js) -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+</body>
+</html>

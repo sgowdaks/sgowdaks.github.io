@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KV Caching: The Hidden Trick Behind Fast LLM Inference - Shivani Gowda KS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+  
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Source Serif 4', 'Georgia', serif;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .post-category {
+      background: var(--accent-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-light);
+      background: var(--bg-secondary);
+      padding: 1rem 1rem 1rem 2rem;
+      border-radius: 4px;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      justify-content: center;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .back-to-blog {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px 24px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .post-content table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .comparison-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .comparison-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .comparison-item h4 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .highlight-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box.danger {
+      background: #f8d7da;
+      border-color: #f5c6cb;
+    }
+
+    .highlight-box.success {
+      background: #d4edda;
+      border-color: #c3e6cb;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .post-title {
+        font-size: 2rem;
+      }
+      
+      .post-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      
+      .post-content {
+        font-size: 1rem;
+      }
+      
+      .post-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+      
+      .visual-box {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+
+      .comparison-box {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
+
+  <div class="container">
+    <div class="post-header">
+      <h1 class="post-title">KV Caching: The Hidden Engine Behind Fast LLM Inference</h1>
+      <div class="post-subtitle">Deep dive into how Key-Value caching transforms LLM inference from impossibly slow to lightning fast</div>
+      <div class="post-meta">
+        <span class="post-category">Technology</span>
+        <span><i class="far fa-calendar"></i> November 17, 2025</span>
+        <span><i class="far fa-clock"></i> 12 min read</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+      <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p>
+      
+      <p>Imagine if every time you wanted to continue a conversation, you had to re-read the entire chat history from the beginning, word by word, just to understand the context. That would be incredibly slow and wasteful, right? Yet this is exactly what Large Language Models (LLMs) would have to do without a clever optimization called <strong>KV Caching</strong>.</p>
+
+      <p>KV Caching is the unsung hero that makes modern AI chat interfaces possible. Without it, generating even a short response would take minutes instead of seconds. Let's explore how this seemingly simple concept revolutionized LLM inference.</p>
+
+      <h2>1. Why We Need KV Caching</h2>
+      
+      <p>To understand the necessity of KV caching, let's first examine what happens during text generation without caching.</p>
+
+      <h3>The Computational Problem</h3>
+
+      <p>During autoregressive text generation, transformers generate one token at a time. For each new token, the model must compute attention over ALL previous tokens in the sequence.</p>
+
+      <p>Each computation requires loading the same data repeatedly from memory. Without caching, the model must:</p>
+
+      <ul>
+        <li>Recompute embeddings for all previous tokens</li>
+        <li>Recompute Key and Value projections for all previous tokens</li>
+        <li>Reload the same weight matrices repeatedly</li>
+        <li>Perform redundant matrix multiplications</li>
+      </ul>
+
+      <p>This results in both computational waste and memory bandwidth saturation.</p>
+
+      <h3>Why KV Caching and Not QKV Caching?</h3>
+
+      <p>You might wonder: "If attention uses Q, K, and V, why do we only cache K and V? Why not cache Q as well?"</p>
+
+      <div class="comparison-box">
+        <div class="comparison-item">
+          <h4>🔍 Q (Query): Position-Dependent</h4>
+          <ul>
+            <li><strong>Changes every step:</strong> Q₁, Q₂, Q₃... are all different</li>
+            <li><strong>Position-aware:</strong> Includes positional encoding for current generation step</li>
+            <li><strong>Context-sensitive:</strong> "What should I look for given where I am in the sequence?"</li>
+            <li><strong>Cannot reuse:</strong> Q for position 5 is useless for position 500</li>
+          </ul>
+        </div>
+        <div class="comparison-item">
+          <h4>🗝️ K,V (Key, Value): Content-Intrinsic</h4>
+          <ul>
+            <li><strong>Token-specific:</strong> K₍hello₎ and V₍hello₎ are always the same regardless of position</li>
+            <li><strong>Context-independent:</strong> "Here's what information I contain"</li>
+            <li><strong>Reusable:</strong> Once computed, they never change</li>
+            <li><strong>Cacheable:</strong> Can be stored and reused across generation steps</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="highlight-box warning">
+        <p><strong>Mathematical Reason:</strong></p>
+        <pre><code>For generating token at position t:
+Q_t = f(position_t, full_context_up_to_t)  # Must be recomputed
+
+For existing token i:
+K_i = f(token_i)  # Only depends on the token itself
+V_i = f(token_i)  # Only depends on the token itself</code></pre>
+        <p>Since K and V are token-intrinsic (don't change based on position), they can be cached.<br>
+        Since Q is position-dependent (changes for each generation step), it cannot be cached.</p>
+      </div>
+
+      <h2>2. How KV Caching Works: A Dimension-Focused Explanation</h2>
+
+      <p>Let's trace through KV caching using concrete dimensions. We'll use a simplified example with:</p>
+
+      <div class="visual-box">
+Model Configuration: <br>
+- Model dimension (d_model): 512 <br>
+- Number of attention heads: 1   <br>
+- Head dimension (d_head): 512 <br>
+- Number of layers: 1 <br>
+- Vocabulary size: 50,000 
+      </div>
+
+      <h3>Step 1: Input Embeddings and Projections</h3>
+
+      <p><strong>Input:</strong> Token sequence ["Hello", "world"]</p>
+
+      <pre><code># Step 1: Token to embeddings
+input_ids = [15496, 995]  # Token IDs for ["Hello", "world"]
+sequence_length = 2
+
+# Embedding lookup
+embeddings = embedding_table[input_ids]  # Shape: [2, 512]
+# Each token becomes a 512-dimensional vector</code></pre>
+
+      <h3>Step 2: Weight Matrix Projections</h3>
+
+      <p>The model has three learned weight matrices for each attention head:</p>
+
+      <pre><code># Weight matrices (learned during training)
+W_q = torch.randn(512, 512)  # Query projection matrix
+W_k = torch.randn(512, 512)  # Key projection matrix  
+W_v = torch.randn(512, 512)  # Value projection matrix
+
+# Project embeddings to Q, K, V
+Q = embeddings @ W_q  # [2, 512] @ [512, 512] = [2, 512]
+K = embeddings @ W_k  # [2, 512] @ [512, 512] = [2, 512]  
+V = embeddings @ W_v  # [2, 512] @ [512, 512] = [2, 512]</code></pre>
+
+      <div class="highlight-box">
+        <p><strong>Key Insight:</strong> At this point, K and V contain all the information about tokens ["Hello", "world"]. These values are independent of what comes next!</p>
+      </div>
+
+      <h3>Step 3: First Generation Step - Computing Attention</h3>
+
+      <p><strong>Goal:</strong> Generate the next token after ["Hello", "world"]</p>
+
+      <p>Here's the crucial insight: <strong>the current query depends on ALL previous keys and values</strong>:</p>
+
+      <pre><code># Current query for position 3 (next token generation)
+Q_current = compute_query_for_position(3)  # [1, 512] - what we're looking for
+
+# This query DEPENDS ON the cached keys and values:
+K_cached = [K_hello, K_world]  # [2, 512] - what info is available
+V_cached = [V_hello, V_world]  # [2, 512] - actual content available
+
+# Attention computation shows the dependency:
+attention_scores = Q_current @ K_cached.transpose(-1, -2)  
+# [1, 512] @ [512, 2] = [1, 2]
+
+# This gives us: [score_for_hello, score_for_world]
+# Example result: [0.3, 0.7] meaning:
+# - 30% attention to "Hello" 
+# - 70% attention to "world"
+
+attention_weights = softmax(attention_scores)  # [1, 2] 
+
+# The context is weighted combination of ALL previous values:
+context = attention_weights @ V_cached  # [1, 2] @ [2, 512] = [1, 512]
+
+# Expanded this means:
+context = 0.3 * V_hello + 0.7 * V_world
+#         ↑               ↑
+#    depends on K₀,V₀   depends on K₁,V₁
+
+# This context vector [512] contains information from BOTH previous tokens
+# and determines what the next token should be</code></pre>
+
+      <div class="highlight-box">
+        <p><strong>Key Dependency Insight:</strong></p>
+        <p>The current query Q₂ doesn't just "look at" K₀,K₁ and V₀,V₁ - it <strong>mathematically depends</strong> on them:</p>
+        <ul>
+          <li><strong>Q₂ × K₀</strong> determines how much to attend to "Hello"</li>
+          <li><strong>Q₂ × K₁</strong> determines how much to attend to "world"</li>
+          <li><strong>Final output = weighted_sum(V₀, V₁)</strong> based on those attention scores</li>
+        </ul>
+        <p>Without K₀,K₁,V₀,V₁, we cannot compute the next token!</p>
+      </div>
+
+      <h3>Step 4: KV Caching - Store Computed Values</h3>
+
+      <p>Instead of discarding K and V, we save them:</p>
+
+      <pre><code># Cache the computed K and V
+kv_cache = {
+    'keys': K,    # [2, 512] - Keys for ["Hello", "world"]  
+    'values': V   # [2, 512] - Values for ["Hello", "world"]
+}
+
+# These cached values represent the "meaning" of previous tokens
+# They won't change in future generation steps!</code></pre>
+
+      <h3>Step 5: Second Generation Step - Reusing Cache</h3>
+
+      <p><strong>Goal:</strong> Generate the token after ["Hello", "world", "!"]</p>
+
+      <pre><code># New token: "!" (assume we generated this)
+new_token_id = 0  # "!" token ID
+new_embedding = embedding_table[new_token_id]  # [512]
+
+# Compute Q, K, V ONLY for the new token
+Q_new = new_embedding @ W_q  # [1, 512] @ [512, 512] = [1, 512]
+K_new = new_embedding @ W_k  # [1, 512] @ [512, 512] = [1, 512]  
+V_new = new_embedding @ W_v  # [1, 512] @ [512, 512] = [1, 512]
+
+# Retrieve cached K, V
+K_cached = kv_cache['keys']    # [2, 512] for ["Hello", "world"]
+V_cached = kv_cache['values']  # [2, 512] for ["Hello", "world"]
+
+# Concatenate: cached + new
+K_total = torch.cat([K_cached, K_new], dim=0)  # [3, 512] for all tokens
+V_total = torch.cat([V_cached, V_new], dim=0)  # [3, 512] for all tokens
+
+# Update cache for next iteration
+kv_cache['keys'] = K_total    # [3, 512]
+kv_cache['values'] = V_total  # [3, 512]</code></pre>
+
+      <h3>Step 6: Attention with Mixed Cached and New Data</h3>
+
+      <pre><code># Compute attention using only the new query
+attention_scores = Q_new @ K_total.transpose(-1, -2)  
+# [1, 512] @ [512, 3] = [1, 3]
+
+# This gives us how much the new token should attend to all previous tokens:
+# attention_scores = [score_for_hello, score_for_world, score_for_exclamation]
+
+attention_weights = softmax(attention_scores)  # [1, 3]
+context = attention_weights @ V_total  # [1, 3] @ [3, 512] = [1, 512]</code></pre>
+
+      <div class="highlight-box success">
+        <p><strong>Efficiency Gain:</strong></p>
+        <ul>
+          <li>✅ <strong>Saved computations:</strong> No recomputation of K,V for ["Hello", "world"]</li>
+          <li>✅ <strong>Saved memory access:</strong> No reloading of previous embeddings</li>
+          <li>✅ <strong>Saved matrix multiplications:</strong> Only 2 new projections instead of 6 total</li>
+        </ul>
+      </div>
+
+      <h3>Dimension Flow Summary</h3>
+
+      <div class="visual-box">
+Without Caching (Step 2): <br>
+  Embeddings: [3, 512] (all tokens) <br>
+  Q, K, V: [3, 512] each (recompute everything) <br>
+
+  <br>
+  
+With Caching (Step 2):  <br>
+  New Embedding: [1, 512] (only new token) <br>
+  Q_new, K_new, V_new: [1, 512] each (only new computations) <br>
+  K_total, V_total: [3, 512] (cached + new)
+  
+Computation Reduction: 66% fewer matrix multiplications!
+      </div>
+
+      <h2>3. Total RAM Requirements for Qwen3-8B with Standard KV Caching</h2>
+
+      <p>Let's calculate the exact RAM requirements to load and run the Qwen3-8B model with standard KV caching (before GQA optimization). We'll use the actual model configuration:</p>
+
+      <div class="visual-box">
+Qwen3-8B Configuration: <br>
+- hidden_size: 4096 <br>
+- max_position_embeddings: 40960 (maximum sequence length) <br>
+- model_type: qwen3 <br>
+- num_attention_heads: 32 <br>
+- num_hidden_layers: 36 <br>
+- Precision: 4 bytes per parameter (float32) <br>
+<br>
+For Standard KV Caching Analysis: <br>
+- Each attention head gets its own K,V cache (32 heads total) <br>
+- Head dimension: 4096 / 32 = 128 dimensions per head
+      </div>
+
+      <h3>1. Model Parameters Memory</h3>
+
+      <pre><code># Qwen3-8B model parameters
+model_parameters = 8_000_000_000  # 8 billion parameters
+bytes_per_param = 4  # float32 = 4 bytes
+
+model_memory = model_parameters * bytes_per_param
+model_memory = 8,000,000,000 * 4 = 32,000,000,000 bytes
+model_memory = 32 GB</code></pre>
+
+      <h3>2. KV Cache Memory (Standard Attention)</h3>
+
+      <p><strong>Scenario:</strong> Processing the maximum sequence length (40,960 tokens)</p>
+
+      <pre><code># KV cache dimensions for standard attention (NOT GQA)
+# Each attention head maintains separate K,V caches
+
+sequence_length = 40960  # max_position_embeddings
+num_layers = 36
+num_attention_heads = 32  # All heads get separate K,V (no GQA)
+head_dimension = 4096 // 32  # 128
+bytes_per_element = 4  # float32
+
+# Per layer KV cache calculation
+k_cache_per_layer = sequence_length * num_attention_heads * head_dimension * bytes_per_element
+v_cache_per_layer = sequence_length * num_attention_heads * head_dimension * bytes_per_element
+
+k_cache_per_layer = 40960 * 32 * 128 * 4 = 671,088,640 bytes = 640 MB
+v_cache_per_layer = 40960 * 32 * 128 * 4 = 671,088,640 bytes = 640 MB
+
+# Total per layer: K + V
+cache_per_layer = k_cache_per_layer + v_cache_per_layer = 1,342,177,280 bytes = 1.28 GB
+
+# Across all layers
+total_kv_cache = cache_per_layer * num_layers
+total_kv_cache = 1.28 GB * 36 = 46.08 GB</code></pre>
+
+      <h3>3. Additional Memory Components</h3>
+
+      <pre><code># Activation buffers for forward pass
+activation_memory = sequence_length * hidden_size * bytes_per_element
+activation_memory = 40960 * 4096 * 4 = 671,088,640 bytes = 640 MB
+
+# Intermediate tensors and gradients (rough estimate)
+intermediate_memory = 2 * 1024 * 1024 * 1024  # ~2 GB
+intermediate_memory = 2 GB
+
+# Total additional memory
+additional_memory = activation_memory + intermediate_memory
+additional_memory = 0.64 + 2 = 2.64 GB</code></pre>
+
+      <h3>4. Total RAM Calculation</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Memory (GB)</th>
+              <th>Percentage</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Model Parameters</td>
+              <td>32.00</td>
+              <td>39.5%</td>
+              <td>8B params × 4 bytes</td>
+            </tr>
+            <tr>
+              <td>KV Cache (40,960 tokens)</td>
+              <td>46.08</td>
+              <td>56.8%</td>
+              <td>32 heads × 36 layers × float32</td>
+            </tr>
+            <tr>
+              <td>Activations</td>
+              <td>0.64</td>
+              <td>0.8%</td>
+              <td>Forward pass buffers</td>
+            </tr>
+            <tr>
+              <td>Intermediate Tensors</td>
+              <td>2.00</td>
+              <td>2.5%</td>
+              <td>Temporary computations</td>
+            </tr>
+            <tr>
+              <td>Memory Overhead</td>
+              <td>0.40</td>
+              <td>0.5%</td>
+              <td>System/framework overhead</td>
+            </tr>
+            <tr>
+              <td><strong>Total RAM Required</strong></td>
+              <td><strong>81.12 GB</strong></td>
+              <td><strong>100%</strong></td>
+              <td><strong>Minimum for full sequence</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>KV caching makes text generation faster and more efficient, but running the full 40k context still requires an 80GB-class GPU. Anything with less memory won't be able to support it.</p>
+
+    </div>
+
+    <div class="post-footer-nav">
+      <a href="grouped-query-attention-llm-efficiency.html" class="nav-btn nav-btn-prev">
+        <i class="fas fa-arrow-left"></i>
+        <div class="nav-btn-text">
+          <span class="nav-label">Previous Post</span>
+          <span class="nav-title">Understanding Grouped Query Attention</span>
+        </div>
+      </a>
+      <div class="nav-btn nav-btn-next nav-btn-placeholder">
+        <div class="nav-btn-text">
+          <span class="nav-label">Next Post</span>
+          <span class="nav-title">You're reading the newest post</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="post-tags">
+      <span class="tag">LLM</span>
+      <span class="tag">Caching</span>
+      <span class="tag">Performance</span>
+      <span class="tag">AI</span>
+      <span class="tag">Optimization</span>
+    </div>
+
+  </div>
+
+  <!-- Footer (auto-generated by common.js) -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+</body>
+</html>

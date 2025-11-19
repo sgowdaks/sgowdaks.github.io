@@ -451,12 +451,12 @@ V_cached = [V_hello, V_world]  # [2, 512] - actual content available
 attention_scores = Q_current @ K_cached.transpose(-1, -2)  
 # [1, 512] @ [512, 2] = [1, 2]
 
+attention_weights = softmax(attention_scores)  # [1, 2]
+
 # This gives us: [score_for_hello, score_for_world]
 # Example result: [0.3, 0.7] meaning:
 # - 30% attention to "Hello" 
 # - 70% attention to "world"
-
-attention_weights = softmax(attention_scores)  # [1, 2] 
 
 # The context is weighted combination of ALL previous values:
 context = attention_weights @ V_cached  # [1, 2] @ [2, 512] = [1, 512]
@@ -556,7 +556,7 @@ With Caching (Step 2):  <br>
 Computation Reduction: 66% fewer matrix multiplications!
       </div>
 
-      <h2>3. Total RAM Requirements for Qwen3-8B with Standard KV Caching</h2>
+      <h2 id="total-ram-requirements">3. Total RAM Requirements for Qwen3-8B with Standard KV Caching</h2>
 
       <p>Let's calculate the exact RAM requirements to load and run the Qwen3-8B model with standard KV caching (before GQA optimization). We'll use the actual model configuration:</p>
 
@@ -617,7 +617,7 @@ total_kv_cache = 1.28 GB * 36 = 46.08 GB</code></pre>
 activation_memory = sequence_length * hidden_size * bytes_per_element
 activation_memory = 40960 * 4096 * 4 = 671,088,640 bytes = 640 MB
 
-# Intermediate tensors and gradients (rough estimate)
+# Intermediate buffers (rough estimate)
 intermediate_memory = 2 * 1024 * 1024 * 1024  # ~2 GB
 intermediate_memory = 2 GB
 
@@ -657,7 +657,7 @@ additional_memory = 0.64 + 2 = 2.64 GB</code></pre>
               <td>Forward pass buffers</td>
             </tr>
             <tr>
-              <td>Intermediate Tensors</td>
+              <td>Intermediate Buffers</td>
               <td>2.00</td>
               <td>2.5%</td>
               <td>Temporary computations</td>
@@ -678,7 +678,60 @@ additional_memory = 0.64 + 2 = 2.64 GB</code></pre>
         </table>
       </div>
 
-      <p>KV caching makes text generation faster and more efficient, but running the full 40k context still requires an 80GB-class GPU. Anything with less memory won't be able to support it.</p>
+      <h3>Impact of Different Precision Levels</h3>
+
+      <p>The calculation above uses <strong>float32 (4 bytes per parameter)</strong>. Let's see how different quantization levels affect total RAM requirements:</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Precision</th>
+              <th>Bytes/Param</th>
+              <th>Model Params</th>
+              <th>KV Cache</th>
+              <th>Other</th>
+              <th>Total RAM</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background: #f8d7da;">
+              <td><strong>FP32 (Float32)</strong></td>
+              <td>4</td>
+              <td>32.00 GB</td>
+              <td>46.08 GB</td>
+              <td>3.04 GB</td>
+              <td><strong>81.12 GB</strong></td>
+            </tr>
+            <tr>
+              <td><strong>FP16 (Float16)</strong></td>
+              <td>2</td>
+              <td>16.00 GB</td>
+              <td>23.04 GB</td>
+              <td>1.52 GB</td>
+              <td><strong>40.56 GB</strong></td>
+            </tr>
+            <tr>
+              <td><strong>INT8 (8-bit)</strong></td>
+              <td>1</td>
+              <td>8.00 GB</td>
+              <td>11.52 GB</td>
+              <td>0.76 GB</td>
+              <td><strong>20.28 GB</strong></td>
+            </tr>
+            <tr style="background: #d4edda;">
+              <td><strong>INT4 (4-bit)</strong></td>
+              <td>0.5</td>
+              <td>4.00 GB</td>
+              <td>5.76 GB</td>
+              <td>0.38 GB</td>
+              <td><strong>10.14 GB</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>KV caching greatly improves text-generation speed and efficiency, but running the full 40k context in full 32-bit precision still needs an 80GB-class GPU. Even though modern deployments commonly use INT8 (8-bit) — which typically reduces memory to around 8.0 GB for weights, 11.52 GB for the KV cache, and 0.76 GB for activations (≈20.28 GB total) — models like Qwen use Grouped Query Attention (GQA), which significantly reduces RAM usage, and this is explained in the next blog. </p>
 
     </div>
 

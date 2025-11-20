@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building a High-Performance ONNX Inference Engine for Qwen LLMs - Shivani Gowda KS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+  
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Source Serif 4', 'Georgia', serif;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .post-category {
+      background: var(--accent-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-light);
+      background: var(--bg-secondary);
+      padding: 1rem 1rem 1rem 2rem;
+      border-radius: 4px;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .back-to-blog {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px 24px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .highlight-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-left: 4px solid #f39c12;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box.danger {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-left: 4px solid #dc3545;
+    }
+
+    .highlight-box.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-left: 4px solid #28a745;
+    }
+
+    .highlight-box p {
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight-box ul {
+      margin-bottom: 0;
+    }
+
+    .post-content a {
+      color: var(--primary-color);
+      text-decoration: underline;
+      transition: color 0.3s ease;
+    }
+
+    .post-content a:hover {
+      color: var(--accent-color);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .post-content table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .post-title {
+        font-size: 2rem;
+      }
+      
+      .post-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      
+      .post-content {
+        font-size: 1rem;
+      }
+      
+      .post-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+      
+      .visual-box {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
+
+  <div class="container">
+    <div class="post-header">
+      <h1 class="post-title">Building a High-Performance ONNX Inference Engine for Qwen LLMs</h1>
+      <div class="post-subtitle">From PyTorch to C++ with GPU Acceleration</div>
+      <div class="post-meta">
+        <span class="post-category">Technology</span>
+        <span><i class="far fa-calendar"></i> November 20, 2025</span>
+        <span><i class="far fa-clock"></i> 10 min read</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+<!-- <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p> -->
+ <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog Is a work in progress]</p>
+      <h1>Building a High-Performance ONNX Inference Engine for Qwen LLMs: From PyTorch to C++ with GPU Acceleration</h1>
+<p><em>A deep dive into exporting Qwen language models to ONNX and building a production-ready C++ inference engine</em></p>
+<hr />
+<h2>TL;DR</h2>
+<p>I built a high-performance ONNX inference engine for Qwen language models that achieves <strong>12+ tokens/sec on GPU</strong> with C++ and CUDA. This article covers the entire journey: from dealing with HuggingFace Transformers' dynamic cache limitations, to implementing a custom forward pass, exporting to ONNX, fixing ONNX Runtime API issues, and optimizing GPU inference with cuDNN 9.</p>
+<p><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">llm-inference</a></p>
+<hr />
+<h2>The Challenge: Running LLMs Efficiently</h2>
+<p>Large Language Models (LLMs) are powerful but resource-intensive. While Python frameworks like HuggingFace Transformers make it easy to prototype, production deployments demand:</p>
+<ul>
+<li><strong>Faster inference</strong> (lower latency)</li>
+<li><strong>Better resource utilization</strong> (efficient GPU usage)</li>
+<li><strong>Lower deployment overhead</strong> (no Python interpreter)</li>
+<li><strong>Cross-platform compatibility</strong></li>
+</ul>
+<p>ONNX (Open Neural Network Exchange) promises to bridge this gap by providing a standardized format that can run on optimized runtimes. But getting there isn't straightforward, especially for complex models like Qwen.</p>
+<hr />
+<h2>Part 1: The Dynamic Cache Problem</h2>
+<h3>Initial Attempt: Direct HuggingFace Export</h3>
+<p>My first attempt was to export Qwen directly using HuggingFace Transformers:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoModelForCausalLM</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;Qwen/Qwen3-8B&quot;</span><span class="p">)</span>
+<span class="n">dummy_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+
+<span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">dummy_input</span><span class="p">,</span>
+    <span class="s2">&quot;qwen.onnx&quot;</span><span class="p">,</span>
+    <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">],</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">],</span>
+    <span class="n">dynamic_axes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;seq_len&quot;</span><span class="p">}}</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Result:</strong> ❌ <strong>Failed with Dynamic Cache Error</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">RuntimeError</span><span class="o">:</span><span class="w"> </span><span class="n">Trying</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="k">export</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n n-Quoted">`DynamicCache`</span><span class="w"> </span><span class="n">but</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="k">current</span><span class="w"> </span><span class="n">version</span><span class="w"> </span>
+<span class="k">of</span><span class="w"> </span><span class="n">ONNX</span><span class="w"> </span><span class="n">doesn</span><span class="s1">&#39;t support dynamic control flow. Please open an issue at </span>
+<span class="s1">https://github.com/pytorch/pytorch/issues</span>
+</code></pre></div>
+
+<h3>The Root Cause</h3>
+<p>Modern transformer models use <strong>KV-cache</strong> (key-value cache) to avoid recomputing attention for previously processed tokens. HuggingFace's default implementation uses <code>DynamicCache</code>, which involves:</p>
+<ul>
+<li>Python dictionaries</li>
+<li>Dynamic list operations</li>
+<li>Runtime-dependent control flow</li>
+</ul>
+<p>None of these translate cleanly to ONNX's static graph format.</p>
+<h3>The Solution: Custom Forward Pass</h3>
+<p>The fix required implementing a custom <code>forward()</code> function that:
+1. <strong>Manages KV-cache explicitly</strong> as input/output tensors
+2. <strong>Uses static operations</strong> (no dynamic lists or dicts)
+3. <strong>Handles cache concatenation</strong> manually</p>
+<p>Here's the key insight - instead of letting HuggingFace manage the cache internally, we expose it as model inputs and outputs:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QWENWrapper</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">input_ids</span><span class="p">,</span>           <span class="c1"># Current token(s)</span>
+        <span class="n">history_len</span><span class="p">,</span>         <span class="c1"># How many tokens already processed</span>
+        <span class="n">ids_len</span><span class="p">,</span>             <span class="c1"># Length of current input</span>
+        <span class="n">attention_mask</span><span class="p">,</span>      <span class="c1"># Mask type (0 or 1)</span>
+        <span class="o">*</span><span class="n">past_key_values</span>     <span class="c1"># Previous KV cache (72 tensors for 36 layers)</span>
+    <span class="p">):</span>
+        <span class="c1"># Reconstruct past_key_values for each layer</span>
+        <span class="n">num_layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_hidden_layers</span>
+        <span class="n">past_kvs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">past_key_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>           <span class="c1"># past_key</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">past_key_values</span><span class="p">[</span><span class="n">num_layers</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>  <span class="c1"># past_value</span>
+            <span class="n">past_kvs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+        <span class="c1"># Run the model</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span>
+            <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+            <span class="n">past_key_values</span><span class="o">=</span><span class="n">past_kvs</span><span class="p">,</span>
+            <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Extract new KV cache</span>
+        <span class="n">new_past_key_values</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">past_key_values</span>
+
+        <span class="c1"># Get logits and compute max token</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">logits</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">max_logit_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Calculate new sequence length</span>
+        <span class="n">kv_seq_len</span> <span class="o">=</span> <span class="n">history_len</span> <span class="o">+</span> <span class="n">ids_len</span>
+
+        <span class="c1"># Return: new KV caches (72 tensors) + token + seq_len</span>
+        <span class="n">output_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_past_key_values</span><span class="p">:</span>
+            <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_past_key_values</span><span class="p">:</span>
+            <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">output_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">max_logit_id</span><span class="p">,</span> <span class="n">kv_seq_len</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_list</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Key Points:</strong>
+- <strong>72 KV tensors</strong> (36 layers × 2 for keys/values) + metadata = 74 outputs
+- <strong>Static graph structure</strong> - no Python loops or conditionals
+- <strong>Explicit cache management</strong> - client code handles passing cache between iterations</p>
+<hr />
+<h2>Part 2: ONNX Export with Optimizations</h2>
+<h3>Export Configuration</h3>
+<p>With the custom forward pass, export becomes straightforward:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
+    <span class="n">wrapped_model</span> <span class="o">=</span> <span class="n">QWENWrapper</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Prepare dummy inputs</span>
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">seq_len</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">num_layers</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_hidden_layers</span>
+    <span class="n">num_kv_heads</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_key_value_heads</span>
+    <span class="n">head_dim</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">//</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_attention_heads</span>
+
+    <span class="n">dummy_input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">dummy_history_len</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">dummy_ids_len</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">seq_len</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">dummy_attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+
+    <span class="c1"># Empty KV caches</span>
+    <span class="n">dummy_past_kvs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span> <span class="o">*</span> <span class="mi">2</span><span class="p">):</span>  <span class="c1"># keys and values</span>
+        <span class="n">dummy_past_kvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_kv_heads</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">head_dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">dummy_input_ids</span><span class="p">,</span> <span class="n">dummy_history_len</span><span class="p">,</span> <span class="n">dummy_ids_len</span><span class="p">,</span> 
+              <span class="n">dummy_attention_mask</span><span class="p">,</span> <span class="o">*</span><span class="n">dummy_past_kvs</span><span class="p">)</span>
+
+    <span class="c1"># Export with dynamic axes</span>
+    <span class="n">dynamic_axes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;seq_len&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Add dynamic axes for all KV caches</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">):</span>
+        <span class="n">dynamic_axes</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;past_key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;past_seq_len&quot;</span><span class="p">}</span>
+        <span class="n">dynamic_axes</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;past_value_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;past_seq_len&quot;</span><span class="p">}</span>
+
+    <span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+        <span class="n">wrapped_model</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">output_path</span><span class="p">,</span>
+        <span class="n">export_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">opset_version</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>  <span class="c1"># Important: 14+ has GPU compatibility issues</span>
+        <span class="n">do_constant_folding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">,</span> <span class="s2">&quot;history_len&quot;</span><span class="p">,</span> <span class="s2">&quot;ids_len&quot;</span><span class="p">,</span> <span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">+</span> 
+                    <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;past_key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)]</span> <span class="o">+</span>
+                    <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;past_value_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)],</span>
+        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;out_key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)]</span> <span class="o">+</span>
+                     <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;out_value_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)]</span> <span class="o">+</span>
+                     <span class="p">[</span><span class="s2">&quot;max_logit_id&quot;</span><span class="p">,</span> <span class="s2">&quot;kv_seq_len&quot;</span><span class="p">],</span>
+        <span class="n">dynamic_axes</span><span class="o">=</span><span class="n">dynamic_axes</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div>
+
+<h3>Why Opset 13?</h3>
+<p>Initially, I used opset 17, but encountered:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">Error</span><span class="o">:</span><span class="w"> </span><span class="n">Could</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">find</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">implementation</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Mul</span><span class="o">(</span><span class="mi">14</span><span class="o">)</span><span class="w"> </span><span class="n">node</span>
+</code></pre></div>
+
+<p><strong>Issue:</strong> ONNX Runtime's GPU builds don't include all CPU fallback kernels for newer opsets.</p>
+<p><strong>Solution:</strong> Use opset 13 for maximum compatibility.</p>
+<hr />
+<h2>Part 3: Building the C++ Inference Engine</h2>
+<h3>Architecture Overview</h3>
+<p>The C++ engine uses:
+- <strong>ONNX Runtime 1.19.0</strong> (GPU build)
+- <strong>tokenizers-cpp</strong> for fast tokenization
+- <strong>nlohmann/json</strong> for configuration
+- <strong>CUDA + cuDNN 9</strong> for GPU acceleration</p>
+<h3>Key Implementation Challenges</h3>
+<h4>Challenge 0: The C++ Tokenizer Problem</h4>
+<p><strong>The Problem:</strong> HuggingFace doesn't provide a C++ tokenizer implementation. While Python developers can directly use <code>transformers.AutoTokenizer</code>, C++ developers face a critical gap in the inference pipeline.</p>
+
+<p><strong>Initial Considerations:</strong></p>
+<ul>
+<li>❌ <strong>Python subprocess:</strong> Massive overhead, defeats the purpose of C++ inference</li>
+<li>❌ <strong>Manual tokenization:</strong> Complex, error-prone, incompatible with pretrained models</li>
+<li>✅ <strong>tokenizers-cpp:</strong> Fast C++ library compatible with HuggingFace <code>tokenizer.json</code> format</li>
+</ul>
+
+<p><strong>The Solution: tokenizers-cpp as Git Submodule</strong></p>
+<p>Instead of reimplementing tokenization, we integrate <a href="https://github.com/mlc-ai/tokenizers-cpp">tokenizers-cpp</a> as a git submodule. This provides:</p>
+<ul>
+<li>✅ Full compatibility with HuggingFace <code>tokenizer.json</code> files</li>
+<li>✅ Fast C++ implementation (no Python overhead)</li>
+<li>✅ Supports all Qwen tokenizer features (special tokens, vocab, etc.)</li>
+<li>✅ Seamless CMake integration</li>
+</ul>
+
+<p><strong>Integration Steps:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 1. Add tokenizers-cpp as a git submodule</span>
+git<span class="w"> </span>submodule<span class="w"> </span>add<span class="w"> </span>https://github.com/mlc-ai/tokenizers-cpp.git<span class="w"> </span>tokenizers
+git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
+
+<span class="c1"># 2. CMake automatically finds and links the library</span>
+<span class="c1"># (no manual configuration needed)</span>
+
+<span class="c1"># 3. Place tokenizer.json from your HuggingFace model</span>
+cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-Instruct/snapshots/.../tokenizer.json<span class="w"> </span>./model/
+</code></pre></div>
+
+<p><strong>Usage in C++:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tokenizers_cpp.h&gt;</span>
+
+<span class="c1">// Load tokenizer from HuggingFace tokenizer.json</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">tokenizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenizers</span><span class="o">::</span><span class="n">Tokenizer</span><span class="o">::</span><span class="n">FromBlobJSON</span><span class="p">(</span><span class="n">json_blob</span><span class="p">);</span>
+
+<span class="c1">// Encode text to token IDs</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prompt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;What is the capital of France?&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">token_ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenizer</span><span class="o">-&gt;</span><span class="n">Encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">);</span>
+
+<span class="c1">// Decode token IDs back to text</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">decoded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenizer</span><span class="o">-&gt;</span><span class="n">Decode</span><span class="p">(</span><span class="n">token_ids</span><span class="p">);</span>
+</code></pre></div>
+
+<p><strong>Why This Matters:</strong> Without this solution, you'd need to either:</p>
+<ol>
+<li>Call Python from C++ (slow, complex dependency management)</li>
+<li>Reimplement the entire tokenizer (weeks of work, bugs inevitable)</li>
+<li>Use a different model with C++ tokenizer support (limits model choice)</li>
+</ol>
+
+<p>The git submodule approach gives you production-grade tokenization with minimal integration effort.</p>
+
+<hr />
+
+<h4>Challenge 1: ONNX Runtime API Compatibility</h4>
+<p>ONNX Runtime 1.19.0 changed several APIs:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// ❌ Old API (pre-1.19)</span>
+<span class="n">session_options</span><span class="p">.</span><span class="n">AddSessionConfigEntry</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span>
+<span class="n">session_options</span><span class="p">.</span><span class="n">SetLogVerbosityLevel</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="n">Ort</span><span class="o">::</span><span class="n">ThrowOnError</span><span class="p">(</span><span class="n">OrtSessionOptionsAppendExecutionProvider_CUDA</span><span class="p">(</span><span class="n">options</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">));</span>
+
+<span class="c1">// ✅ New API (1.19.0+)</span>
+<span class="n">session_options</span><span class="p">.</span><span class="n">AddConfigEntry</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span>
+<span class="c1">// SetLogVerbosityLevel removed - use session options</span>
+<span class="n">OrtCUDAProviderOptions</span><span class="w"> </span><span class="n">cuda_options</span><span class="p">;</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">device_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="n">session_options</span><span class="p">.</span><span class="n">AppendExecutionProvider_CUDA</span><span class="p">(</span><span class="n">cuda_options</span><span class="p">);</span>
+</code></pre></div>
+
+<h4>Challenge 2: Tensor Lifecycle Management</h4>
+<p><strong>The Bug:</strong> Generated tokens were garbage:</p>
+<div class="codehilite"><pre><span></span><code>Output:<span class="w"> </span>&quot;ĊĊĊĊ<span class="nt">&lt;/think&gt;&lt;/think&gt;</span>and<span class="w"> </span>and<span class="w"> </span>and<span class="w"> </span>and...&quot;
+</code></pre></div>
+
+<p><strong>Root Cause:</strong> Data vectors went out of scope before tensor creation:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// ❌ WRONG - vector destroyed after loop iteration</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">max_tokens</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">new_token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">token_id</span><span class="p">};</span><span class="w">  </span><span class="c1">// Goes out of scope!</span>
+<span class="w">    </span><span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span>
+<span class="w">        </span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">memory_info</span><span class="p">,</span><span class="w"> </span>
+<span class="w">            </span><span class="n">new_token</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="p">...));</span><span class="w">  </span><span class="c1">// Dangling pointer!</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p><strong>Solution:</strong> Maintain persistent buffers:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// ✅ CORRECT - persistent across iterations</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">current_tokens</span><span class="p">(</span><span class="n">ids_vec</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">ids_vec</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">history_len_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ids_len_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">current_tokens</span><span class="p">.</span><span class="n">size</span><span class="p">())};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">attention_mask_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">};</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">max_tokens</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Create tensors from persistent data</span>
+<span class="w">    </span><span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span>
+<span class="w">        </span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">memory_info</span><span class="p">,</span><span class="w"> </span>
+<span class="w">            </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="w"> </span><span class="p">...));</span>
+
+<span class="w">    </span><span class="c1">// ... run inference ...</span>
+
+<span class="w">    </span><span class="c1">// Update buffers for next iteration</span>
+<span class="w">    </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+<span class="w">    </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">token_id</span><span class="p">));</span>
+<span class="w">    </span><span class="n">history_len_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">ids_len_data</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">    </span><span class="n">ids_len_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">attention_mask_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h4>Challenge 3: KV Cache Management</h4>
+<p>Each decode iteration:
+1. Takes 76 input tensors: 72 KV caches + 4 metadata
+2. Produces 74 output tensors: 72 new KV caches + 2 outputs
+3. Must reconstruct inputs from outputs</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">// Move KV caches from outputs to inputs (zero-copy)</span>
+<span class="n">input_tensors</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">num_layers_</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">output_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">]));</span>
+<span class="p">}</span>
+
+<span class="c1">// Create new metadata tensors</span>
+<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// token</span>
+<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// history_len</span>
+<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// ids_len</span>
+<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">   </span><span class="c1">// attention_mask</span>
+</code></pre></div>
+
+<hr />
+<h2>Part 4: GPU Acceleration with CUDA</h2>
+<h3>Setting Up GPU Inference</h3>
+<h4>1. Install cuDNN 9</h4>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Via conda (recommended)</span>
+conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">9</span>
+
+<span class="c1"># Set environment</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$CONDA_PREFIX</span>/lib:<span class="nv">$LD_LIBRARY_PATH</span>
+</code></pre></div>
+
+<h4>2. Configure CUDA Provider</h4>
+<div class="codehilite"><pre><span></span><code><span class="n">OrtCUDAProviderOptions</span><span class="w"> </span><span class="n">cuda_options</span><span class="p">;</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">device_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Use GPU 0</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">cudnn_conv_algo_search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OrtCudnnConvAlgoSearchExhaustive</span><span class="p">;</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">gpu_mem_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SIZE_MAX</span><span class="p">;</span><span class="w">  </span><span class="c1">// No limit</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">arena_extend_strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">do_copy_in_default_stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="n">session_options</span><span class="p">.</span><span class="n">AppendExecutionProvider_CUDA</span><span class="p">(</span><span class="n">cuda_options</span><span class="p">);</span>
+</code></pre></div>
+
+<h4>3. Handle Library Conflicts</h4>
+<p>Created a wrapper script to resolve libstdc++ conflicts:</p>
+<div class="codehilite"><pre><span></span><code><span class="ch">#!/bin/bash</span>
+<span class="c1"># scripts/run_gpu_inference.sh</span>
+
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$CONDA_PREFIX</span>/lib:<span class="nv">$LD_LIBRARY_PATH</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_PRELOAD</span><span class="o">=</span>/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+
+./build/bin/onnx_inference<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$@</span><span class="s2">&quot;</span>
+</code></pre></div>
+
+<hr />
+<h2>Part 5: Performance Results</h2>
+<h3>Benchmarks (Qwen3-8B)</h3>
+<table>
+<thead>
+<tr>
+<th>Configuration</th>
+<th>Hardware</th>
+<th>Tokens/sec</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python (HF)</td>
+<td>RTX A6000</td>
+<td>~8-10</td>
+<td>Native PyTorch</td>
+</tr>
+<tr>
+<td>C++ (CPU)</td>
+<td>Xeon E5</td>
+<td>~15-20</td>
+<td>ONNX Runtime CPU</td>
+</tr>
+<tr>
+<td><strong>C++ (GPU)</strong></td>
+<td><strong>RTX A6000</strong></td>
+<td><strong>~12</strong></td>
+<td><strong>ONNX Runtime + CUDA</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>Why GPU Isn't Faster?</h3>
+<p>You might wonder why GPU is similar to CPU. Reasons:</p>
+<ol>
+<li><strong>Small batch size</strong> (1) - GPU underutilized</li>
+<li><strong>KV cache overhead</strong> - Memory bandwidth bound</li>
+<li><strong>Model load time</strong> - First token takes 45-60s</li>
+<li><strong>8B model size</strong> - Still fits in CPU cache reasonably well</li>
+</ol>
+<p><strong>GPU shines with:</strong>
+- Larger batch sizes (2-8+)
+- Continuous inference (amortized load time)
+- Larger models (70B+)</p>
+<hr />
+<h2>Part 6: Project Structure</h2>
+<p>After refactoring, the project is organized as:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">llm</span><span class="o">-</span><span class="n">inference</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">src</span><span class="o">/</span><span class="w">                    </span><span class="c1"># Source code</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">onnx_inference</span><span class="o">.</span><span class="n">cpp</span><span class="w">  </span><span class="c1"># C++ inference engine</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">onnx_inference</span><span class="o">.</span><span class="n">py</span><span class="w">   </span><span class="c1"># Python inference</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">exporter</span><span class="o">.</span><span class="n">py</span><span class="w">         </span><span class="c1"># Model export</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">scripts</span><span class="o">/</span><span class="w">                </span><span class="c1"># Utility scripts</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">run_gpu_inference</span><span class="o">.</span><span class="n">sh</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">test_inference</span><span class="o">.</span><span class="n">sh</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">configs</span><span class="o">/</span><span class="w">                </span><span class="c1"># Configuration</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">config</span><span class="o">.</span><span class="n">json</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">docs</span><span class="o">/</span><span class="w">                   </span><span class="c1"># Documentation</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">BUILD</span><span class="o">.</span><span class="n">md</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">CONTRIBUTING</span><span class="o">.</span><span class="n">md</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">FIXES_APPLIED</span><span class="o">.</span><span class="n">md</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">CMakeLists</span><span class="o">.</span><span class="n">txt</span><span class="w">         </span><span class="c1"># Build system</span>
+<span class="err">└──</span><span class="w"> </span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span><span class="w">       </span><span class="c1"># Python deps</span>
+</code></pre></div>
+
+<hr />
+<h2>Part 7: Lessons Learned</h2>
+<h3>1. HuggingFace Abstractions Can Hide Complexity</h3>
+<p>The <code>DynamicCache</code> abstraction is great for research but a barrier for deployment. Understanding the underlying mechanism is crucial.</p>
+<h3>2. ONNX Opset Matters</h3>
+<p>Newer isn't always better. Opset compatibility with your runtime is more important than having the latest features.</p>
+<h3>3. Memory Management in C++ is Critical</h3>
+<p>Modern C++ with smart pointers helps, but ONNX Runtime's C API requires careful attention to:
+- Tensor data lifetime
+- Memory ownership
+- Zero-copy operations</p>
+<h3>4. GPU Acceleration Isn't Automatic</h3>
+<p>Getting cuDNN working required:
+- Correct library versions
+- Environment variables
+- Library path resolution
+- Preload order</p>
+<h3>5. Debugging Requires Multiple Perspectives</h3>
+<p>When output was garbage, I had to check:
+- Token IDs (valid range?)
+- Tensor shapes (correct dimensions?)
+- Data types (int32 vs int64?)
+- Memory lifetimes (data still valid?)
+- KV cache (properly passed?)</p>
+<hr />
+<h2>Getting Started</h2>
+<h3>Quick Start</h3>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Clone repository</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/sgowdaks/llm-inference.git
+<span class="nb">cd</span><span class="w"> </span>llm-inference
+git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
+
+<span class="c1"># Install Python dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c1"># Download ONNX Runtime GPU</span>
+wget<span class="w"> </span>https://github.com/microsoft/onnxruntime/releases/download/v1.19.0/onnxruntime-linux-x64-gpu-1.19.0.tgz
+tar<span class="w"> </span>-xzf<span class="w"> </span>onnxruntime-linux-x64-gpu-1.19.0.tgz
+
+<span class="c1"># Install cuDNN</span>
+conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">9</span>
+
+<span class="c1"># Build C++ inference</span>
+mkdir<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+cmake<span class="w"> </span>..<span class="w"> </span>-DONNXRUNTIME_ROOT_DIR<span class="o">=</span>/path/to/onnxruntime-linux-x64-gpu-1.19.0
+make<span class="w"> </span>-j4
+
+<span class="c1"># Export model</span>
+<span class="nb">cd</span><span class="w"> </span>..
+cp<span class="w"> </span>configs/config.example.json<span class="w"> </span>configs/config.json
+<span class="c1"># Edit configs/config.json with your paths</span>
+python<span class="w"> </span>src/exporter.py<span class="w"> </span>--config<span class="w"> </span>configs/config.json<span class="w"> </span>--mode<span class="w"> </span><span class="nb">export</span>
+
+<span class="c1"># Run inference</span>
+./scripts/run_gpu_inference.sh<span class="w"> </span><span class="s2">&quot;What is machine learning?&quot;</span>
+</code></pre></div>
+
+<h3>Expected Output</h3>
+<div class="codehilite"><pre><span></span><code>Using CUDA execution provider on GPU 0
+
+Prompt: What is machine learning?
+Qwen Answering:
+
+Machine learning is a subset of artificial intelligence (AI) that 
+focuses on the development of algorithms and statistical models that 
+enable computers to learn from and make predictions or decisions based 
+on data...
+
+Decode: 12.28 token/s
+</code></pre></div>
+
+<hr />
+<h2>Future Improvements</h2>
+<h3>Planned Features</h3>
+<ol>
+<li><strong>Batch Inference</strong> - Process multiple prompts simultaneously</li>
+<li><strong>Quantization</strong> - INT8/INT4 support for smaller memory footprint</li>
+<li><strong>Multi-GPU</strong> - Distribute inference across devices</li>
+<li><strong>More Models</strong> - Support Llama, Mistral, etc.</li>
+<li><strong>Python Bindings</strong> - PyBind11 wrapper for C++ engine</li>
+<li><strong>Streaming API</strong> - Token-by-token generation</li>
+<li><strong>Request Batching</strong> - Dynamic batching for throughput</li>
+</ol>
+<h3>Performance Optimizations</h3>
+<ul>
+<li>Flash Attention integration</li>
+<li>Continuous batching</li>
+<li>KV cache quantization</li>
+<li>Model parallelism</li>
+<li>Pipeline parallelism</li>
+</ul>
+<hr />
+<h2>Conclusion</h2>
+<p>Building a production-ready inference engine for LLMs involves much more than just exporting a model. From understanding cache management, to navigating ONNX Runtime APIs, to optimizing GPU utilization - each step presents unique challenges.</p>
+<p>The result? A system that:
+- ✅ Runs 12+ tokens/sec on GPU
+- ✅ Has no Python runtime overhead
+- ✅ Supports both CPU and GPU
+- ✅ Is production-ready and maintainable</p>
+<p>The journey taught me that modern ML frameworks are powerful but sometimes you need to go lower-level to achieve your goals. The trade-off between convenience and control is real, and knowing when to make that trade is key.</p>
+<hr />
+<h2>Resources</h2>
+<ul>
+<li><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">github.com/sgowdaks/llm-inference</a></li>
+<li><strong>ONNX Runtime Docs:</strong> <a href="https://onnxruntime.ai/docs/">onnxruntime.ai/docs</a></li>
+<li><strong>Qwen Models:</strong> <a href="https://huggingface.co/Qwen">huggingface.co/Qwen</a></li>
+<li><strong>ONNX Spec:</strong> <a href="https://github.com/onnx/onnx">github.com/onnx/onnx</a></li>
+</ul>
+<hr />
+<h2>Connect</h2>
+<p>If you found this helpful or have questions:
+- ⭐ Star the <a href="https://github.com/sgowdaks/llm-inference">GitHub repo</a>
+- 🐛 Open an issue for bugs or questions
+- 💬 Discussion section for ideas
+- 🤝 PRs welcome!</p>
+<hr />
+<p><strong>Tags:</strong> #MachineLearning #LLM #ONNX #Cpp #CUDA #AI #DeepLearning #Inference #Optimization #Qwen</p>
+<hr />
+    </div>
+
+    <div class="post-footer-nav">
+
+
+    </div>
+
+    <div class="post-tags">
+
+    </div>
+
+  </div>
+
+  <!-- Footer (auto-generated by common.js) -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+</body>
+</html>

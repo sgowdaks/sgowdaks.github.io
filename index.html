@@ -933,11 +933,8 @@
       font-size: 1.2rem;
       color: var(--primary-color);
     }
-
     .contact-link:hover {
-      background: var(--primary-color);
       color: white;
-      border-color: var(--primary-color);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
@@ -945,6 +942,26 @@
     .contact-link:hover i {
       color: white;
     }
+
+    /* Brand-specific icon colors (default) */
+    .contact-link.email i { color: #EA4335; }       /* Gmail red */
+    .contact-link.linkedin i { color: #0A66C2; }    /* LinkedIn blue */
+    .contact-link.github i { color: #333; }         /* GitHub black */
+
+    /* Brand-specific hover backgrounds */
+    .contact-link.email:hover { background: #EA4335; border-color: #EA4335; }
+    .contact-link.linkedin:hover { background: #0A66C2; border-color: #0A66C2; }
+    .contact-link.github:hover { background: #333; border-color: #333; }
+
+    /* Hero/social link styles */
+    .social-link { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-color); transition: color 0.2s ease; }
+    .social-link i { font-size: 1.2rem; }
+    .social-link.github i { color: #333; }
+    .social-link.linkedin i { color: #0A66C2; }
+    .social-link.scholar i { color: #4285F4; }
+    .social-link.github:hover { color: #333; }
+    .social-link.linkedin:hover { color: #0A66C2; }
+    .social-link.scholar:hover { color: #4285F4; }
 
     .contact-card h4 {
       margin-bottom: 0.5rem;
@@ -1060,6 +1077,7 @@
         flex-direction: column;
         width: 100%;
         padding: 0 1rem;
+        align-items: center;
       }
 
       .btn {
@@ -1428,16 +1446,16 @@
     
     <!-- Social Links -->
     <div style="display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;">
-      <a href="https://github.com/sgowdaks" target="_blank" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-color)'">
-        <i class="fab fa-github" style="font-size: 1.3rem;"></i>
+      <a href="https://github.com/sgowdaks" target="_blank" class="social-link github">
+        <i class="fab fa-github"></i>
         <span>GitHub</span>
       </a>
-      <a href="https://www.linkedin.com/in/sgowdaks/" target="_blank" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-color)'">
-        <i class="fab fa-linkedin" style="font-size: 1.3rem;"></i>
+      <a href="https://www.linkedin.com/in/sgowdaks/" target="_blank" class="social-link linkedin">
+        <i class="fab fa-linkedin"></i>
         <span>LinkedIn</span>
       </a>
-      <a href="https://scholar.google.com/citations?user=-dru8h4AAAAJ&hl=en" target="_blank" style="color: var(--text-color); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-color)'">
-        <i class="fas fa-graduation-cap" style="font-size: 1.3rem;"></i>
+      <a href="https://scholar.google.com/citations?user=-dru8h4AAAAJ&hl=en" target="_blank" class="social-link scholar">
+        <i class="fas fa-graduation-cap"></i>
         <span>Google Scholar</span>
       </a>
     </div>
@@ -2010,15 +2028,15 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
       <p>Let's connect - reach out via email, LinkedIn, or check out my work on GitHub.</p>
       
       <div class="contact-links">
-        <a href="mailto:gowdaks.shivani@gmail.com" class="contact-link">
+        <a href="mailto:gowdaks.shivani@gmail.com" class="contact-link email">
           <i class="fas fa-envelope"></i>
           <span>Email</span>
         </a>
-        <a href="https://www.linkedin.com/in/sgowdaks/" target="_blank" class="contact-link">
+        <a href="https://www.linkedin.com/in/sgowdaks/" target="_blank" class="contact-link linkedin">
           <i class="fab fa-linkedin"></i>
           <span>LinkedIn</span>
         </a>
-        <a href="https://github.com/sgowdaks" target="_blank" class="contact-link">
+        <a href="https://github.com/sgowdaks" target="_blank" class="contact-link github">
           <i class="fab fa-github"></i>
           <span>GitHub</span>
         </a>

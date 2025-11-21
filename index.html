@@ -255,9 +255,10 @@
     }
 
     .profile-image {
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
+      width: 100%;
+      max-width: 350px;
+      height: 400px;
+      border-radius: 16px;
       background: var(--gradient);
       margin: 0 auto 1.5rem;
       display: flex;
@@ -270,6 +271,13 @@
       border: 3px solid var(--primary-color);
       box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
       transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .profile-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .profile-image:hover {
@@ -463,8 +471,8 @@
     }
 
     .experience-logo {
-      width: 50px;
-      height: 50px;
+      width: 80px;
+      height: 80px;
       background: var(--bg-tertiary);
       border-radius: 8px;
       display: flex;
@@ -473,10 +481,11 @@
       flex-shrink: 0;
       border: 1px solid var(--border-color);
       transition: all 0.3s ease;
+      padding: 4px;
     }
 
     .experience-logo i {
-      font-size: 1.8rem;
+      font-size: 2rem;
       color: var(--primary-color);
     }
 
@@ -486,7 +495,7 @@
       height: 100%;
       object-fit: contain;
       display: block;
-      border-radius: 6px;
+      border-radius: 4px;
     }
 
     .experience-logo.microsoft {
@@ -873,6 +882,8 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .contact-card {
@@ -991,9 +1002,9 @@
     .blog-card .category {
       background: transparent;
       color: #6b9bd1;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
       font-weight: 600;
       display: inline-block;
       margin-bottom: 1rem;
@@ -1012,18 +1023,22 @@
       color: var(--text-light);
       margin-bottom: 1.5rem;
       line-height: 1.6;
+      flex-grow: 1;
     }
 
     .blog-card a, .contact-card a {
-      color: var(--primary-color);
+      color: #0066cc;
       text-decoration: none;
       font-weight: 600;
       transition: all 0.3s ease;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .blog-card a:hover, .contact-card a:hover {
-      color: var(--accent-color);
+      color: #0052a3;
     }
 
     .contact-card:hover i {
@@ -1133,8 +1148,8 @@
       }
 
       .profile-image {
-        width: 120px;
-        height: 120px;
+        max-width: 250px;
+        height: 300px;
         font-size: 1.8rem;
       }
 
@@ -1186,12 +1201,12 @@
       }
 
       .experience-logo {
-        width: 40px;
-        height: 40px;
+        width: 65px;
+        height: 65px;
       }
 
       .experience-logo i {
-        font-size: 1.4rem;
+        font-size: 1.6rem;
       }
 
       .experience-basic-info h4 {
@@ -1338,8 +1353,8 @@
       }
 
       .profile-image {
-        width: 100px;
-        height: 100px;
+        max-width: 220px;
+        height: 280px;
         font-size: 1.5rem;
       }
 
@@ -1361,12 +1376,12 @@
       }
 
       .experience-logo {
-        width: 35px;
-        height: 35px;
+        width: 55px;
+        height: 55px;
       }
 
       .experience-logo i {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
       }
 
       .experience-basic-info h4 {
@@ -1477,7 +1492,9 @@
       <h2>About Me</h2>      
       <div class="about-content">
         <div class="profile-card">
-          <div class="profile-image">SG</div>
+          <div class="profile-image">
+            <img src="assets/shivani-face.png" alt="Shivani Gowda KS" />
+          </div>
         </div>
         
         <div>
@@ -1499,13 +1516,13 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
           <!-- Cloud Engineer (left intentionally blank per request) -->
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
-              <div class="experience-logo microsoft">
-                <i class="fab fa-microsoft"></i>
+              <div class="experience-logo">
+                <img src="assets/LTImindtree-logo.png" alt="LTIMindtree logo" />
               </div>
               <div class="experience-basic-info">
-                <h4>Cloud Engineer (Contractor)</h4>
-                <div class="company">Microsoft</div>
-                <div class="duration">Present</div>
+                <h4>Cloud Engineer (Vendor to Microsoft)</h4>
+                <div class="company">LTIMindtree · Bellevue, WA, USA</div>
+                <div class="duration">March 2024 – Present</div>
               </div>
             </div>
             <div class="experience-details">
@@ -1513,14 +1530,32 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
             </div>
           </div>
 
+                    <!-- Flavor -->
+          <div class="experience-item" onclick="toggleExperience(this)">
+            <div class="experience-header">
+              <div class="experience-logo">
+                <img src="assets/flavor_app_logo.jpg" alt="Flavor logo" />
+              </div>
+              <div class="experience-basic-info">
+                <h4>Machine Learning Engineer (Contract)</h4>
+                <div class="company">Flavor · Remote, USA</div>
+                <div class="duration">Nov 2023 – Jan 2024</div>
+              </div>
+            </div>
+            <div class="experience-details">
+              <p><strong>Tools:</strong> Python, Flask, SQLite, Apache Airflow, BERT, NLLB, Transformers</p>
+              <p>Built ETL pipelines with Airflow (31% performance boost) and a Flask/SQLite annotation platform with RESTful APIs for real-time labeling (15% increase in data collection). Fine-tuned multilingual transformer models for hate speech classification and benchmarked embedding models for unstructured data indexing.</p>
+            </div>
+          </div>
+
           <!-- PixStory -->
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
               <div class="experience-logo">
-                <img src="https://pixstory.com/favicon.ico" alt="PixStory logo" />
+                <img src="assets/pix-logo.png" alt="PixStory logo" />
               </div>
               <div class="experience-basic-info">
-                <h4>Software Engineer (Intern → Full-time)</h4>
+                <h4>Machine Learning Engineer (Intern → Full-time)</h4>
                 <div class="company">PixStory · Remote, USA</div>
                 <div class="duration">Jan 2023 – Dec 2023</div>
               </div>
@@ -1534,8 +1569,8 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
           <!-- Loyola Marymount University (Graduate Research Assistant) -->
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
-              <div class="experience-logo education">
-                <img src="https://www.lmu.edu/favicon.ico" alt="LMU logo" />
+              <div class="experience-logo">
+                <img src="assets/lmu-logo.png" alt="LMU logo" />
               </div>
               <div class="experience-basic-info">
                 <h4>Graduate Research Assistant</h4>
@@ -1573,8 +1608,8 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
 
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
-              <div class="experience-logo education">
-                <i class="fas fa-university"></i>
+              <div class="experience-logo">
+                <img src="assets/lmu-logo.png" alt="LMU logo" />
               </div>
               <div class="experience-basic-info">
                 <h4>Loyola Marymount University</h4>
@@ -1589,8 +1624,8 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
 
           <div class="experience-item" onclick="toggleExperience(this)">
             <div class="experience-header">
-              <div class="experience-logo education">
-                <i class="fas fa-graduation-cap"></i>
+              <div class="experience-logo">
+                <img src="assets/amrita-logo.png" alt="Amrita logo" />
               </div>
               <div class="experience-basic-info">
                 <h4>Amrita School of Engineering</h4>
@@ -1718,7 +1753,7 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
         </div> -->
 
         <div class="project-card" onclick="openProjectModal('project2')">
-          <h4><i class="fas fa-apple-alt"></i> Multi-Modal Food Classification in a Diet Tracking System</h4>
+          <h4>Multi-Modal Food Classification in a Diet Tracking System</h4>
           <div class="tech-stack">
             <span class="tech-tag">PyTorch</span>
             <span class="tech-tag">Vision</span>
@@ -1728,7 +1763,7 @@ If you’re into thoughtful engineering, LLM experiments, or the art of making m
         </div>
 
         <div class="project-card" onclick="openProjectModal('project3')">
-          <h4><i class="fas fa-spider"></i> Nichirin: Webcrawler + Retrieval-Augmented Generator</h4>
+          <h4>Nichirin: Webcrawler + Retrieval-Augmented Generator</h4>
           <div class="tech-stack">
             <span class="tech-tag">Apache Solr</span>
             <span class="tech-tag">Apache Spark</span>

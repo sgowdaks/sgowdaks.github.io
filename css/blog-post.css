@@ -19,6 +19,13 @@
   z-index: 100;
 }
 
+/* Add left margin to container when TOC is visible */
+@media (min-width: 1201px) {
+  .container {
+    margin-left: 320px !important;
+  }
+}
+
 .toc-sidebar::-webkit-scrollbar {
   width: 6px;
 }
@@ -83,7 +90,7 @@
 }
 
 /* Hide TOC on smaller screens */
-@media (max-width: 1400px) {
+@media (max-width: 1200px) {
   .toc-sidebar {
     display: none;
   }

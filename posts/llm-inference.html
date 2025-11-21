@@ -886,9 +886,12 @@ Decode: 12.28 token/s
   <!-- Table of Contents Auto-Generator -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('TOC Script loaded');
       const tocList = document.getElementById('toc-list');
       const postContent = document.querySelector('.post-content');
       const headings = postContent.querySelectorAll('h2');
+      
+      console.log('Found ' + headings.length + ' headings');
       
       // Generate TOC items
       headings.forEach((heading, index) => {
@@ -914,6 +917,8 @@ Decode: 12.28 token/s
         li.appendChild(a);
         tocList.appendChild(li);
       });
+      
+      console.log('TOC generated successfully');
       
       // Highlight active section on scroll
       window.addEventListener('scroll', function() {

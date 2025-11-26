@@ -198,35 +198,6 @@
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
 
-    .highlight-box {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-left: 4px solid #f39c12;
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin: 1.5rem 0;
-    }
-
-    .highlight-box.danger {
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
-      border-left: 4px solid #dc3545;
-    }
-
-    .highlight-box.success {
-      background: #d4edda;
-      border: 1px solid #c3e6cb;
-      border-left: 4px solid #28a745;
-    }
-
-    .highlight-box p {
-      margin-bottom: 0.5rem;
-    }
-
-    .highlight-box ul {
-      margin-bottom: 0;
-    }
-
     .post-content a {
       color: var(--primary-color);
       text-decoration: underline;
@@ -277,6 +248,44 @@
       line-height: 1.6;
     }
 
+    .comparison-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .comparison-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .comparison-item h4 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .highlight-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box.danger {
+      background: #f8d7da;
+      border-color: #f5c6cb;
+    }
+
+    .highlight-box.success {
+      background: #d4edda;
+      border-color: #c3e6cb;
+    }
+
     @media (max-width: 768px) {
       .container {
         padding: 1rem;
@@ -305,6 +314,10 @@
         font-size: 0.8rem;
         padding: 1rem;
       }
+
+      .comparison-box {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -323,7 +336,7 @@
 
   <div class="container">
     <div class="post-header">
-      <h1 class="post-title">Building a High-Performance ONNX Inference Engine for Qwen LLMs</h1>
+      <h1 class="post-title">Building a High-Performance ONNX Inference Engine for LLMs</h1>
       <div class="post-subtitle">From PyTorch to C++ with GPU Acceleration</div>
       <div class="post-meta">
         <span class="post-category">Technology</span>
@@ -341,17 +354,318 @@
 <h2>TL;DR</h2>
 <p>I built a high-performance ONNX inference engine for Qwen language models that achieves <strong>12+ tokens/sec on GPU</strong> with C++ and CUDA. This article covers the entire journey: from dealing with HuggingFace Transformers' dynamic cache limitations, to implementing a custom forward pass, exporting to ONNX, fixing ONNX Runtime API issues, and optimizing GPU inference with cuDNN 9.</p>
 <p><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">llm-inference</a></p>
+<div class="highlight-box highlight-info">
+<p><strong>Attribution:</strong> The custom forward pass implementation and ONNX export approach were adapted from <a href="https://github.com/DakeQQ/Native-LLM-for-Android" target="_blank">DakeQQ/Native-LLM-for-Android</a>, an excellent project for running LLMs on mobile devices. I've extended and modified these techniques for server-side GPU inference.</p>
+</div>
 <hr />
 <h2>The Challenge: Running LLMs Efficiently</h2>
-<p>Large Language Models (LLMs) are powerful but resource-intensive. While Python frameworks like HuggingFace Transformers make it easy to prototype, production deployments demand:</p>
+
+<p>Large Language Models (LLMs) are powerful but resource-intensive. While Python frameworks like HuggingFace Transformers and PyTorch make it easy to prototype and train models, production inference deployments face significant challenges.</p>
+
+<h3>The PyTorch Overhead Problem</h3>
+
+<p>PyTorch is the go-to framework for training LLMs, and for good reasons - it's flexible, easy to debug, and has excellent GPU support. But here's what's happening under the hood:</p>
+
+<div class="highlight-box highlight-warning">
+<p><strong>PyTorch's Architecture:</strong></p>
 <ul>
-<li><strong>Faster inference</strong> (lower latency)</li>
-<li><strong>Better resource utilization</strong> (efficient GPU usage)</li>
-<li><strong>Lower deployment overhead</strong> (no Python interpreter)</li>
-<li><strong>Cross-platform compatibility</strong></li>
+  <li><strong>Python frontend:</strong> Your code that defines models, training loops, etc.</li>
+  <li><strong>pybind11 bindings:</strong> Translates Python calls to C++</li>
+  <li><strong>libtorch (C++):</strong> The actual computation engine
+    <ul>
+      <li>ATen tensor library</li>
+      <li>Autograd for gradients</li>
+      <li>CUDA/cuDNN kernels for GPU acceleration</li>
+    </ul>
+  </li>
 </ul>
-<p>ONNX (Open Neural Network Exchange) promises to bridge this gap by providing a standardized format that can run on optimized runtimes. But getting there isn't straightforward, especially for complex models like Qwen.</p>
+<p><strong>Key insight:</strong> Even though PyTorch uses C++ and CUDA for the heavy lifting, <em>Python still orchestrates everything</em> - deciding which operations to run, when, and managing the model structure.</p>
+</div>
+
+<p>This Python orchestration layer introduces overhead:</p>
+<ul>
+  <li>🔴 <strong>Interpreter:</strong> Python interprets code at runtime (no compilation)</li>
+  <li>🔴 <strong>GIL (Global Interpreter Lock):</strong> Limits true multi-threading</li>
+  <li>🔴 <strong>Dynamic graph construction:</strong> Model structure rebuilt for each forward pass</li>
+  <li>🔴 <strong>Memory overhead:</strong> Python runtime + garbage collector (~200-300MB)</li>
+  <li>🔴 <strong>Boundary crossings:</strong> Frequent Python ↔ C++ calls add latency</li>
+</ul>
+
+<h3>Training vs Inference: Different Requirements</h3>
+
+<p>Here's a key insight that shapes modern ML workflows:</p>
+
+<div class="comparison-box">
+  <div class="comparison-item">
+    <h4>📚 Training (Python is fine)</h4>
+    <ul>
+      <li><strong>Frequency:</strong> Done once or periodically</li>
+      <li><strong>Priority:</strong> Flexibility and debuggability</li>
+      <li><strong>Workflow:</strong> Iterative experimentation</li>
+      <li><strong>Hardware:</strong> Usually on powerful GPU clusters</li>
+      <li><strong>Python advantages:</strong>
+        <ul>
+          <li>Easy debugging (print statements, breakpoints)</li>
+          <li>Rich ecosystem (data loaders, visualization)</li>
+          <li>Quick iteration on model architectures</li>
+          <li>Autograd makes gradient computation simple</li>
+        </ul>
+      </li>
+    </ul>
+    <p><strong>Verdict:</strong> Python overhead is acceptable - flexibility matters more</p>
+  </div>
+
+  <div class="comparison-item">
+    <h4>⚡ Inference (C++ shines)</h4>
+    <ul>
+      <li><strong>Frequency:</strong> Millions of times per day</li>
+      <li><strong>Priority:</strong> Speed, cost, and efficiency</li>
+      <li><strong>Workflow:</strong> Fixed model, just run it</li>
+      <li><strong>Hardware:</strong> Cost-optimized, often edge devices</li>
+      <li><strong>C++ advantages:</strong>
+        <ul>
+          <li>No interpreter overhead</li>
+          <li>Lower memory footprint</li>
+          <li>Faster startup time</li>
+          <li>True multi-threading</li>
+          <li>Deployable anywhere (mobile, IoT, servers)</li>
+        </ul>
+      </li>
+    </ul>
+    <p><strong>Verdict:</strong> Every millisecond counts - remove Python overhead</p>
+  </div>
+</div>
+
+<div class="highlight-box highlight-success">
+<p><strong>Common ML Production Pattern:</strong></p>
+<ol>
+  <li><strong>Train in Python/PyTorch:</strong> Leverage flexibility, debugging, rich ecosystem</li>
+  <li><strong>Export to ONNX:</strong> Convert trained model to a portable, optimized format</li>
+  <li><strong>Deploy with C++ ONNX Runtime:</strong> Run inference without Python overhead</li>
+</ol>
+<p>This gives you the best of both worlds: Python's ease for training, C++'s speed for inference.</p>
+</div>
+
+<h3>Why Training in C++ is Hard (and Rare)</h3>
+
+<p>You might wonder: "If C++ is so fast, why not train in C++ too?"</p>
+
+<p><strong>The reality:</strong> Training requires:</p>
+<ul>
+  <li>Frequent code changes (trying architectures, hyperparameters)</li>
+  <li>Complex gradient computation (autograd)</li>
+  <li>Rich debugging (inspecting tensors, gradients, losses)</li>
+  <li>Data pipelines (augmentation, batching, sampling)</li>
+  <li>Integration with visualization tools (TensorBoard, wandb)</li>
+</ul>
+
+<p>Implementing all of this in C++ is possible but <strong>extremely time-consuming</strong>. A research experiment that takes 1 day in Python might take 1-2 weeks in C++. The productivity cost outweighs the performance gain for training (which is done infrequently).</p>
+
+<p><strong>For inference though</strong>, the model is frozen - no more experimentation. You just need to run the same computation graph millions of times. This is where C++'s performance advantage justifies the effort.</p>
+
+<h3>What We Need for Production Inference</h3>
+
+<p>To deploy LLMs efficiently, we need:</p>
+<ul>
+<li>✅ <strong>Faster inference</strong> (lower latency, higher throughput)</li>
+<li>✅ <strong>Better resource utilization</strong> (more requests per GPU)</li>
+<li>✅ <strong>Lower deployment overhead</strong> (no Python interpreter, smaller containers)</li>
+<li>✅ <strong>Cross-platform compatibility</strong> (server, mobile, edge)</li>
+<li>✅ <strong>Static optimization</strong> (graph fusion, kernel selection)</li>
+</ul>
+
+<p><strong>The solution?</strong> ONNX (Open Neural Network Exchange) - a format that bridges training (Python) and inference (C++), providing a standardized, optimized way to deploy models across different runtimes and hardware.</p>
+
+<p>But getting there isn't straightforward, especially for complex models like Qwen...</p>
+
 <hr />
+<h2>What is ONNX?</h2>
+<p>ONNX is an open, framework-agnostic format for representing neural networks as a computational graph. It standardizes how layers and operations are described so that models trained in one framework (e.g., PyTorch) can run efficiently across many runtimes and hardware backends.</p>
+
+<h3>Dynamic vs Static Execution: A Graph Traversal Analogy</h3>
+<p>To understand the fundamental difference between Python/PyTorch execution and ONNX, think of graph traversal algorithms like BFS (Breadth-First Search):</p>
+
+<div class="comparison-box">
+  <div class="comparison-item">
+    <h4>🐍 Python-style (Dynamic Execution)</h4>
+    <div class="codehilite"><pre><span></span><code><span class="c1"># BFS graph built on the spot</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="mi">3</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">]}</span>
+<span class="n">queue</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>   <span class="c1"># do something</span>
+</code></pre></div>
+    <p><strong>Characteristics:</strong></p>
+    <ul>
+      <li>Graph and traversal happen <em>together</em></li>
+      <li>Flexible, but every run rebuilds or interprets the structure</li>
+      <li>Python interpreter evaluates each line dynamically</li>
+    </ul>
+  </div>
+
+  <div class="comparison-item">
+    <h4>📊 ONNX-style (Precompiled Graph)</h4>
+    <div class="codehilite"><pre><span></span><code><span class="c1"># BFS graph &quot;prebuilt&quot; in a file</span>
+<span class="c1"># Runtime only plugs in start node</span>
+<span class="n">start_node</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">run_precompiled_graph</span><span class="p">(</span><span class="n">start_node</span><span class="p">)</span>
+</code></pre></div>
+    <p><strong>Characteristics:</strong></p>
+    <ul>
+      <li>Graph structure <em>fixed in advance</em></li>
+      <li>Runtime just feeds input → gets output</li>
+      <li>Efficient, portable, no dynamic construction</li>
+    </ul>
+  </div>
+</div>
+
+<div class="highlight-box highlight-success">
+<p><strong>Analogy:</strong></p>
+<ul>
+  <li><strong>Python/PyTorch</strong> = "Draw the graph while traversing" - flexible but slower</li>
+  <li><strong>ONNX</strong> = "Graph is drawn once, later you just plug in inputs" - fast and portable</li>
+</ul>
+<p>This is why ONNX models run faster: the computational graph is frozen at export time, and the runtime can optimize execution without worrying about dynamic changes.</p>
+</div>
+
+<hr />
+<h2>ONNX + Python vs ONNX + C++: Why Both Matter</h2>
+
+<p>Now that we understand ONNX is a file format and it acts like a blueprint or recipe:</p>
+<ul>
+  <li>📄 <strong>ONNX file (.onnx)</strong> = The "blueprint" - describes what operations to run and how they connect</li>
+  <li>🏭 <strong>ONNX Runtime</strong> = The "factory" - reads the blueprint and executes it</li>
+  <li>🔧 <strong>Programming language (Python/C++)</strong> = How you interact with the factory</li>
+</ul>
+
+<p>The ONNX file itself doesn't run anything - it's just a standardized description of the model. You need an <strong>ONNX Runtime</strong> to actually execute it, and you need to call that runtime from <em>some</em> programming language.</p>
+
+<h3>Python vs C++ ONNX Runtime: The Critical Difference</h3>
+
+<div class="comparison-box">
+  <div class="comparison-item">
+    <h4>🐍 Python + ONNX Runtime</h4>
+    <div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">onnxruntime</span> <span class="k">as</span> <span class="nn">ort</span>
+
+<span class="c1"># Load ONNX model</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">ort</span><span class="o">.</span><span class="n">InferenceSession</span><span class="p">(</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">)</span>
+
+<span class="c1"># Run inference</span>
+<span class="n">outputs</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">input_data</span><span class="p">})</span>
+</code></pre></div>
+    <p><strong>What happens:</strong></p>
+    <ol>
+      <li>Python interpreter starts</li>
+      <li>Loads Python ONNX Runtime bindings (pybind11 wrapper)</li>
+      <li>Python → C++ boundary crossing for <em>every</em> API call</li>
+      <li>Data conversion: numpy array → C++ tensor → GPU memory</li>
+      <li>ONNX Runtime (C++) does the actual computation</li>
+      <li>Results converted back: GPU → C++ tensor → numpy → Python</li>
+    </ol>
+    <p><strong>Overhead sources:</strong></p>
+    <ul>
+      <li>Python interpreter startup (~200-500ms)</li>
+      <li>GIL (Global Interpreter Lock) for thread safety</li>
+      <li>Python → C++ function call overhead</li>
+      <li>Data type conversions and memory copies</li>
+      <li>Python object management and garbage collection</li>
+    </ul>
+  </div>
+
+  <div class="comparison-item">
+    <h4>⚡ C++ + ONNX Runtime</h4>
+    <div class="codehilite"><pre><span></span><code><span class="cp">#include</span> <span class="cpf">&lt;onnxruntime_cxx_api.h&gt;</span>
+
+<span class="c1">// Load ONNX model</span>
+<span class="n">Ort</span><span class="o">::</span><span class="n">Session</span> <span class="n">session</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&quot;model.onnx&quot;</span><span class="p">,</span> <span class="n">options</span><span class="p">);</span>
+
+<span class="c1">// Run inference</span>
+<span class="k">auto</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">session</span><span class="p">.</span><span class="n">Run</span><span class="p">(</span><span class="n">run_options</span><span class="p">,</span> 
+                           <span class="n">input_names</span><span class="p">,</span> 
+                           <span class="o">&amp;</span><span class="n">input_tensor</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                           <span class="n">output_names</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</code></pre></div>
+    <p><strong>What happens:</strong></p>
+    <ol>
+      <li>Native C++ executable starts</li>
+      <li>Directly calls ONNX Runtime C++ API (no wrapper)</li>
+      <li><strong>Zero</strong> language boundary crossing</li>
+      <li>Direct memory access: C++ → GPU (no conversions)</li>
+      <li>ONNX Runtime does computation</li>
+      <li>Results stay in C++ memory (no conversions)</li>
+    </ol>
+    <p><strong>Advantages:</strong></p>
+    <ul>
+      <li>Fast startup (~50-100ms)</li>
+      <li>No GIL, true multi-threading</li>
+      <li>Direct function calls (no overhead)</li>
+      <li>Zero-copy operations where possible</li>
+      <li>Manual memory control, no GC pauses</li>
+    </ul>
+  </div>
+</div>
+
+<h3>The Performance Stack</h3>
+
+<div class="highlight-box highlight-warning">
+<p><strong>Understanding the layers:</strong></p>
+<table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+  <thead>
+    <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border-color);">
+      <th style="padding: 10px; text-align: left;">Layer</th>
+      <th style="padding: 10px; text-align: center;">Python ONNX</th>
+      <th style="padding: 10px; text-align: center;">C++ ONNX</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px;"><strong>Your Code</strong></td>
+      <td style="padding: 10px; text-align: center;">Python (.py)</td>
+      <td style="padding: 10px; text-align: center;">C++ (.cpp)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px;"><strong>Language Runtime</strong></td>
+      <td style="padding: 10px; text-align: center;">Python Interpreter ⚠️</td>
+      <td style="padding: 10px; text-align: center;">None (compiled) ✅</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px;"><strong>API Bindings</strong></td>
+      <td style="padding: 10px; text-align: center;">pybind11 wrapper ⚠️</td>
+      <td style="padding: 10px; text-align: center;">Direct C++ API ✅</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px;"><strong>ONNX Runtime</strong></td>
+      <td style="padding: 10px; text-align: center;" colspan="2">C++ (same for both) ✅</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+      <td style="padding: 10px;"><strong>Execution Provider</strong></td>
+      <td style="padding: 10px; text-align: center;" colspan="2">CUDA/cuDNN/CPU (same) ✅</td>
+    </tr>
+  </tbody>
+</table>
+<p><strong>Key insight:</strong> Both use the same ONNX Runtime and execution providers (CUDA, etc.). The difference is in the <em>layers above</em> - Python adds interpretation and binding overhead, C++ goes direct.</p>
+</div>
+
+<hr />
+
+<h2>The Implementation Journey: Converting PyTorch to ONNX</h2>
+
+<p>Now that we understand <em>why</em> we need ONNX + C++ for production inference, let's dive into the <em>how</em>. Converting a PyTorch LLM to ONNX isn't as simple as calling <code>torch.onnx.export()</code> - you'll encounter several challenges along the way.</p>
+
+<p>This section covers the real-world problems I faced when converting Qwen models from PyTorch to ONNX, and the solutions that made it work. The journey involves three main parts:</p>
+
+<ol>
+  <li><strong>Part 1:</strong> Solving the dynamic cache export problem</li>
+  <li><strong>Part 2:</strong> Configuring ONNX export with optimizations</li>
+  <li><strong>Part 3:</strong> Building the C++ inference engine</li>
+</ol>
+
+<div class="highlight-box highlight-info">
+<p><strong>Heads up:</strong> These aren't abstract concepts - they're concrete technical challenges you'll face when converting any modern transformer model to ONNX. Understanding these will save you hours of debugging.</p>
+</div>
+
+<hr />
+
 <h2>Part 1: The Dynamic Cache Problem</h2>
 <h3>Initial Attempt: Direct HuggingFace Export</h3>
 <p>My first attempt was to export Qwen directly using HuggingFace Transformers:</p>
@@ -390,58 +704,11 @@
 1. <strong>Manages KV-cache explicitly</strong> as input/output tensors
 2. <strong>Uses static operations</strong> (no dynamic lists or dicts)
 3. <strong>Handles cache concatenation</strong> manually</p>
-<p>Here's the key insight - instead of letting HuggingFace manage the cache internally, we expose it as model inputs and outputs:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QWENWrapper</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span>
+<p>Here's the key insight - instead of letting HuggingFace manage the cache internally, we expose it as model inputs and outputs.</p>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">input_ids</span><span class="p">,</span>           <span class="c1"># Current token(s)</span>
-        <span class="n">history_len</span><span class="p">,</span>         <span class="c1"># How many tokens already processed</span>
-        <span class="n">ids_len</span><span class="p">,</span>             <span class="c1"># Length of current input</span>
-        <span class="n">attention_mask</span><span class="p">,</span>      <span class="c1"># Mask type (0 or 1)</span>
-        <span class="o">*</span><span class="n">past_key_values</span>     <span class="c1"># Previous KV cache (72 tensors for 36 layers)</span>
-    <span class="p">):</span>
-        <span class="c1"># Reconstruct past_key_values for each layer</span>
-        <span class="n">num_layers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_hidden_layers</span>
-        <span class="n">past_kvs</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">):</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="n">past_key_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>           <span class="c1"># past_key</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">past_key_values</span><span class="p">[</span><span class="n">num_layers</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>  <span class="c1"># past_value</span>
-            <span class="n">past_kvs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-
-        <span class="c1"># Run the model</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span>
-            <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
-            <span class="n">past_key_values</span><span class="o">=</span><span class="n">past_kvs</span><span class="p">,</span>
-            <span class="n">use_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-
-        <span class="c1"># Extract new KV cache</span>
-        <span class="n">new_past_key_values</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">past_key_values</span>
-
-        <span class="c1"># Get logits and compute max token</span>
-        <span class="n">logits</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">logits</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
-        <span class="n">max_logit_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># Calculate new sequence length</span>
-        <span class="n">kv_seq_len</span> <span class="o">=</span> <span class="n">history_len</span> <span class="o">+</span> <span class="n">ids_len</span>
-
-        <span class="c1"># Return: new KV caches (72 tensors) + token + seq_len</span>
-        <span class="n">output_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_past_key_values</span><span class="p">:</span>
-            <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_past_key_values</span><span class="p">:</span>
-            <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">output_list</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">max_logit_id</span><span class="p">,</span> <span class="n">kv_seq_len</span><span class="p">])</span>
-
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_list</span><span class="p">)</span>
-</code></pre></div>
+<div class="highlight-box highlight-success">
+<p><strong>Implementation Reference:</strong> See the complete <code>QWENWrapper</code> class implementation in <a href="https://github.com/sgowdaks/llm-inference/blob/main/src/exporter.py#L64" target="_blank">src/exporter.py</a></p>
+</div>
 
 <p><strong>Key Points:</strong>
 - <strong>72 KV tensors</strong> (36 layers × 2 for keys/values) + metadata = 74 outputs
@@ -449,6 +716,11 @@
 - <strong>Explicit cache management</strong> - client code handles passing cache between iterations</p>
 <hr />
 <h2>Part 2: ONNX Export with Optimizations</h2>
+
+<div class="highlight-box highlight-success">
+<p><strong>Implementation Reference:</strong> See the complete export function <code>export_to_onnx(config: ExportConfig)</code> in <a href="https://github.com/sgowdaks/llm-inference/blob/main/src/exporter.py#L141" target="_blank">src/exporter.py#L141</a></p>
+</div>
+
 <h3>Export Configuration</h3>
 <p>With the custom forward pass, export becomes straightforward:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
@@ -515,22 +787,22 @@
 <h3>Architecture Overview</h3>
 <p>The C++ engine uses:
 - <strong>ONNX Runtime 1.19.0</strong> (GPU build)
-- <strong>tokenizers-cpp</strong> for fast tokenization
+- <strong>HuggingFace Tokenizers (C++ bindings)</strong> for fast tokenization
 - <strong>nlohmann/json</strong> for configuration
 - <strong>CUDA + cuDNN 9</strong> for GPU acceleration</p>
 <h3>Key Implementation Challenges</h3>
 <h4>Challenge 0: The C++ Tokenizer Problem</h4>
-<p><strong>The Problem:</strong> HuggingFace doesn't provide a C++ tokenizer implementation. While Python developers can directly use <code>transformers.AutoTokenizer</code>, C++ developers face a critical gap in the inference pipeline.</p>
+<p><strong>The Problem:</strong> HuggingFace doesn't provide official C++ tokenizer bindings. While Python developers can directly use <code>transformers.AutoTokenizer</code>, C++ developers face a critical gap in the inference pipeline.</p>
 
 <p><strong>Initial Considerations:</strong></p>
 <ul>
 <li>❌ <strong>Python subprocess:</strong> Massive overhead, defeats the purpose of C++ inference</li>
 <li>❌ <strong>Manual tokenization:</strong> Complex, error-prone, incompatible with pretrained models</li>
-<li>✅ <strong>tokenizers-cpp:</strong> Fast C++ library compatible with HuggingFace <code>tokenizer.json</code> format</li>
+<li>✅ <strong>HuggingFace Tokenizers C++ bindings:</strong> Fast C++ library compatible with HuggingFace <code>tokenizer.json</code> format</li>
 </ul>
 
-<p><strong>The Solution: tokenizers-cpp as Git Submodule</strong></p>
-<p>Instead of reimplementing tokenization, we integrate <a href="https://github.com/mlc-ai/tokenizers-cpp">tokenizers-cpp</a> as a git submodule. This provides:</p>
+<p><strong>The Solution: HuggingFace Tokenizers C++ Bindings</strong></p>
+<p>I use <a href="https://github.com/thammegowda/tokenizers" target="_blank">thammegowda/tokenizers</a>, a C++ binding for HuggingFace tokenizers that has an <a href="https://github.com/huggingface/tokenizers/pull/1600" target="_blank">open pull request</a> to the official HuggingFace tokenizers repository. This provides:</p>
 <ul>
 <li>✅ Full compatibility with HuggingFace <code>tokenizer.json</code> files</li>
 <li>✅ Fast C++ implementation (no Python overhead)</li>
@@ -538,9 +810,18 @@
 <li>✅ Seamless CMake integration</li>
 </ul>
 
+<p><strong>Testing the Tokenizer Integration:</strong></p>
+<p>Before integrating into the main inference pipeline, I validated the tokenizer through a multi-stage testing process:</p>
+<ol>
+<li><strong>Standalone validation:</strong> Built a <a href="https://github.com/sgowdaks/llm-inference/tree/main/tokenizer_test_proj" target="_blank">dedicated test project</a> to verify tokenizer functionality in isolation</li>
+<li><strong>Quick integration test:</strong> Ran <a href="https://github.com/sgowdaks/llm-inference/blob/main/scripts/quick_test.sh" target="_blank">scripts/quick_test.sh</a> to ensure basic encode/decode operations work correctly</li>
+<li><strong>Full inference test:</strong> Validated end-to-end with <a href="https://github.com/sgowdaks/llm-inference/blob/main/scripts/test_inference.sh" target="_blank">scripts/test_inference.sh</a> to confirm tokenizer output matches Python tokenizer results</li>
+</ol>
+<p>This incremental testing approach ensured the tokenizer worked correctly before committing to the full integration.</p>
+
 <p><strong>Integration Steps:</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># 1. Add tokenizers-cpp as a git submodule</span>
-git<span class="w"> </span>submodule<span class="w"> </span>add<span class="w"> </span>https://github.com/mlc-ai/tokenizers-cpp.git<span class="w"> </span>tokenizers
+<div class="codehilite"><pre><span></span><code><span class="c1"># 1. Add HuggingFace tokenizers C++ bindings as a git submodule</span>
+git<span class="w"> </span>submodule<span class="w"> </span>add<span class="w"> </span>https://github.com/thammegowda/tokenizers.git<span class="w"> </span>tokenizers
 git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
 
 <span class="c1"># 2. CMake automatically finds and links the library</span>
@@ -564,18 +845,11 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">decoded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenizer</span><span class="o">-&gt;</span><span class="n">Decode</span><span class="p">(</span><span class="n">token_ids</span><span class="p">);</span>
 </code></pre></div>
 
-<p><strong>Why This Matters:</strong> Without this solution, you'd need to either:</p>
-<ol>
-<li>Call Python from C++ (slow, complex dependency management)</li>
-<li>Reimplement the entire tokenizer (weeks of work, bugs inevitable)</li>
-<li>Use a different model with C++ tokenizer support (limits model choice)</li>
-</ol>
-
 <p>The git submodule approach gives you production-grade tokenization with minimal integration effort.</p>
 
 <hr />
 
-<h4>Challenge 1: ONNX Runtime API Compatibility</h4>
+<!-- <h4>Challenge 1: ONNX Runtime API Compatibility</h4>
 <p>ONNX Runtime 1.19.0 changed several APIs:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1">// ❌ Old API (pre-1.19)</span>
 <span class="n">session_options</span><span class="p">.</span><span class="n">AddSessionConfigEntry</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span>
@@ -610,9 +884,9 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">current_tokens</span><span class="p">(</span><span class="n">ids_vec</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">ids_vec</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">history_len_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ids_len_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">current_tokens</span><span class="p">.</span><span class="n">size</span><span class="p">())};</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">attention_mask_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">attention_mask_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">};</span> -->
 
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">max_tokens</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<!-- <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">max_tokens</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// Create tensors from persistent data</span>
 <span class="w">    </span><span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span>
 <span class="w">        </span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">memory_info</span><span class="p">,</span><span class="w"> </span>
@@ -627,9 +901,9 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 <span class="w">    </span><span class="n">ids_len_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">    </span><span class="n">attention_mask_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div>
+</code></pre></div> -->
 
-<h4>Challenge 3: KV Cache Management</h4>
+<!-- <h4>Challenge 3: KV Cache Management</h4>
 <p>Each decode iteration:
 1. Takes 76 input tensors: 72 KV caches + 4 metadata
 2. Produces 74 output tensors: 72 new KV caches + 2 outputs
@@ -645,7 +919,7 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 <span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// history_len</span>
 <span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// ids_len</span>
 <span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">   </span><span class="c1">// attention_mask</span>
-</code></pre></div>
+</code></pre></div> -->
 
 <hr />
 <h2>Part 4: GPU Acceleration with CUDA</h2>
@@ -681,52 +955,8 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 </code></pre></div>
 
 <hr />
-<h2>Part 5: Performance Results</h2>
-<h3>Benchmarks (Qwen3-8B)</h3>
-<table>
-<thead>
-<tr>
-<th>Configuration</th>
-<th>Hardware</th>
-<th>Tokens/sec</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Python (HF)</td>
-<td>RTX A6000</td>
-<td>~8-10</td>
-<td>Native PyTorch</td>
-</tr>
-<tr>
-<td>C++ (CPU)</td>
-<td>Xeon E5</td>
-<td>~15-20</td>
-<td>ONNX Runtime CPU</td>
-</tr>
-<tr>
-<td><strong>C++ (GPU)</strong></td>
-<td><strong>RTX A6000</strong></td>
-<td><strong>~12</strong></td>
-<td><strong>ONNX Runtime + CUDA</strong></td>
-</tr>
-</tbody>
-</table>
-<h3>Why GPU Isn't Faster?</h3>
-<p>You might wonder why GPU is similar to CPU. Reasons:</p>
-<ol>
-<li><strong>Small batch size</strong> (1) - GPU underutilized</li>
-<li><strong>KV cache overhead</strong> - Memory bandwidth bound</li>
-<li><strong>Model load time</strong> - First token takes 45-60s</li>
-<li><strong>8B model size</strong> - Still fits in CPU cache reasonably well</li>
-</ol>
-<p><strong>GPU shines with:</strong>
-- Larger batch sizes (2-8+)
-- Continuous inference (amortized load time)
-- Larger models (70B+)</p>
-<hr />
-<h2>Part 6: Project Structure</h2>
+
+<!-- <h2>Part 6: Project Structure</h2>
 <p>After refactoring, the project is organized as:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">llm</span><span class="o">-</span><span class="n">inference</span><span class="o">/</span>
 <span class="err">├──</span><span class="w"> </span><span class="n">src</span><span class="o">/</span><span class="w">                    </span><span class="c1"># Source code</span>
@@ -744,9 +974,9 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 <span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">FIXES_APPLIED</span><span class="o">.</span><span class="n">md</span>
 <span class="err">├──</span><span class="w"> </span><span class="n">CMakeLists</span><span class="o">.</span><span class="n">txt</span><span class="w">         </span><span class="c1"># Build system</span>
 <span class="err">└──</span><span class="w"> </span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span><span class="w">       </span><span class="c1"># Python deps</span>
-</code></pre></div>
+</code></pre></div> -->
 
-<hr />
+<!-- <hr />
 <h2>Part 7: Lessons Learned</h2>
 <h3>1. HuggingFace Abstractions Can Hide Complexity</h3>
 <p>The <code>DynamicCache</code> abstraction is great for research but a barrier for deployment. Understanding the underlying mechanism is crucial.</p>
@@ -754,10 +984,10 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 <p>Newer isn't always better. Opset compatibility with your runtime is more important than having the latest features.</p>
 <h3>3. Memory Management in C++ is Critical</h3>
 <p>Modern C++ with smart pointers helps, but ONNX Runtime's C API requires careful attention to:
-- Tensor data lifetime
+- Tensor data lifetime 
 - Memory ownership
-- Zero-copy operations</p>
-<h3>4. GPU Acceleration Isn't Automatic</h3>
+- Zero-copy operations</p> -->
+<!-- <h3>4. GPU Acceleration Isn't Automatic</h3>
 <p>Getting cuDNN working required:
 - Correct library versions
 - Environment variables
@@ -776,9 +1006,9 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 <div class="codehilite"><pre><span></span><code><span class="c1"># Clone repository</span>
 git<span class="w"> </span>clone<span class="w"> </span>https://github.com/sgowdaks/llm-inference.git
 <span class="nb">cd</span><span class="w"> </span>llm-inference
-git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
+git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive -->
 
-<span class="c1"># Install Python dependencies</span>
+<!-- <span class="c1"># Install Python dependencies</span>
 pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 
 <span class="c1"># Download ONNX Runtime GPU</span>
@@ -793,8 +1023,8 @@ mkdir<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&
 cmake<span class="w"> </span>..<span class="w"> </span>-DONNXRUNTIME_ROOT_DIR<span class="o">=</span>/path/to/onnxruntime-linux-x64-gpu-1.19.0
 make<span class="w"> </span>-j4
 
-<span class="c1"># Export model</span>
-<span class="nb">cd</span><span class="w"> </span>..
+<span class="c1"># Export model</span> -->
+<!-- <span class="nb">cd</span><span class="w"> </span>..
 cp<span class="w"> </span>configs/config.example.json<span class="w"> </span>configs/config.json
 <span class="c1"># Edit configs/config.json with your paths</span>
 python<span class="w"> </span>src/exporter.py<span class="w"> </span>--config<span class="w"> </span>configs/config.json<span class="w"> </span>--mode<span class="w"> </span><span class="nb">export</span>
@@ -815,9 +1045,9 @@ enable computers to learn from and make predictions or decisions based
 on data...
 
 Decode: 12.28 token/s
-</code></pre></div>
+</code></pre></div> -->
 
-<hr />
+<!-- <hr />
 <h2>Future Improvements</h2>
 <h3>Planned Features</h3>
 <ol>
@@ -835,8 +1065,8 @@ Decode: 12.28 token/s
 <li>Continuous batching</li>
 <li>KV cache quantization</li>
 <li>Model parallelism</li>
-<li>Pipeline parallelism</li>
-</ul>
+<li>Pipeline parallelism</li> -->
+<!-- </ul>
 <hr />
 <h2>Conclusion</h2>
 <p>Building a production-ready inference engine for LLMs involves much more than just exporting a model. From understanding cache management, to navigating ONNX Runtime APIs, to optimizing GPU utilization - each step presents unique challenges.</p>
@@ -846,33 +1076,96 @@ Decode: 12.28 token/s
 - ✅ Supports both CPU and GPU
 - ✅ Is production-ready and maintainable</p>
 <p>The journey taught me that modern ML frameworks are powerful but sometimes you need to go lower-level to achieve your goals. The trade-off between convenience and control is real, and knowing when to make that trade is key.</p>
+<hr /> -->
+
+<h2>Current Status: It Works! 🎉</h2>
+
+<p>After navigating through dynamic cache challenges, ONNX export complexities, and C++ integration hurdles, the inference engine is now <strong>fully operational</strong>.</p>
+
+<h3>What's Working</h3>
+
+<div class="highlight-box highlight-success">
+<ul>
+  <li>✅ <strong>ONNX Export:</strong> Qwen models successfully exported with custom forward pass</li>
+  <li>✅ <strong>C++ Inference Engine:</strong> Complete implementation with ONNX Runtime 1.19.0</li>
+  <li>✅ <strong>Tokenizer Integration:</strong> HuggingFace tokenizers working via C++ bindings</li>
+  <li>✅ <strong>GPU Acceleration:</strong> CUDA execution provider with cuDNN 9</li>
+  <li>✅ <strong>KV Cache Management:</strong> Efficient cache handling across iterations</li>
+  <li>✅ <strong>End-to-End Pipeline:</strong> Input text → tokens → inference → detokenization → output</li>
+</ul>
+</div>
+
+<h3>Example Output</h3>
+
+<p>The system successfully generates coherent text responses (In Progress):</p>
+
+<!-- <div class="codehilite"><pre><span></span><code><span class="gp">$ </span>./build/llm_inference
+<span class="go">Loading model: model/qwen_model.onnx</span>
+<span class="go">Initializing CUDA execution provider...</span>
+<span class="go">Model loaded successfully!</span>
+
+<span class="gp">User: </span>What is the capital of France?
+<span class="go">Assistant: The capital of France is Paris. It is located in the north-central</span>
+<span class="go">part of the country and is known for its iconic landmarks such as the Eiffel</span>
+<span class="go">Tower, the Louvre Museum, and Notre-Dame Cathedral.</span> -->
+</code></pre></div>
+
+<h3>Performance Benchmarking (In Progress)</h3>
+
+<div class="highlight-box highlight-warning">
+<p><strong>Note:</strong> Comprehensive performance benchmarking and token generation speed calculations are currently <strong>in progress</strong>. While the system is functionally complete and producing correct outputs, I'm still working on:</p>
+<ul>
+  <li>📊 Accurate tokens/second measurements across different input lengths</li>
+  <li>📊 Latency profiling (prefill vs decode phases)</li>
+  <li>📊 Memory usage analysis and optimization</li>
+  <li>📊 Comparison with PyTorch and Python ONNX Runtime baselines</li>
+  <li>📊 Benchmarks across different GPU configurations</li>
+</ul>
+<p>Initial informal testing shows the system running smoothly on GPU, but formal metrics will be added once the benchmarking suite is complete.</p>
+</div>
+
+<!-- <p>The remaining work is quantifying performance and optimization, not making it work in the first place.</p> -->
+
+<div class="highlight-box highlight-info">
+<p><strong>Try it yourself:</strong> The complete code is available in the <a href="https://github.com/sgowdaks/llm-inference">GitHub repository</a>. Follow the README for build instructions and running your own inference.</p>
+</div>
+
 <hr />
 <h2>Resources</h2>
 <ul>
 <li><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">github.com/sgowdaks/llm-inference</a></li>
+<li><strong>Native-LLM-for-Android:</strong> <a href="https://github.com/DakeQQ/Native-LLM-for-Android">github.com/DakeQQ/Native-LLM-for-Android</a> (Original ONNX export approach)</li>
 <li><strong>ONNX Runtime Docs:</strong> <a href="https://onnxruntime.ai/docs/">onnxruntime.ai/docs</a></li>
 <li><strong>Qwen Models:</strong> <a href="https://huggingface.co/Qwen">huggingface.co/Qwen</a></li>
 <li><strong>ONNX Spec:</strong> <a href="https://github.com/onnx/onnx">github.com/onnx/onnx</a></li>
 </ul>
 <hr />
-<h2>Connect</h2>
-<p>If you found this helpful or have questions:
-- ⭐ Star the <a href="https://github.com/sgowdaks/llm-inference">GitHub repo</a>
-- 🐛 Open an issue for bugs or questions
-- 💬 Discussion section for ideas
-- 🤝 PRs welcome!</p>
-<hr />
-<p><strong>Tags:</strong> #MachineLearning #LLM #ONNX #Cpp #CUDA #AI #DeepLearning #Inference #Optimization #Qwen</p>
-<hr />
+
     </div>
 
     <div class="post-footer-nav">
-
-
+      <a href="kv-caching-llm-inference-optimization.html" class="nav-btn nav-btn-prev">
+        <i class="fas fa-arrow-left"></i>
+        <div class="nav-btn-text">
+          <span class="nav-label">Previous Post</span>
+          <span class="nav-title">KV Caching: The Hidden Trick Behind Fast LLM Inference</span>
+        </div>
+      </a>
+      <div class="nav-btn nav-btn-next nav-btn-placeholder">
+        <div class="nav-btn-text">
+          <span class="nav-label">Next Post</span>
+          <span class="nav-title">You're reading the newest post</span>
+        </div>
+      </div>
     </div>
 
     <div class="post-tags">
-
+      <span class="tag">LLM</span>
+      <span class="tag">ONNX</span>
+      <span class="tag">C++</span>
+      <span class="tag">GPU</span>
+      <span class="tag">Performance</span>
+      <span class="tag">AI</span>
     </div>
 
   </div>

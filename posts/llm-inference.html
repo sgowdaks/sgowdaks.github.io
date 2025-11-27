@@ -163,6 +163,7 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-bottom: 2rem;
+      justify-content: center;
     }
 
     .tag {
@@ -350,14 +351,14 @@
  <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog Is a work in progress]</p>
       <h1>Building a High-Performance ONNX Inference Engine for Qwen LLMs: From PyTorch to C++ with GPU Acceleration</h1>
 <p><em>A deep dive into exporting Qwen language models to ONNX and building a production-ready C++ inference engine</em></p>
-<hr />
+
 <h2>TL;DR</h2>
 <p>I built a high-performance ONNX inference engine for Qwen language models that achieves <strong>12+ tokens/sec on GPU</strong> with C++ and CUDA. This article covers the entire journey: from dealing with HuggingFace Transformers' dynamic cache limitations, to implementing a custom forward pass, exporting to ONNX, fixing ONNX Runtime API issues, and optimizing GPU inference with cuDNN 9.</p>
 <p><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">llm-inference</a></p>
 <div class="highlight-box highlight-info">
 <p><strong>Attribution:</strong> The custom forward pass implementation and ONNX export approach were adapted from <a href="https://github.com/DakeQQ/Native-LLM-for-Android" target="_blank">DakeQQ/Native-LLM-for-Android</a>, an excellent project for running LLMs on mobile devices. I've extended and modified these techniques for server-side GPU inference.</p>
 </div>
-<hr />
+
 <h2>The Challenge: Running LLMs Efficiently</h2>
 
 <p>Large Language Models (LLMs) are powerful but resource-intensive. While Python frameworks like HuggingFace Transformers and PyTorch make it easy to prototype and train models, production inference deployments face significant challenges.</p>
@@ -478,7 +479,7 @@
 
 <p>But getting there isn't straightforward, especially for complex models like Qwen...</p>
 
-<hr />
+
 <h2>What is ONNX?</h2>
 <p>ONNX is an open, framework-agnostic format for representing neural networks as a computational graph. It standardizes how layers and operations are described so that models trained in one framework (e.g., PyTorch) can run efficiently across many runtimes and hardware backends.</p>
 
@@ -528,7 +529,7 @@
 <p>This is why ONNX models run faster: the computational graph is frozen at export time, and the runtime can optimize execution without worrying about dynamic changes.</p>
 </div>
 
-<hr />
+
 <h2>ONNX + Python vs ONNX + C++: Why Both Matter</h2>
 
 <p>Now that we understand ONNX is a file format and it acts like a blueprint or recipe:</p>
@@ -646,7 +647,7 @@
 <p><strong>Key insight:</strong> Both use the same ONNX Runtime and execution providers (CUDA, etc.). The difference is in the <em>layers above</em> - Python adds interpretation and binding overhead, C++ goes direct.</p>
 </div>
 
-<hr />
+
 
 <h2>The Implementation Journey: Converting PyTorch to ONNX</h2>
 
@@ -664,7 +665,7 @@
 <p><strong>Heads up:</strong> These aren't abstract concepts - they're concrete technical challenges you'll face when converting any modern transformer model to ONNX. Understanding these will save you hours of debugging.</p>
 </div>
 
-<hr />
+
 
 <h2>Part 1: The Dynamic Cache Problem</h2>
 <h3>Initial Attempt: Direct HuggingFace Export</h3>
@@ -714,7 +715,7 @@
 - <strong>72 KV tensors</strong> (36 layers × 2 for keys/values) + metadata = 74 outputs
 - <strong>Static graph structure</strong> - no Python loops or conditionals
 - <strong>Explicit cache management</strong> - client code handles passing cache between iterations</p>
-<hr />
+
 <h2>Part 2: ONNX Export with Optimizations</h2>
 
 <div class="highlight-box highlight-success">
@@ -782,7 +783,7 @@
 
 <p><strong>Issue:</strong> ONNX Runtime's GPU builds don't include all CPU fallback kernels for newer opsets.</p>
 <p><strong>Solution:</strong> Use opset 13 for maximum compatibility.</p>
-<hr />
+
 <h2>Part 3: Building the C++ Inference Engine</h2>
 <h3>Architecture Overview</h3>
 <p>The C++ engine uses:
@@ -847,7 +848,7 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 
 <p>The git submodule approach gives you production-grade tokenization with minimal integration effort.</p>
 
-<hr />
+
 
 <!-- <h4>Challenge 1: ONNX Runtime API Compatibility</h4>
 <p>ONNX Runtime 1.19.0 changed several APIs:</p>
@@ -921,7 +922,7 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 <span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">   </span><span class="c1">// attention_mask</span>
 </code></pre></div> -->
 
-<hr />
+
 <h2>Part 4: GPU Acceleration with CUDA</h2>
 <h3>Setting Up GPU Inference</h3>
 <h4>1. Install cuDNN 9</h4>
@@ -954,7 +955,7 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 ./build/bin/onnx_inference<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$@</span><span class="s2">&quot;</span>
 </code></pre></div>
 
-<hr />
+
 
 <!-- <h2>Part 6: Project Structure</h2>
 <p>After refactoring, the project is organized as:</p>
@@ -976,7 +977,7 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 <span class="err">└──</span><span class="w"> </span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span><span class="w">       </span><span class="c1"># Python deps</span>
 </code></pre></div> -->
 
-<!-- <hr />
+<!-- 
 <h2>Part 7: Lessons Learned</h2>
 <h3>1. HuggingFace Abstractions Can Hide Complexity</h3>
 <p>The <code>DynamicCache</code> abstraction is great for research but a barrier for deployment. Understanding the underlying mechanism is crucial.</p>
@@ -1000,7 +1001,7 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 - Data types (int32 vs int64?)
 - Memory lifetimes (data still valid?)
 - KV cache (properly passed?)</p>
-<hr />
+
 <h2>Getting Started</h2>
 <h3>Quick Start</h3>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Clone repository</span>
@@ -1047,7 +1048,7 @@ on data...
 Decode: 12.28 token/s
 </code></pre></div> -->
 
-<!-- <hr />
+<!-- 
 <h2>Future Improvements</h2>
 <h3>Planned Features</h3>
 <ol>
@@ -1067,7 +1068,7 @@ Decode: 12.28 token/s
 <li>Model parallelism</li>
 <li>Pipeline parallelism</li> -->
 <!-- </ul>
-<hr />
+
 <h2>Conclusion</h2>
 <p>Building a production-ready inference engine for LLMs involves much more than just exporting a model. From understanding cache management, to navigating ONNX Runtime APIs, to optimizing GPU utilization - each step presents unique challenges.</p>
 <p>The result? A system that:
@@ -1076,7 +1077,7 @@ Decode: 12.28 token/s
 - ✅ Supports both CPU and GPU
 - ✅ Is production-ready and maintainable</p>
 <p>The journey taught me that modern ML frameworks are powerful but sometimes you need to go lower-level to achieve your goals. The trade-off between convenience and control is real, and knowing when to make that trade is key.</p>
-<hr /> -->
+ -->
 
 <h2>Current Status: It Works! 🎉</h2>
 
@@ -1130,8 +1131,8 @@ Decode: 12.28 token/s
 <p><strong>Try it yourself:</strong> The complete code is available in the <a href="https://github.com/sgowdaks/llm-inference">GitHub repository</a>. Follow the README for build instructions and running your own inference.</p>
 </div>
 
-<hr />
-<h2>Resources</h2>
+
+<!-- <h2>Resources</h2>
 <ul>
 <li><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">github.com/sgowdaks/llm-inference</a></li>
 <li><strong>Native-LLM-for-Android:</strong> <a href="https://github.com/DakeQQ/Native-LLM-for-Android">github.com/DakeQQ/Native-LLM-for-Android</a> (Original ONNX export approach)</li>
@@ -1139,33 +1140,36 @@ Decode: 12.28 token/s
 <li><strong>Qwen Models:</strong> <a href="https://huggingface.co/Qwen">huggingface.co/Qwen</a></li>
 <li><strong>ONNX Spec:</strong> <a href="https://github.com/onnx/onnx">github.com/onnx/onnx</a></li>
 </ul>
-<hr />
+ -->
 
     </div>
 
-    <div class="post-footer-nav">
-      <a href="kv-caching-llm-inference-optimization.html" class="nav-btn nav-btn-prev">
-        <i class="fas fa-arrow-left"></i>
-        <div class="nav-btn-text">
-          <span class="nav-label">Previous Post</span>
-          <span class="nav-title">KV Caching: The Hidden Trick Behind Fast LLM Inference</span>
-        </div>
-      </a>
-      <div class="nav-btn nav-btn-next nav-btn-placeholder">
-        <div class="nav-btn-text">
-          <span class="nav-label">Next Post</span>
-          <span class="nav-title">You're reading the newest post</span>
+    <div class="container">
+      <div class="post-footer-nav">
+        <a href="kv-caching-llm-inference-optimization.html" class="nav-btn nav-btn-prev">
+          <i class="fas fa-arrow-left"></i>
+          <div class="nav-btn-text">
+            <span class="nav-label">Previous Post</span>
+            <span class="nav-title">KV Caching: The Hidden Trick Behind Fast LLM Inference</span>
+          </div>
+        </a>
+        <div class="nav-btn nav-btn-next nav-btn-placeholder" aria-hidden="true">
+          <div class="nav-btn-text">
+            <span class="nav-label">Next Post</span>
+            <span class="nav-title">You're reading the newest post</span>
+          </div>
+          <i class="fas fa-arrow-right" aria-hidden="true"></i>
         </div>
       </div>
-    </div>
 
-    <div class="post-tags">
-      <span class="tag">LLM</span>
-      <span class="tag">ONNX</span>
-      <span class="tag">C++</span>
-      <span class="tag">GPU</span>
-      <span class="tag">Performance</span>
-      <span class="tag">AI</span>
+      <div class="post-tags">
+        <span class="tag">LLM</span>
+        <span class="tag">ONNX</span>
+        <span class="tag">C++</span>
+        <span class="tag">GPU</span>
+        <span class="tag">Performance</span>
+        <span class="tag">AI</span>
+      </div>
     </div>
 
   </div>

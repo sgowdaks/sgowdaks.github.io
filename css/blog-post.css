@@ -164,7 +164,9 @@
 }
 
 .post-footer-nav .nav-btn-placeholder {
-  visibility: hidden;
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
 }
 
 @media (max-width: 768px) {
@@ -176,6 +178,7 @@
   .post-footer-nav .nav-btn,
   .post-footer-nav .nav-btn-placeholder {
     width: 100%;
+    max-width: 100%;
     justify-content: flex-start;
     text-align: left;
   }

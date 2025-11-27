@@ -18,15 +18,6 @@
       tags: ['LLM', 'ONNX', 'C++', 'GPU', 'Performance', 'AI']
     },
     {
-      id: 'example-post',
-      title: 'Example Blog Post',
-      date: '2025-11-18',
-      category: 'tech',
-      categoryLabel: 'Technology',
-      excerpt: 'This is an example showing how to write blog posts in Markdown and automatically convert them to HTML with custom styling.',
-      tags: ['Example', 'Markdown', 'Tutorial']
-    },
-    {
       id: 'kv-caching-llm-inference-optimization',
       title: 'KV Caching: The Hidden Engine Behind Fast LLM Inference',
       date: '2025-11-17',

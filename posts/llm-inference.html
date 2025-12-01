@@ -711,10 +711,10 @@
 <p><strong>Implementation Reference:</strong> See the complete <code>QWENWrapper</code> class implementation in <a href="https://github.com/sgowdaks/llm-inference/blob/main/src/exporter.py#L64" target="_blank">src/exporter.py</a></p>
 </div>
 
-<p><strong>Key Points:</strong>
+<!-- <p><strong>Key Points:</strong>
 - <strong>72 KV tensors</strong> (36 layers × 2 for keys/values) + metadata = 74 outputs
 - <strong>Static graph structure</strong> - no Python loops or conditionals
-- <strong>Explicit cache management</strong> - client code handles passing cache between iterations</p>
+- <strong>Explicit cache management</strong> - client code handles passing cache between iterations</p> -->
 
 <h2>Part 2: ONNX Export with Optimizations</h2>
 
@@ -723,7 +723,7 @@
 </div>
 
 <h3>Export Configuration</h3>
-<p>With the custom forward pass, export becomes straightforward:</p>
+<p>With the custom forward pass, export becomes straightforward</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
     <span class="n">wrapped_model</span> <span class="o">=</span> <span class="n">QWENWrapper</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
@@ -764,7 +764,7 @@
         <span class="n">inputs</span><span class="p">,</span>
         <span class="n">output_path</span><span class="p">,</span>
         <span class="n">export_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">opset_version</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>  <span class="c1"># Important: 14+ has GPU compatibility issues</span>
+        <br><span class="n">opset_version</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>  <span class="c1"># Important: 14+ has GPU compatibility issues</span></br>
         <span class="n">do_constant_folding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">,</span> <span class="s2">&quot;history_len&quot;</span><span class="p">,</span> <span class="s2">&quot;ids_len&quot;</span><span class="p">,</span> <span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">+</span> 
                     <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;past_key_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_layers</span><span class="p">)]</span> <span class="o">+</span>
@@ -785,22 +785,23 @@
 <p><strong>Solution:</strong> Use opset 13 for maximum compatibility.</p>
 
 <h2>Part 3: Building the C++ Inference Engine</h2>
-<h3>Architecture Overview</h3>
-<p>The C++ engine uses:
-- <strong>ONNX Runtime 1.19.0</strong> (GPU build)
-- <strong>HuggingFace Tokenizers (C++ bindings)</strong> for fast tokenization
-- <strong>nlohmann/json</strong> for configuration
-- <strong>CUDA + cuDNN 9</strong> for GPU acceleration</p>
+<!-- <h3>Architecture Overview</h3> -->
+<p>The C++ engine uses: <br>
+- <strong>ONNX Runtime 1.19.0</strong> (GPU build) <br>
+- <strong>HuggingFace Tokenizers (C++ bindings)</strong> for fast tokenization <br>
+- <strong>nlohmann/json</strong> for configuration <br>
+- <strong>CUDA + cuDNN 9</strong> for GPU acceleration</p> 
+
 <h3>Key Implementation Challenges</h3>
-<h4>Challenge 0: The C++ Tokenizer Problem</h4>
+<!-- <h4>Challenge 0: The C++ Tokenizer Problem</h4> -->
 <p><strong>The Problem:</strong> HuggingFace doesn't provide official C++ tokenizer bindings. While Python developers can directly use <code>transformers.AutoTokenizer</code>, C++ developers face a critical gap in the inference pipeline.</p>
 
-<p><strong>Initial Considerations:</strong></p>
+<!-- <p><strong>Initial Considerations:</strong></p>
 <ul>
 <li>❌ <strong>Python subprocess:</strong> Massive overhead, defeats the purpose of C++ inference</li>
 <li>❌ <strong>Manual tokenization:</strong> Complex, error-prone, incompatible with pretrained models</li>
 <li>✅ <strong>HuggingFace Tokenizers C++ bindings:</strong> Fast C++ library compatible with HuggingFace <code>tokenizer.json</code> format</li>
-</ul>
+</ul> -->
 
 <p><strong>The Solution: HuggingFace Tokenizers C++ Bindings</strong></p>
 <p>I use <a href="https://github.com/thammegowda/tokenizers" target="_blank">thammegowda/tokenizers</a>, a C++ binding for HuggingFace tokenizers that has an <a href="https://github.com/huggingface/tokenizers/pull/1600" target="_blank">open pull request</a> to the official HuggingFace tokenizers repository. This provides:</p>
@@ -811,12 +812,12 @@
 <li>✅ Seamless CMake integration</li>
 </ul>
 
-<p><strong>Testing the Tokenizer Integration:</strong></p>
+<!-- <p><strong>Testing the Tokenizer Integration:</strong></p> -->
 <p>Before integrating into the main inference pipeline, I validated the tokenizer through a multi-stage testing process:</p>
 <ol>
-<li><strong>Standalone validation:</strong> Built a <a href="https://github.com/sgowdaks/llm-inference/tree/main/tokenizer_test_proj" target="_blank">dedicated test project</a> to verify tokenizer functionality in isolation</li>
-<li><strong>Quick integration test:</strong> Ran <a href="https://github.com/sgowdaks/llm-inference/blob/main/scripts/quick_test.sh" target="_blank">scripts/quick_test.sh</a> to ensure basic encode/decode operations work correctly</li>
-<li><strong>Full inference test:</strong> Validated end-to-end with <a href="https://github.com/sgowdaks/llm-inference/blob/main/scripts/test_inference.sh" target="_blank">scripts/test_inference.sh</a> to confirm tokenizer output matches Python tokenizer results</li>
+<li><strong>Standalone validation:</strong> Built a <a href="https://github.com/sgowdaks/llm-inference/tree/main/tokenizer_test_proj" target="_blank">dedicated test project</a> to verify tokenizer functionality in isolation.</li>
+<li><strong>Quick integration test:</strong> A fast validation script <a href="https://github.com/sgowdaks/llm-inference/blob/main/scripts/quick_test.sh" target="_blank">scripts/quick_test.sh</a> that runs the C++ inference binary in the background, waits for model loading (~60 seconds), and confirms ONNX Runtime initializes and inference starts successfully before terminating. This catches loading/initialization issues without waiting for full generation.</li>
+<li><strong>Full inference test:</strong> Validated end-to-end with <a href="https://github.com/sgowdaks/llm-inference/blob/main/scripts/test_inference.sh" target="_blank">scripts/test_inference.sh</a> - a comprehensive test that performs pre-flight checks (executable, model, tokenizer existence), runs complete inference with a 3-minute timeout, and logs output for debugging. This confirms the entire pipeline works correctly from prompt to generated response.</li>
 </ol>
 <p>This incremental testing approach ensured the tokenizer worked correctly before committing to the full integration.</p>
 

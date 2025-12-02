@@ -162,7 +162,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-bottom: 2rem;
+      margin: 2rem 0;
       justify-content: center;
     }
 
@@ -711,11 +711,6 @@
 <p><strong>Implementation Reference:</strong> See the complete <code>QWENWrapper</code> class implementation in <a href="https://github.com/sgowdaks/llm-inference/blob/main/src/exporter.py#L64" target="_blank">src/exporter.py</a></p>
 </div>
 
-<!-- <p><strong>Key Points:</strong>
-- <strong>72 KV tensors</strong> (36 layers × 2 for keys/values) + metadata = 74 outputs
-- <strong>Static graph structure</strong> - no Python loops or conditionals
-- <strong>Explicit cache management</strong> - client code handles passing cache between iterations</p> -->
-
 <h2>Part 2: ONNX Export with Optimizations</h2>
 
 <div class="highlight-box highlight-success">
@@ -796,12 +791,7 @@
 <!-- <h4>Challenge 0: The C++ Tokenizer Problem</h4> -->
 <p><strong>The Problem:</strong> HuggingFace doesn't provide official C++ tokenizer bindings. While Python developers can directly use <code>transformers.AutoTokenizer</code>, C++ developers face a critical gap in the inference pipeline.</p>
 
-<!-- <p><strong>Initial Considerations:</strong></p>
-<ul>
-<li>❌ <strong>Python subprocess:</strong> Massive overhead, defeats the purpose of C++ inference</li>
-<li>❌ <strong>Manual tokenization:</strong> Complex, error-prone, incompatible with pretrained models</li>
-<li>✅ <strong>HuggingFace Tokenizers C++ bindings:</strong> Fast C++ library compatible with HuggingFace <code>tokenizer.json</code> format</li>
-</ul> -->
+
 
 <p><strong>The Solution: HuggingFace Tokenizers C++ Bindings</strong></p>
 <p>I use <a href="https://github.com/thammegowda/tokenizers" target="_blank">thammegowda/tokenizers</a>, a C++ binding for HuggingFace tokenizers that has an <a href="https://github.com/huggingface/tokenizers/pull/1600" target="_blank">open pull request</a> to the official HuggingFace tokenizers repository. This provides:</p>
@@ -834,10 +824,10 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 </code></pre></div>
 
 <p><strong>Usage in C++:</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tokenizers_cpp.h&gt;</span>
+<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;tokenizers/tokenizers.h&quot;</span>
 
-<span class="c1">// Load tokenizer from HuggingFace tokenizer.json</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">tokenizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenizers</span><span class="o">::</span><span class="n">Tokenizer</span><span class="o">::</span><span class="n">FromBlobJSON</span><span class="p">(</span><span class="n">json_blob</span><span class="p">);</span>
+<span class="c1">// Load tokenizer from HuggingFace tokenizer.json file path</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">tokenizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenizers</span><span class="o">::</span><span class="n">Tokenizer</span><span class="o">::</span><span class="n">FromFile</span><span class="p">(</span><span class="s">&quot;/path/to/Qwen3-8B/tokenizer.json&quot;</span><span class="p">);</span>
 
 <span class="c1">// Encode text to token IDs</span>
 <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prompt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;What is the capital of France?&quot;</span><span class="p">;</span>
@@ -845,240 +835,94 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 
 <span class="c1">// Decode token IDs back to text</span>
 <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">decoded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tokenizer</span><span class="o">-&gt;</span><span class="n">Decode</span><span class="p">(</span><span class="n">token_ids</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Token IDs: &quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">token_ids</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">Decoded: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">decoded</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </code></pre></div>
 
 <p>The git submodule approach gives you production-grade tokenization with minimal integration effort.</p>
 
+<h2>Part 4: CPU vs GPU Execution - Understanding the Difference</h2>
 
+<p>The C++ inference engine supports both CPU and GPU execution. While the core ONNX model and inference logic remain the same, <strong>how you run the executable differs significantly</strong> depending on which hardware you're using.</p>
 
-<!-- <h4>Challenge 1: ONNX Runtime API Compatibility</h4>
-<p>ONNX Runtime 1.19.0 changed several APIs:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1">// ❌ Old API (pre-1.19)</span>
-<span class="n">session_options</span><span class="p">.</span><span class="n">AddSessionConfigEntry</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span>
-<span class="n">session_options</span><span class="p">.</span><span class="n">SetLogVerbosityLevel</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
-<span class="n">Ort</span><span class="o">::</span><span class="n">ThrowOnError</span><span class="p">(</span><span class="n">OrtSessionOptionsAppendExecutionProvider_CUDA</span><span class="p">(</span><span class="n">options</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">));</span>
+<h3>Key Differences: CPU vs GPU Execution</h3>
 
-<span class="c1">// ✅ New API (1.19.0+)</span>
-<span class="n">session_options</span><span class="p">.</span><span class="n">AddConfigEntry</span><span class="p">(</span><span class="s">&quot;key&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value&quot;</span><span class="p">);</span>
-<span class="c1">// SetLogVerbosityLevel removed - use session options</span>
-<span class="n">OrtCUDAProviderOptions</span><span class="w"> </span><span class="n">cuda_options</span><span class="p">;</span>
-<span class="n">cuda_options</span><span class="p">.</span><span class="n">device_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="n">session_options</span><span class="p">.</span><span class="n">AppendExecutionProvider_CUDA</span><span class="p">(</span><span class="n">cuda_options</span><span class="p">);</span>
+<div class="comparison-box">
+  <div class="comparison-item">
+    <h4>💻 CPU Execution</h4>
+    <div class="codehilite"><pre><span></span><code><span class="c1"># Simple and direct - just run it</span>
+./build/bin/onnx_inference "What is AI?"
 </code></pre></div>
+    <p><strong>What happens:</strong></p>
+    <ul>
+      <li>✅ No special environment setup needed</li>
+      <li>✅ Uses default system libraries</li>
+      <li>✅ ONNX Runtime automatically uses CPU execution provider</li>
+      <li>✅ Works out of the box after compilation</li>
+    </ul>
+  </div>
 
-<h4>Challenge 2: Tensor Lifecycle Management</h4>
-<p><strong>The Bug:</strong> Generated tokens were garbage:</p>
-<div class="codehilite"><pre><span></span><code>Output:<span class="w"> </span>&quot;ĊĊĊĊ<span class="nt">&lt;/think&gt;&lt;/think&gt;</span>and<span class="w"> </span>and<span class="w"> </span>and<span class="w"> </span>and...&quot;
+  <div class="comparison-item">
+    <h4>🎮 GPU Execution (CUDA)</h4>
+    <div class="codehilite"><pre><span></span><code><span class="c1"># Requires wrapper script for library setup</span>
+./scripts/run_gpu_inference.sh "What is AI?"
 </code></pre></div>
+    <p><strong>What happens:</strong></p>
+    <ul>
+      <li>⚠️ Needs CUDA/cuDNN libraries properly configured</li>
+      <li>⚠️ Requires setting environment variables</li>
+      <li>⚠️ Must resolve library conflicts</li>
+      <li>✅ Much faster inference (10-20x speedup)</li>
+    </ul>
+  </div>
+</div>
 
-<p><strong>Root Cause:</strong> Data vectors went out of scope before tensor creation:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1">// ❌ WRONG - vector destroyed after loop iteration</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">max_tokens</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">new_token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">token_id</span><span class="p">};</span><span class="w">  </span><span class="c1">// Goes out of scope!</span>
-<span class="w">    </span><span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span>
-<span class="w">        </span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">memory_info</span><span class="p">,</span><span class="w"> </span>
-<span class="w">            </span><span class="n">new_token</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="p">...));</span><span class="w">  </span><span class="c1">// Dangling pointer!</span>
-<span class="p">}</span>
-</code></pre></div>
-
-<p><strong>Solution:</strong> Maintain persistent buffers:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1">// ✅ CORRECT - persistent across iterations</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">current_tokens</span><span class="p">(</span><span class="n">ids_vec</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">ids_vec</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">history_len_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ids_len_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">current_tokens</span><span class="p">.</span><span class="n">size</span><span class="p">())};</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">attention_mask_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">};</span> -->
-
-<!-- <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">max_tokens</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="c1">// Create tensors from persistent data</span>
-<span class="w">    </span><span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span>
-<span class="w">        </span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">memory_info</span><span class="p">,</span><span class="w"> </span>
-<span class="w">            </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span><span class="w"> </span><span class="p">...));</span>
-
-<span class="w">    </span><span class="c1">// ... run inference ...</span>
-
-<span class="w">    </span><span class="c1">// Update buffers for next iteration</span>
-<span class="w">    </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
-<span class="w">    </span><span class="n">current_tokens</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">token_id</span><span class="p">));</span>
-<span class="w">    </span><span class="n">history_len_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">ids_len_data</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="w">    </span><span class="n">ids_len_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="w">    </span><span class="n">attention_mask_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div> -->
-
-<!-- <h4>Challenge 3: KV Cache Management</h4>
-<p>Each decode iteration:
-1. Takes 76 input tensors: 72 KV caches + 4 metadata
-2. Produces 74 output tensors: 72 new KV caches + 2 outputs
-3. Must reconstruct inputs from outputs</p>
-<div class="codehilite"><pre><span></span><code><span class="c1">// Move KV caches from outputs to inputs (zero-copy)</span>
-<span class="n">input_tensors</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">num_layers_</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">output_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">]));</span>
-<span class="p">}</span>
-
-<span class="c1">// Create new metadata tensors</span>
-<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// token</span>
-<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// history_len</span>
-<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">  </span><span class="c1">// ids_len</span>
-<span class="n">input_tensors</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">Ort</span><span class="o">::</span><span class="n">Value</span><span class="o">::</span><span class="n">CreateTensor</span><span class="o">&lt;</span><span class="kt">int8_t</span><span class="o">&gt;</span><span class="p">(...));</span><span class="w">   </span><span class="c1">// attention_mask</span>
-</code></pre></div> -->
-
-
-<h2>Part 4: GPU Acceleration with CUDA</h2>
 <h3>Setting Up GPU Inference</h3>
+
 <h4>1. Install cuDNN 9</h4>
-<div class="codehilite"><pre><span></span><code><span class="c1"># Via conda (recommended)</span>
+<p>cuDNN (CUDA Deep Neural Network library) provides GPU-accelerated implementations of neural network operations. It's essential for fast GPU inference.</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># Install via conda (recommended - handles dependencies automatically)</span>
 conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">9</span>
 
-<span class="c1"># Set environment</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$CONDA_PREFIX</span>/lib:<span class="nv">$LD_LIBRARY_PATH</span>
+<span class="c1"># This installs cuDNN to: $CONDA_PREFIX/lib/</span>
+<span class="c1"># But the system doesn't know to look there by default!</span>
 </code></pre></div>
 
-<h4>2. Configure CUDA Provider</h4>
-<div class="codehilite"><pre><span></span><code><span class="n">OrtCUDAProviderOptions</span><span class="w"> </span><span class="n">cuda_options</span><span class="p">;</span>
-<span class="n">cuda_options</span><span class="p">.</span><span class="n">device_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Use GPU 0</span>
-<span class="n">cuda_options</span><span class="p">.</span><span class="n">cudnn_conv_algo_search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OrtCudnnConvAlgoSearchExhaustive</span><span class="p">;</span>
-<span class="n">cuda_options</span><span class="p">.</span><span class="n">gpu_mem_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SIZE_MAX</span><span class="p">;</span><span class="w">  </span><span class="c1">// No limit</span>
-<span class="n">cuda_options</span><span class="p">.</span><span class="n">arena_extend_strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="n">cuda_options</span><span class="p">.</span><span class="n">do_copy_in_default_stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<h4>2. The Wrapper Script Solution</h4>
+<p>To make GPU execution work, we use a wrapper script (<code>scripts/run_gpu_inference.sh</code>) that sets up the environment <em>before</em> running the executable:</p>
 
-<span class="n">session_options</span><span class="p">.</span><span class="n">AppendExecutionProvider_CUDA</span><span class="p">(</span><span class="n">cuda_options</span><span class="p">);</span>
-</code></pre></div>
-
-<h4>3. Handle Library Conflicts</h4>
-<p>Created a wrapper script to resolve libstdc++ conflicts:</p>
 <div class="codehilite"><pre><span></span><code><span class="ch">#!/bin/bash</span>
 <span class="c1"># scripts/run_gpu_inference.sh</span>
 
+<span class="c1"># Tell the system where to find CUDA/cuDNN libraries</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="nv">$CONDA_PREFIX</span>/lib:<span class="nv">$LD_LIBRARY_PATH</span>
+
+<span class="c1"># Force loading the correct C++ standard library to avoid version conflicts</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">LD_PRELOAD</span><span class="o">=</span>/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
+<span class="c1"># Now run the actual executable with GPU support</span>
 ./build/bin/onnx_inference<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$@</span><span class="s2">&quot;</span>
 </code></pre></div>
 
+<h4>3. Configure CUDA Provider in C++</h4>
+<p>In the C++ code, we configure ONNX Runtime to use the CUDA execution provider:</p>
 
+<div class="codehilite"><pre><span></span><code><span class="n">OrtCUDAProviderOptions</span><span class="w"> </span><span class="n">cuda_options</span><span class="p">;</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">device_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Use GPU 0 (first GPU)</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">cudnn_conv_algo_search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OrtCudnnConvAlgoSearchExhaustive</span><span class="p">;</span><span class="w">  </span><span class="c1">// Find best convolution algorithm</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">gpu_mem_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SIZE_MAX</span><span class="p">;</span><span class="w">  </span><span class="c1">// No memory limit - use all available GPU RAM</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">arena_extend_strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">// How to allocate GPU memory</span>
+<span class="n">cuda_options</span><span class="p">.</span><span class="n">do_copy_in_default_stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">  </span><span class="c1">// Use default CUDA stream for copies</span>
 
-<!-- <h2>Part 6: Project Structure</h2>
-<p>After refactoring, the project is organized as:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">llm</span><span class="o">-</span><span class="n">inference</span><span class="o">/</span>
-<span class="err">├──</span><span class="w"> </span><span class="n">src</span><span class="o">/</span><span class="w">                    </span><span class="c1"># Source code</span>
-<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">onnx_inference</span><span class="o">.</span><span class="n">cpp</span><span class="w">  </span><span class="c1"># C++ inference engine</span>
-<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">onnx_inference</span><span class="o">.</span><span class="n">py</span><span class="w">   </span><span class="c1"># Python inference</span>
-<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">exporter</span><span class="o">.</span><span class="n">py</span><span class="w">         </span><span class="c1"># Model export</span>
-<span class="err">├──</span><span class="w"> </span><span class="n">scripts</span><span class="o">/</span><span class="w">                </span><span class="c1"># Utility scripts</span>
-<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">run_gpu_inference</span><span class="o">.</span><span class="n">sh</span>
-<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">test_inference</span><span class="o">.</span><span class="n">sh</span>
-<span class="err">├──</span><span class="w"> </span><span class="n">configs</span><span class="o">/</span><span class="w">                </span><span class="c1"># Configuration</span>
-<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">config</span><span class="o">.</span><span class="n">json</span>
-<span class="err">├──</span><span class="w"> </span><span class="n">docs</span><span class="o">/</span><span class="w">                   </span><span class="c1"># Documentation</span>
-<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">BUILD</span><span class="o">.</span><span class="n">md</span>
-<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">CONTRIBUTING</span><span class="o">.</span><span class="n">md</span>
-<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">FIXES_APPLIED</span><span class="o">.</span><span class="n">md</span>
-<span class="err">├──</span><span class="w"> </span><span class="n">CMakeLists</span><span class="o">.</span><span class="n">txt</span><span class="w">         </span><span class="c1"># Build system</span>
-<span class="err">└──</span><span class="w"> </span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span><span class="w">       </span><span class="c1"># Python deps</span>
-</code></pre></div> -->
-
-<!-- 
-<h2>Part 7: Lessons Learned</h2>
-<h3>1. HuggingFace Abstractions Can Hide Complexity</h3>
-<p>The <code>DynamicCache</code> abstraction is great for research but a barrier for deployment. Understanding the underlying mechanism is crucial.</p>
-<h3>2. ONNX Opset Matters</h3>
-<p>Newer isn't always better. Opset compatibility with your runtime is more important than having the latest features.</p>
-<h3>3. Memory Management in C++ is Critical</h3>
-<p>Modern C++ with smart pointers helps, but ONNX Runtime's C API requires careful attention to:
-- Tensor data lifetime 
-- Memory ownership
-- Zero-copy operations</p> -->
-<!-- <h3>4. GPU Acceleration Isn't Automatic</h3>
-<p>Getting cuDNN working required:
-- Correct library versions
-- Environment variables
-- Library path resolution
-- Preload order</p>
-<h3>5. Debugging Requires Multiple Perspectives</h3>
-<p>When output was garbage, I had to check:
-- Token IDs (valid range?)
-- Tensor shapes (correct dimensions?)
-- Data types (int32 vs int64?)
-- Memory lifetimes (data still valid?)
-- KV cache (properly passed?)</p>
-
-<h2>Getting Started</h2>
-<h3>Quick Start</h3>
-<div class="codehilite"><pre><span></span><code><span class="c1"># Clone repository</span>
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/sgowdaks/llm-inference.git
-<span class="nb">cd</span><span class="w"> </span>llm-inference
-git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive -->
-
-<!-- <span class="c1"># Install Python dependencies</span>
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-
-<span class="c1"># Download ONNX Runtime GPU</span>
-wget<span class="w"> </span>https://github.com/microsoft/onnxruntime/releases/download/v1.19.0/onnxruntime-linux-x64-gpu-1.19.0.tgz
-tar<span class="w"> </span>-xzf<span class="w"> </span>onnxruntime-linux-x64-gpu-1.19.0.tgz
-
-<span class="c1"># Install cuDNN</span>
-conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="nv">cudnn</span><span class="o">=</span><span class="m">9</span>
-
-<span class="c1"># Build C++ inference</span>
-mkdir<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
-cmake<span class="w"> </span>..<span class="w"> </span>-DONNXRUNTIME_ROOT_DIR<span class="o">=</span>/path/to/onnxruntime-linux-x64-gpu-1.19.0
-make<span class="w"> </span>-j4
-
-<span class="c1"># Export model</span> -->
-<!-- <span class="nb">cd</span><span class="w"> </span>..
-cp<span class="w"> </span>configs/config.example.json<span class="w"> </span>configs/config.json
-<span class="c1"># Edit configs/config.json with your paths</span>
-python<span class="w"> </span>src/exporter.py<span class="w"> </span>--config<span class="w"> </span>configs/config.json<span class="w"> </span>--mode<span class="w"> </span><span class="nb">export</span>
-
-<span class="c1"># Run inference</span>
-./scripts/run_gpu_inference.sh<span class="w"> </span><span class="s2">&quot;What is machine learning?&quot;</span>
+<span class="c1">// Tell ONNX Runtime to use CUDA for execution</span>
+<span class="n">session_options</span><span class="p">.</span><span class="n">AppendExecutionProvider_CUDA</span><span class="p">(</span><span class="n">cuda_options</span><span class="p">);</span>
 </code></pre></div>
 
-<h3>Expected Output</h3>
-<div class="codehilite"><pre><span></span><code>Using CUDA execution provider on GPU 0
 
-Prompt: What is machine learning?
-Qwen Answering:
 
-Machine learning is a subset of artificial intelligence (AI) that 
-focuses on the development of algorithms and statistical models that 
-enable computers to learn from and make predictions or decisions based 
-on data...
-
-Decode: 12.28 token/s
-</code></pre></div> -->
-
-<!-- 
-<h2>Future Improvements</h2>
-<h3>Planned Features</h3>
-<ol>
-<li><strong>Batch Inference</strong> - Process multiple prompts simultaneously</li>
-<li><strong>Quantization</strong> - INT8/INT4 support for smaller memory footprint</li>
-<li><strong>Multi-GPU</strong> - Distribute inference across devices</li>
-<li><strong>More Models</strong> - Support Llama, Mistral, etc.</li>
-<li><strong>Python Bindings</strong> - PyBind11 wrapper for C++ engine</li>
-<li><strong>Streaming API</strong> - Token-by-token generation</li>
-<li><strong>Request Batching</strong> - Dynamic batching for throughput</li>
-</ol>
-<h3>Performance Optimizations</h3>
-<ul>
-<li>Flash Attention integration</li>
-<li>Continuous batching</li>
-<li>KV cache quantization</li>
-<li>Model parallelism</li>
-<li>Pipeline parallelism</li> -->
-<!-- </ul>
-
-<h2>Conclusion</h2>
-<p>Building a production-ready inference engine for LLMs involves much more than just exporting a model. From understanding cache management, to navigating ONNX Runtime APIs, to optimizing GPU utilization - each step presents unique challenges.</p>
-<p>The result? A system that:
-- ✅ Runs 12+ tokens/sec on GPU
-- ✅ Has no Python runtime overhead
-- ✅ Supports both CPU and GPU
-- ✅ Is production-ready and maintainable</p>
-<p>The journey taught me that modern ML frameworks are powerful but sometimes you need to go lower-level to achieve your goals. The trade-off between convenience and control is real, and knowing when to make that trade is key.</p>
- -->
 
 <h2>Current Status: It Works! 🎉</h2>
 
@@ -1097,20 +941,7 @@ Decode: 12.28 token/s
 </ul>
 </div>
 
-<h3>Example Output</h3>
 
-<p>The system successfully generates coherent text responses (In Progress):</p>
-
-<!-- <div class="codehilite"><pre><span></span><code><span class="gp">$ </span>./build/llm_inference
-<span class="go">Loading model: model/qwen_model.onnx</span>
-<span class="go">Initializing CUDA execution provider...</span>
-<span class="go">Model loaded successfully!</span>
-
-<span class="gp">User: </span>What is the capital of France?
-<span class="go">Assistant: The capital of France is Paris. It is located in the north-central</span>
-<span class="go">part of the country and is known for its iconic landmarks such as the Eiffel</span>
-<span class="go">Tower, the Louvre Museum, and Notre-Dame Cathedral.</span> -->
-</code></pre></div>
 
 <h3>Performance Benchmarking (In Progress)</h3>
 
@@ -1133,44 +964,32 @@ Decode: 12.28 token/s
 </div>
 
 
-<!-- <h2>Resources</h2>
-<ul>
-<li><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">github.com/sgowdaks/llm-inference</a></li>
-<li><strong>Native-LLM-for-Android:</strong> <a href="https://github.com/DakeQQ/Native-LLM-for-Android">github.com/DakeQQ/Native-LLM-for-Android</a> (Original ONNX export approach)</li>
-<li><strong>ONNX Runtime Docs:</strong> <a href="https://onnxruntime.ai/docs/">onnxruntime.ai/docs</a></li>
-<li><strong>Qwen Models:</strong> <a href="https://huggingface.co/Qwen">huggingface.co/Qwen</a></li>
-<li><strong>ONNX Spec:</strong> <a href="https://github.com/onnx/onnx">github.com/onnx/onnx</a></li>
-</ul>
- -->
-
     </div>
 
-    <div class="container">
-      <div class="post-footer-nav">
-        <a href="kv-caching-llm-inference-optimization.html" class="nav-btn nav-btn-prev">
-          <i class="fas fa-arrow-left"></i>
-          <div class="nav-btn-text">
-            <span class="nav-label">Previous Post</span>
-            <span class="nav-title">KV Caching: The Hidden Trick Behind Fast LLM Inference</span>
-          </div>
-        </a>
-        <a href="positional-embeddings-transformers.html" class="nav-btn nav-btn-next">
-          <div class="nav-btn-text">
-            <span class="nav-label">Next Post</span>
-            <span class="nav-title">Positional Embeddings in Transformers</span>
-          </div>
-          <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
+    <div class="post-footer-nav">
+      <a href="kv-caching-llm-inference-optimization.html" class="nav-btn nav-btn-prev">
+        <i class="fas fa-arrow-left"></i>
+        <div class="nav-btn-text">
+          <span class="nav-label">Previous Post</span>
+          <span class="nav-title">KV Caching: The Hidden Trick Behind Fast LLM Inference</span>
+        </div>
+      </a>
+      <a href="positional-embeddings-transformers.html" class="nav-btn nav-btn-next">
+        <div class="nav-btn-text">
+          <span class="nav-label">Next Post</span>
+          <span class="nav-title">Positional Embeddings in Transformers</span>
+        </div>
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
 
-      <div class="post-tags">
-        <span class="tag">LLM</span>
-        <span class="tag">ONNX</span>
-        <span class="tag">C++</span>
-        <span class="tag">GPU</span>
-        <span class="tag">Performance</span>
-        <span class="tag">AI</span>
-      </div>
+    <div class="post-tags">
+      <span class="tag">LLM</span>
+      <span class="tag">ONNX</span>
+      <span class="tag">C++</span>
+      <span class="tag">GPU</span>
+      <span class="tag">Performance</span>
+      <span class="tag">AI</span>
     </div>
 
   </div>

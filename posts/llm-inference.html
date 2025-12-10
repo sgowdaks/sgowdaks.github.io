@@ -348,13 +348,16 @@
 
     <div class="post-content">
 <!-- <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p> -->
- <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog Is a work in progress]</p>
+ <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me]</p>
       <h1>Building a High-Performance ONNX Inference Engine for Qwen LLMs: From PyTorch to C++ with GPU Acceleration</h1>
 <p><em>A deep dive into exporting Qwen language models to ONNX and building a production-ready C++ inference engine</em></p>
 
 <h2>TL;DR</h2>
-<p>I built a high-performance ONNX inference engine for Qwen language models that achieves <strong>12+ tokens/sec on GPU</strong> with C++ and CUDA. This article covers the entire journey: from dealing with HuggingFace Transformers' dynamic cache limitations, to implementing a custom forward pass, exporting to ONNX, fixing ONNX Runtime API issues, and optimizing GPU inference with cuDNN 9.</p>
+<p>I'm building a high-performance ONNX inference engine for Qwen language models in C++ with GPU acceleration. Currently achieving <strong>~16.84 tokens/sec on GPU</strong>, with significant optimization opportunities identified. This article covers: dealing with HuggingFace Transformers' dynamic cache limitations, implementing a custom forward pass, exporting to ONNX, fixing ONNX Runtime API issues, and GPU inference with cuDNN 9. Performance optimization is actively underway.</p>
 <p><strong>GitHub Repository:</strong> <a href="https://github.com/sgowdaks/llm-inference">llm-inference</a></p>
+<div class="highlight-box highlight-warning">
+<p><strong>⚠️ Current Status:</strong> The C++ inference engine is functionally complete but performance is lower than expected (16.84 tokens/sec vs Python's 21.78 tokens/sec). I'm actively working on optimization. See "Performance Benchmarking" and "Next Steps" sections for details on where improvements will focus.</p>
+</div>
 <div class="highlight-box highlight-info">
 <p><strong>Attribution:</strong> The custom forward pass implementation and ONNX export approach were adapted from <a href="https://github.com/DakeQQ/Native-LLM-for-Android" target="_blank">DakeQQ/Native-LLM-for-Android</a>, an excellent project for running LLMs on mobile devices. I've extended and modified these techniques for server-side GPU inference.</p>
 </div>
@@ -771,10 +774,10 @@
     <span class="p">)</span>
 </code></pre></div>
 
-<h3>Why Opset 13?</h3>
+<!-- <h3>Why Opset 13?</h3>
 <p>Initially, I used opset 17, but encountered:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">Error</span><span class="o">:</span><span class="w"> </span><span class="n">Could</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">find</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">implementation</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">Mul</span><span class="o">(</span><span class="mi">14</span><span class="o">)</span><span class="w"> </span><span class="n">node</span>
-</code></pre></div>
+</code></pre></div> -->
 
 <p><strong>Issue:</strong> ONNX Runtime's GPU builds don't include all CPU fallback kernels for newer opsets.</p>
 <p><strong>Solution:</strong> Use opset 13 for maximum compatibility.</p>
@@ -803,7 +806,7 @@
 </ul>
 
 <!-- <p><strong>Testing the Tokenizer Integration:</strong></p> -->
-<p>Before integrating into the main inference pipeline, I validated the tokenizer through a multi-stage testing process:</p>
+<!-- <p>Before integrating into the main inference pipeline, I validated the tokenizer through a multi-stage testing process:</p>
 <ol>
 <li><strong>Standalone validation:</strong> Built a <a href="https://github.com/sgowdaks/llm-inference/tree/main/tokenizer_test_proj" target="_blank">dedicated test project</a> to verify tokenizer functionality in isolation.</li>
 <li><strong>Quick integration test:</strong> A fast validation script <a href="https://github.com/sgowdaks/llm-inference/blob/main/scripts/quick_test.sh" target="_blank">scripts/quick_test.sh</a> that runs the C++ inference binary in the background, waits for model loading (~60 seconds), and confirms ONNX Runtime initializes and inference starts successfully before terminating. This catches loading/initialization issues without waiting for full generation.</li>
@@ -839,7 +842,7 @@ cp<span class="w"> </span>~/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-In
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Token IDs: &quot;</span><span class="p">;</span>
 <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">token_ids</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">Decoded: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">decoded</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-</code></pre></div>
+</code></pre></div> -->
 
 <p>The git submodule approach gives you production-grade tokenization with minimal integration effort.</p>
 
@@ -924,9 +927,9 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 
 
 
-<h2>Current Status: It Works! 🎉</h2>
+<h2>Current Status: Functional But Underperforming 🚧</h2>
 
-<p>After navigating through dynamic cache challenges, ONNX export complexities, and C++ integration hurdles, the inference engine is now <strong>fully operational</strong>.</p>
+<p>After navigating through dynamic cache challenges, ONNX export complexities, and C++ integration hurdles, the inference engine is now <strong>fully operational and producing correct outputs</strong>. However, initial benchmarking reveals performance is lower than expected. This is an opportunity to identify and fix optimization bottlenecks.</p>
 
 <h3>What's Working</h3>
 
@@ -938,29 +941,97 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
   <li>✅ <strong>GPU Acceleration:</strong> CUDA execution provider with cuDNN 9</li>
   <li>✅ <strong>KV Cache Management:</strong> Efficient cache handling across iterations</li>
   <li>✅ <strong>End-to-End Pipeline:</strong> Input text → tokens → inference → detokenization → output</li>
+  <li>✅ <strong>Correctness:</strong> Generated text is coherent and accurate</li>
 </ul>
 </div>
 
+<h3>Performance Benchmarking Results</h3>
 
+<p>Here are the actual benchmarks comparing different inference approaches:</p>
 
-<h3>Performance Benchmarking (In Progress)</h3>
+<div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Tokens/sec</th>
+      <th>Speedup vs C++</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>vLLM GPU (0.8)</strong></td>
+      <td><strong>40.34</strong> ⭐</td>
+      <td>2.39x</td>
+      <td>Baseline (optimized)</td>
+    </tr>
+    <tr>
+      <td>Python ONNX (0.8)</td>
+      <td>21.78</td>
+      <td>1.29x</td>
+      <td>Good</td>
+    </tr>
+    <tr>
+      <td><strong>C++ ONNX GPU</strong></td>
+      <td><strong>16.84</strong></td>
+      <td>1.0x</td>
+      <td>Needs optimization</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>Key Observations:</strong></p>
+<ul>
+  <li>🔴 C++ is <strong>22% slower</strong> than Python ONNX despite having zero Python overhead in theory</li>
+  <li>🔴 Both are significantly slower than vLLM (specialized inference framework)</li>
+  <li>⚠️ This suggests optimization opportunities in tensor management, CUDA stream usage, or ONNX Runtime configuration</li>
+  <li>✅ The engine produces correct outputs, so performance gap is likely not algorithmic</li>
+</ul>
+
+<!-- <h3>Identified Optimization Opportunities</h3>
 
 <div class="highlight-box highlight-warning">
-<p><strong>Note:</strong> Comprehensive performance benchmarking and token generation speed calculations are currently <strong>in progress</strong>. While the system is functionally complete and producing correct outputs, I'm still working on:</p>
-<ul>
-  <li>📊 Accurate tokens/second measurements across different input lengths</li>
-  <li>📊 Latency profiling (prefill vs decode phases)</li>
-  <li>📊 Memory usage analysis and optimization</li>
-  <li>📊 Comparison with PyTorch and Python ONNX Runtime baselines</li>
-  <li>📊 Benchmarks across different GPU configurations</li>
-</ul>
-<p>Initial informal testing shows the system running smoothly on GPU, but formal metrics will be added once the benchmarking suite is complete.</p>
-</div>
+<p><strong>Why is C++ slower than Python?</strong> Possible causes being investigated:</p>
+<ol>
+  <li><strong>Memory copies:</strong> Unnecessary GPU ↔ CPU transfers in the inference loop</li>
+  <li><strong>ONNX Runtime configuration:</strong> May not be using optimal graph optimization settings</li>
+  <li><strong>CUDA stream management:</strong> Potential synchronization inefficiencies</li>
+  <li><strong>Tensor allocation strategy:</strong> Overhead in creating/destroying tensors each iteration</li>
+  <li><strong>KV cache implementation:</strong> Manual cache concatenation might be suboptimal</li>
+  <li><strong>Library overhead:</strong> Tokenizer integration or binding layer overhead</li>
+</ol>
+</div> -->
 
-<!-- <p>The remaining work is quantifying performance and optimization, not making it work in the first place.</p> -->
+<h3>Next Steps: Active Optimization Work</h3>
+
+<p>I'm actively working on improving performance. The optimization roadmap includes:</p>
+
+<!-- <div class="comparison-box">
+  <div class="comparison-item">
+    <h4>🎯 Short-term (High Impact)</h4>
+    <ul>
+      <li>Profile CUDA kernels to identify bottlenecks</li>
+      <li>Optimize tensor memory pooling to reduce allocation overhead</li>
+      <li>Enable ONNX Runtime graph optimization passes</li>
+      <li>Reduce Python↔C++ boundary crossings in tokenizer</li>
+      <li>Benchmark prefill vs decode phases separately</li>
+    </ul>
+  </div>
+  <div class="comparison-item">
+    <h4>📈 Medium-term (Architecture)</h4>
+    <ul>
+      <li>Implement batch processing for concurrent requests</li>
+      <li>Add continuous batching (decode multiple tokens in parallel)</li>
+      <li>Custom CUDA kernels for frequent operations</li>
+      <li>Investigate static memory allocation strategies</li>
+    </ul>
+  </div>
+</div> -->
 
 <div class="highlight-box highlight-info">
-<p><strong>Try it yourself:</strong> The complete code is available in the <a href="https://github.com/sgowdaks/llm-inference">GitHub repository</a>. Follow the README for build instructions and running your own inference.</p>
+<p><strong>Contribute or Track Progress:</strong> The complete code is available in the <a href="https://github.com/sgowdaks/llm-inference">GitHub repository</a>. If you have insights on optimization or find bottlenecks, please open an issue! This is an open optimization problem and community input is valuable.</p>
 </div>
 
 

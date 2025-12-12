@@ -984,7 +984,7 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
 
 <p><strong>Key Observations:</strong></p>
 <ul>
-  <li>🔴 C++ is <strong>22% slower</strong> than Python ONNX despite having zero Python overhead in theory</li>
+  <li>🔴 C++ with ONNX Runtime is <strong>22% slower</strong> than Python ONNX despite having zero Python overhead in theory</li>
   <li>🔴 Both are significantly slower than vLLM (specialized inference framework)</li>
   <li>⚠️ This suggests optimization opportunities in tensor management, CUDA stream usage, or ONNX Runtime configuration</li>
   <li>✅ The engine produces correct outputs, so performance gap is likely not algorithmic</li>

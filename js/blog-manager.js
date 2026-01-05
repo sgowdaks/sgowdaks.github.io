@@ -9,6 +9,42 @@
   // Blog posts database
   const blogPosts = [
     {
+      id: 'libtorch-static-dynamic-linking-journey',
+      title: 'LibTorch Journey: Static vs Dynamic Linking and Fixing Multi-GPU Model Initialization',
+      date: '2026-01-04',
+      category: 'tech',
+      categoryLabel: 'Technology',
+      excerpt: 'A weekend deep dive into PyTorch internals, CUDA memory management, and contributing a 77x performance fix for multi-GPU model initialization.',
+      tags: ['C++', 'PyTorch', 'LibTorch', 'CUDA', 'Linking', 'Systems Programming', 'GPU Optimization']
+    },
+    // {
+    //   id: 'cpu-gpu-npu-llm-inference',
+    //   title: 'CPU vs GPU vs NPU: Running LLMs Across Different Hardware',
+    //   date: '2024-12-03',
+    //   category: 'tech',
+    //   categoryLabel: 'Technology',
+    //   excerpt: 'A deep dive into running LLM inference on CPUs, GPUs, and NPUs—understanding what hardware to use when, with practical examples on Intel and Qualcomm platforms.',
+    //   tags: ['LLM', 'NPU', 'Hardware', 'Intel', 'Qualcomm', 'Performance', 'Edge AI']
+    // },
+    // {
+    //   id: 'flash-attention-vs-kernel-fusion',
+    //   title: 'Flash Attention vs Kernel Fusion: What\'s the Difference and Why It Matters',
+    //   date: '2024-12-02',
+    //   category: 'tech',
+    //   categoryLabel: 'Technology',
+    //   excerpt: 'Understanding two distinct optimization techniques that both make transformers faster—but in fundamentally different ways. Learn the key differences between algorithmic redesign and compiler optimization.',
+    //   tags: ['LLM', 'Flash Attention', 'Optimization', 'GPU', 'Performance', 'Transformers']
+    // },
+    // {
+    //   id: 'positional-embeddings-transformers',
+    //   title: 'Positional Embeddings in Transformers',
+    //   date: '2024-12-01',
+    //   category: 'tech',
+    //   categoryLabel: 'Technology',
+    //   excerpt: 'A deep dive into exporting Qwen language models to ONNX and building a production-ready C++ inference engine with GPU acceleration achieving 12+ tokens/sec.',
+    //   tags: ['LLM', 'ONNX', 'C++', 'GPU', 'Performance', 'AI']
+    // },
+    {
       id: 'llm-inference',
       title: 'Building a High-Performance ONNX Inference Engine for Qwen LLMs',
       date: '2025-11-20',

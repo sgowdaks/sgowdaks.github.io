@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LibTorch Journey: Static vs Dynamic Linking and Fixing Multi-GPU Model Initialization - Shivani Gowda KS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+  
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Source Serif 4', 'Georgia', serif;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .post-category {
+      background: var(--accent-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-light);
+      background: var(--bg-secondary);
+      padding: 1rem 1rem 1rem 2rem;
+      border-radius: 4px;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      justify-content: center;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .back-to-blog {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px 24px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .highlight-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-left: 4px solid #f39c12;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box.danger {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-left: 4px solid #dc3545;
+    }
+
+    .highlight-box.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-left: 4px solid #28a745;
+    }
+
+    .highlight-box p {
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight-box ul {
+      margin-bottom: 0;
+    }
+
+    .post-content a {
+      color: var(--primary-color);
+      text-decoration: underline;
+      transition: color 0.3s ease;
+    }
+
+    .post-content a:hover {
+      color: var(--accent-color);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .post-content table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .comparison-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .comparison-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .comparison-item h4 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    /* Table of Contents Sidebar */
+    .toc-sidebar {
+      position: fixed;
+      top: 100px;
+      left: 20px;
+      width: 200px;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+
+    .toc-title {
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      color: var(--primary-color);
+      font-family: 'Source Serif 4', Georgia, serif;
+    }
+
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .toc-list li {
+      margin-bottom: 0.5rem;
+    }
+
+    .toc-list a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: color 0.2s ease;
+      display: block;
+      padding: 0.2rem 0;
+    }
+
+    .toc-list a:hover,
+    .toc-list a.active {
+      color: var(--primary-color);
+    }
+
+    @media (max-width: 1200px) {
+      .toc-sidebar {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .post-title {
+        font-size: 2rem;
+      }
+      
+      .post-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      
+      .post-content {
+        font-size: 1rem;
+      }
+      
+      .post-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+      
+      .visual-box {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+
+      .comparison-box {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
+
+  <!-- Table of Contents Sidebar -->
+  <nav class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-title">Table of Contents</div>
+    <ul class="toc-list" id="toc-list">
+      <!-- Auto-generated by script -->
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <h1 class="post-title">LibTorch Journey: Static vs Dynamic Linking and Fixing Multi-GPU Model Initialization</h1>
+      <div class="post-subtitle">A weekend deep dive into PyTorch internals, CUDA memory management, and open-source contribution</div>
+      <div class="post-meta">
+        <span class="post-category">Technology</span>
+        <span><i class="far fa-calendar"></i> January 4, 2026</span>
+        <span><i class="far fa-clock"></i> 12 min read</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+      <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p>
+
+      <p>This weekend, I decided to take on a challenge that seemed straightforward on paper: get the <a href="https://github.com/thammegowda/libtorch-starter">libtorch-starter</a> project running and contribute fix for <a href="https://github.com/pytorch/pytorch/issues/145337">PyTorch issue #145337</a> - a performance bug causing slow multi-GPU model initialization.</p>
+
+      <p>Spoiler alert: It wasn't straightforward at all, but I successfully contributed a fix that <strong>reduced model initialization time from 10 seconds to ~130 milliseconds</strong>!</p>
+
+      <p>What started as a simple "clone and build" exercise turned into a deep dive into:</p>
+      <ul>
+        <li>Understanding PyTorch's architecture and how LibTorch fits in</li>
+        <li>CUDA version compatibility and static/dynamic linking</li>
+        <li>Why tensor allocation location matters for GPU performance</li>
+        <li>The CPU-to-GPU memory transfer bottleneck</li>
+      </ul>
+<p>This blog documents my complete journey - from understanding the problem to submitting a PR to PyTorch.</p>
+<hr />
+<h2>Understanding PyTorch's Architecture: Where Does LibTorch Fit?</h2>
+<p>Before diving into the problem, let's understand how PyTorch is organized. This context is crucial for understanding why certain issues exist and how they can be fixed.</p>
+<h3>PyTorch: More Than Just a Python Library</h3>
+<p>When most people think of PyTorch, they think of <code>import torch</code> in Python. But PyTorch is actually a sophisticated multi-layered system:</p>
+<div class="codehilite"><pre><span></span><code>┌─────────────────────────────────────────────────────┐
+│                   Python API                         │
+│              (torch, torch.nn, etc.)                 │
+├─────────────────────────────────────────────────────┤
+│                    LibTorch                          │
+│           (C++ Frontend - torch::nn)                 │
+├─────────────────────────────────────────────────────┤
+│                      ATen                            │
+│     (Tensor Library - core tensor operations)        │
+├─────────────────────────────────────────────────────┤
+│                      C10                             │
+│        (Core Library - memory, device mgmt)          │
+├─────────────────────────────────────────────────────┤
+│              Hardware Backends                       │
+│          (CUDA, CPU, MPS, ROCm, etc.)               │
+└─────────────────────────────────────────────────────┘
+</code></pre></div>
+
+<h3>What is LibTorch?</h3>
+<p><strong>LibTorch</strong> is PyTorch's C++ API and runtime. It's the actual core of PyTorch that the Python bindings wrap around.</p>
+<p><strong>Why use LibTorch?</strong> <br>
+- <strong>Production deployment</strong>: No Python runtime overhead <br>
+<!-- - <strong>Embedded systems</strong>: Smaller footprint than full Python <br> -->
+- <strong>Real-time applications</strong>: Lower latency, predictable performance <br>
+<!-- - <strong>Integration</strong>: Embed ML in C++ applications</p> -->
+<hr />
+
+<h2>The Challenge</h2>
+
+<h3>The Problem: Multi-GPU Model Initialization is Slow</h3>
+<p>When initializing models across multiple GPUs using LibTorch, I discovered a surprising performance issue. The initialization time scaled linearly with the number of GPUs instead of staying constant. Here's what was happening:</p>
+
+<ol>
+<li><strong>Hidden CPU Allocation:</strong> Calling <code>nn::Linear(1024, 4096)</code> silently creates weight and bias tensors on the CPU—even when you intend to use them on a GPU.</li>
+
+<li><strong>PCIe Bandwidth Bottleneck:</strong> When you call <code>model->to(device)</code>, all those CPU tensors must be copied to the GPU through the PCIe bus. With multiple GPUs, these transfers compete for the same limited bandwidth, creating a traffic jam.</li>
+
+<li><strong>Linear Scaling Problem:</strong> Instead of parallel GPU initialization, you get serial transfers. One model on one GPU takes ~14 seconds. Four models on four GPUs? ~56 seconds—because the PCIe bus can only handle so much data at once.</li>
+</ol>
+
+<h3>Understanding the Root Cause</h3>
+<p>After investigation by the community, the culprit was found: <strong><code>nn::LinearImpl</code> doesn't accept a <code>device</code> argument</strong>.</p>
+
+<p>Here's what happens internally when you create a Linear layer:</p>
+
+<div class="codehilite"><pre><span></span><code>// What you write:
+auto linear = nn::Linear(1024, 4096);
+linear->to(torch::kCUDA);
+
+// What actually happens:
+// Step 1: Tensors created on CPU (hidden from you)
+weight = torch::empty({4096, 1024});  // CPU memory
+bias = torch::empty({4096});          // CPU memory
+
+// Step 2: Then copied to GPU (slow!)
+weight = weight.to(torch::kCUDA);     // CPU → GPU transfer
+bias = bias.to(torch::kCUDA);         // CPU → GPU transfer
+</code></pre></div>
+
+<p>With multiple GPUs, all these CPU→GPU transfers compete for the <strong>same PCIe bus</strong>, creating a serialization point that parallelization cannot overcome.</p>
+
+<h3>The Solution (Proposed by the Community)</h3>
+<p>The fix proposed in the <a href="https://github.com/pytorch/pytorch/issues/145337">GitHub issue</a> was elegantly simple: <strong>allocate tensors directly on the GPU from the start</strong>.</p>
+
+<p>Instead of the default "create on CPU, then move to GPU" pattern, modify the layer construction to specify the target device upfront. By passing a <code>torch::Device</code> argument during tensor creation, the weights and biases are allocated directly in GPU memory (VRAM), completely bypassing the PCIe bottleneck.</p>
+
+<div class="highlight-box success">
+  <p><strong>Result:</strong> This bypasses the PCIe bottleneck entirely. Each GPU allocates memory in its own HBM (High Bandwidth Memory) independently and in parallel — achieving a <strong>77x speedup</strong>!</p>
+</div>
+
+<h3>My Role</h3>
+<p>This was a hands-on learning exercise to understand PyTorch's internals at the C++ level. My contribution was:</p>
+<ol>
+<li><strong>Build and explore LibTorch</strong> - Thanks to <a href="https://github.com/thammegowda/libtorch-starter">libtorch-starter</a> project, for providing the build steps which made things easier to understand.</li>
+<li><strong>Implement the proposed solution</strong> - Applied the fix from <a href="https://github.com/pytorch/pytorch/issues/145337">PyTorch issue #145337</a> and submitted a PR to add <code>device</code> and <code>dtype</code> options to <code>nn::Linear.</code></li>
+</ol>
+
+<p>I submitted <a href="https://github.com/pytorch/pytorch/pull/171666">PR #171666</a> to PyTorch that adds <code>device</code> and <code>dtype</code> options to <code>nn::Linear</code>. This allows developers to specify where tensors should be allocated at creation time.</p>
+<hr />
+
+<h2>Key Concept: Static vs Dynamic Linking</h2>
+<p>While debugging my build issues, I kept seeing errors related to "shared libraries" and ".so files". This led me down the rabbit hole of understanding linking - something I'd glossed over in my CS education.</p>
+
+<h3>What is Linking?</h3>
+<p>When you compile a C++ program, the compilation happens in two stages:</p>
+<ol>
+  <li><strong>Compilation</strong>: Source code (.cpp) → Object files (.o)</li>
+  <li><strong>Linking</strong>: Object files + Libraries → Executable</li>
+</ol>
+<p>The linking stage is where you combine your code with external libraries (like LibTorch). There are two ways to do this:</p>
+
+<div class="comparison-box">
+  <div class="comparison-item">
+    <h4>🔗 Dynamic Linking</h4>
+    <p><code>Your Program → libtorch.so</code></p>
+    <ul>
+      <li><strong>Smaller executable</strong> (references external libraries)</li>
+      <li><strong>Update friendly</strong> (swap libraries without recompiling)</li>
+      <li><strong>Memory efficient</strong> (shared across processes)</li>
+    </ul>
+    <p><em>Trade-off: Must distribute .so/.dll files with your executable</em></p>
+  </div>
+  <div class="comparison-item">
+    <h4>📦 Static Linking</h4>
+    <p><code>Your Program + libtorch.a → Single Executable</code></p>
+    <ul>
+      <li><strong>Self-contained</strong> (no external dependencies)</li>
+      <li><strong>Easy deployment</strong> (just copy the binary)</li>
+      <li><strong>Faster startup</strong> (no dynamic loading)</li>
+    </ul>
+    <p><em>Trade-off: Larger binary (~2.2GB with CUDA)</em></p>
+  </div>
+</div>
+
+<p>The <a href="https://github.com/thammegowda/libtorch-starter">libtorch-starter</a> project builds LibTorch from source with static linking instead of using prebuilt packages. The advantages of this approach are well-documented in the <a href="https://pytorch.org/get-started/locally/">official PyTorch documentation</a>.</p>
+
+
+<hr />
+<h2>My Current Setup</h2>
+<h3>System Configuration</h3>
+<div class="codehilite"><pre><span></span><code>OS:<span class="w"> </span>Ubuntu<span class="w"> </span>Linux
+GPU:<span class="w"> </span>NVIDIA<span class="w"> </span>GPU<span class="w"> </span>with<span class="w"> </span>CUDA<span class="w"> </span>support
+CUDA:<span class="w"> </span><span class="m">13</span>.0
+cuDNN:<span class="w"> </span><span class="m">9</span>.x
+GCC:<span class="w"> </span>Latest<span class="w"> </span>available
+CMake:<span class="w"> </span><span class="m">3</span>.x
+</code></pre></div>
+
+<h3>The libtorch-starter Project</h3>
+<p>I forked the <a href="https://github.com/sgowdaks/libtorch-starter/tree/sg/edit-cmake">libtorch-starter</a> project and found that some CUDA libraries were missing from the CMake configuration. After adding the missing pieces, the build worked smoothly.</p>
+<p><strong>What was missing:</strong>
+- cuDNN 9 static libraries (<code>cudnn_graph_static</code>, <code>cudnn_adv_static</code>, <code>cudnn_heuristic_static</code>, etc.)
+- NVRTC libraries required by cuDNN (<code>libnvrtc_static.a</code>, <code>libnvrtc-builtins_static.a</code>, <code>libnvptxcompiler_static.a</code>)
+- Proper linker group handling for circular dependencies between static libraries</p>
+<p>Once these were added, everything compiled and ran correctly.</p>
+<blockquote>
+<p><strong>Note:</strong> I'm relatively new to C++ and CMake. I was able to identify and fix these issues with significant help from Copilot agents, which guided me through understanding the build system and debugging linker errors. This was a great learning experience!</p>
+</blockquote>
+<hr />
+<h2>Summary</h2>
+<h3>What Was Accomplished</h3>
+<ol>
+<li>✅ <strong>Submitted PR #171666</strong>: Added <code>device</code> and <code>dtype</code> options to <code>nn::Linear</code> in PyTorch</li>
+<li>✅ <strong>Enhanced libtorch-starter</strong>: Added comprehensive CMake configuration for static CUDA linking with cuDNN 9 support</li>
+</ol>
+<h3>Pull Requests &amp; Code</h3>
+<ul>
+<li><strong>PyTorch PR</strong>: <a href="https://github.com/pytorch/pytorch/pull/171666">#171666 - Add device, dtype opts to nn::Linear</a></li>
+<li><strong>libtorch-starter fork</strong>: <a href="https://github.com/sgowdaks/libtorch-starter/tree/sg/edit-cmake">sg/edit-cmake branch</a></li>
+</ul>
+<hr />
+
+<h2>Conclusion</h2>
+<p>This weekend challenge turned into an incredibly rewarding deep dive into systems programming and open-source contribution. What started as a simple build exercise led me to:</p>
+<ol>
+<li><strong>Understand PyTorch's architecture</strong> from Python bindings down to GPU memory allocation</li>
+<li><strong>Understanding a fundamental performance bottleneck</strong> in multi-GPU model initialization</li>
+<li><strong>Understanding static linking of CUDA libraries</strong> for portable C++ deployments</li>
+</ol>
+<hr />
+<p><strong>Last Updated:</strong> January 4, 2026<br />
+<strong>Status:</strong> Completed ✅</p>
+    </div>
+
+    <div class="post-tags">
+      <span class="tag">C++</span>
+      <span class="tag">PyTorch</span>
+      <span class="tag">LibTorch</span>
+      <span class="tag">CUDA</span>
+      <span class="tag">Linking</span>
+      <span class="tag">Systems Programming</span>
+      <span class="tag">GPU Optimization</span>
+    </div>
+
+    <div class="back-to-blog">
+      <a href="../blog.html" class="btn">
+        <i class="fas fa-arrow-left"></i> Back to Blog
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Footer (auto-generated by common.js) -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+  
+  <!-- Table of Contents Auto-Generator -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tocList = document.getElementById('toc-list');
+      const postContent = document.querySelector('.post-content');
+      const headings = postContent.querySelectorAll('h2');
+      
+      // Generate TOC items
+      headings.forEach((heading, index) => {
+        // Create ID for heading if it doesn't have one
+        if (!heading.id) {
+          heading.id = 'section-' + index;
+        }
+        
+        // Create TOC list item
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + heading.id;
+        a.textContent = heading.textContent;
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          
+          // Update active state
+          document.querySelectorAll('.toc-list a').forEach(link => link.classList.remove('active'));
+          a.classList.add('active');
+        });
+        
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+      
+      // Highlight active section on scroll
+      window.addEventListener('scroll', function() {
+        let current = '';
+        
+        headings.forEach(heading => {
+          const sectionTop = heading.offsetTop;
+          const scrollPos = window.scrollY + 150;
+          
+          if (scrollPos >= sectionTop) {
+            current = heading.id;
+          }
+        });
+        
+        document.querySelectorAll('.toc-list a').forEach(a => {
+          a.classList.remove('active');
+          if (a.getAttribute('href') === '#' + current) {
+            a.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

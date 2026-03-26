@@ -260,17 +260,24 @@
   75%      { transform: translateX(-50%) rotate(-3deg); }
 }
 
-/* ---- Responsive ---- */
-@media (max-width: 600px) {
-  .figure-walking { left: 2%; width: 70px; height: 70px; }
-  .figure-hiking { right: 2%; width: 90px; height: 90px; }
-  .figure-cat { left: 12%; width: 100px; height: 100px; }
-  .figure-laptop { left: 2%; width: 70px; height: 70px; }
-  .figure-agent { right: 10%; width: 70px; height: 70px; }
+/* ---- Responsive: tablet ---- */
+@media (max-width: 768px) {
+  .figure-walking { width: 70px; height: 70px; }
+  .figure-hiking { width: 90px; height: 90px; }
+  .figure-cat { width: 100px; height: 100px; }
+  .figure-laptop { width: 70px; height: 70px; }
+  .figure-agent { width: 70px; height: 70px; }
   .doodle-azure { width: 80px; height: 55px; }
-  .doodle-transfer { left: 20%; width: 110px; height: 60px; }
-  .figure-stargazing { right: 1%; width: 100px; height: 85px; top: 3%; }
-  .doodle-code { right: 18%; width: 60px; height: 50px; }
+  .doodle-transfer { width: 110px; height: 60px; }
+  .figure-stargazing { width: 100px; height: 85px; }
+  .doodle-code { width: 60px; height: 50px; }
   .broomstick-rider { width: 110px; height: 110px; }
-  .figure-gazing, .figure-cat { opacity: 0.3; }
+  .stick-figures-container { opacity: 0.5; }
+}
+
+/* ---- Responsive: mobile — hide doodles so they don't cover intro text ---- */
+@media (max-width: 600px) {
+  .stick-figures-container {
+    display: none;
+  }
 }

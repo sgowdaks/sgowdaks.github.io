@@ -9,6 +9,7 @@
   
   <!-- Common Styles -->
   <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/stick-figures.css">
   
   <style>
     :root {
@@ -70,7 +71,7 @@
       background: linear-gradient(135deg, var(--bg-color) 0%, var(--bg-secondary) 100%);
       color: var(--text-color);
       text-align: center;
-      padding: 8rem 2rem;
+      padding: 8rem 2rem 10rem;
       position: relative;
       overflow: hidden;
     }
@@ -1455,6 +1456,357 @@
   <header></header>
 
   <section class="hero">
+    <!-- Stick figures background container (confined to hero) -->
+    <div class="stick-figures-container">
+
+      <!-- 1. Broomstick rider — person in front, bristles trailing behind -->
+      <div class="broomstick-rider">
+        <svg viewBox="0 0 180 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Broomstick (slight curve, bristles on right/back) -->
+          <path d="M25 70 Q90 66 155 68" stroke="#8b0000" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- Bristles (trailing behind on right) -->
+          <path d="M148 68 Q158 58 165 54" stroke="#cc3333" stroke-width="2" fill="none"/>
+          <path d="M148 68 Q162 64 170 62" stroke="#cc3333" stroke-width="2" fill="none"/>
+          <path d="M148 68 Q162 72 170 74" stroke="#cc3333" stroke-width="2" fill="none"/>
+          <path d="M148 68 Q158 78 165 82" stroke="#cc3333" stroke-width="2" fill="none"/>
+          <path d="M148 68 Q160 68 172 68" stroke="#cc3333" stroke-width="2" fill="none"/>
+          <!-- Person (sitting in front / left side of broom) -->
+          <!-- Head -->
+          <circle cx="42" cy="34" r="10" stroke="#b22222" stroke-width="2.5" fill="none"/>
+          <!-- Body (curved spine) -->
+          <path d="M42 44 Q40 54 42 66" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs (sitting on broom, curved) -->
+          <path d="M42 66 Q34 72 28 76" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M42 66 Q50 72 56 74" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Arms (holding broom, reaching back) -->
+          <path d="M42 52 Q52 56 60 62" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M42 52 Q34 58 28 64" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Hat (witch/wizard) -->
+          <path d="M32 34 Q37 14 42 10 Q47 14 52 34" stroke="#b22222" stroke-width="2" fill="none"/>
+          <line x1="28" y1="34" x2="56" y2="34" stroke="#b22222" stroke-width="2" stroke-linecap="round"/>
+          <!-- Speed lines (behind the rider) -->
+          <line x1="120" y1="50" x2="140" y2="50" stroke="#b22222" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+          <line x1="125" y1="58" x2="142" y2="58" stroke="#b22222" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+          <line x1="118" y1="66" x2="135" y2="66" stroke="#b22222" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+        </svg>
+      </div>
+
+      <!-- 2. Walking & Thinking — static, bottom-left -->
+      <div class="figure-walking">
+        <svg viewBox="0 0 90 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Thought cloud -->
+          <path d="M58 8 Q54 2 48 4 Q43 0 38 4 Q33 2 31 7 Q27 6 27 11 Q24 13 26 17 Q25 20 29 22 Q31 25 36 24 Q39 28 44 26 Q48 28 52 25 Q56 27 58 23 Q62 22 62 18 Q65 15 62 12 Q63 10 60 8 Z" stroke="#b22222" stroke-width="1.5" fill="none"/>
+          <!-- "idea" dot inside cloud -->
+          <circle cx="44" cy="14" r="1.5" fill="#b22222"/>
+          <!-- Small connector bubbles from head to cloud -->
+          <circle cx="48" cy="28" r="1.8" stroke="#b22222" stroke-width="1.2" fill="none"/>
+          <circle cx="45" cy="33" r="1.2" stroke="#b22222" stroke-width="1" fill="none"/>
+          <!-- Head -->
+          <circle cx="42" cy="42" r="10" stroke="#b22222" stroke-width="2.5" fill="none"/>
+          <!-- Body (curved posture) -->
+          <path d="M42 52 Q44 66 42 82" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Arms (curved swing) -->
+          <path d="M42 62 Q32 66 26 74" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M42 62 Q52 66 58 72" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs (curved stride) -->
+          <path d="M42 82 Q34 94 28 106" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M42 82 Q50 94 56 106" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Feet -->
+          <path d="M28 106 Q24 106 22 105" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M56 106 Q60 106 62 105" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- 4. Hiking figure on mountain terrain — static, bottom-right -->
+      <div class="figure-hiking">
+        <svg viewBox="0 0 140 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Mountain terrain: up, down, up, down, up — real hiking feel -->
+          <path d="M5 95 Q15 85 25 75 Q35 85 45 90 Q55 78 65 65 Q75 75 85 82 Q95 68 108 52 Q118 62 135 70" stroke="#b22222" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <!-- Small vegetation/rocks on trail -->
+          <circle cx="20" cy="78" r="1.5" stroke="#b22222" stroke-width="1" fill="none" opacity="0.4"/>
+          <circle cx="48" cy="88" r="1.2" stroke="#b22222" stroke-width="1" fill="none" opacity="0.4"/>
+          <circle cx="78" cy="79" r="1.5" stroke="#b22222" stroke-width="1" fill="none" opacity="0.4"/>
+          <circle cx="112" cy="56" r="1.2" stroke="#b22222" stroke-width="1" fill="none" opacity="0.4"/>
+          <!-- Hiker on mid-peak -->
+          <!-- Head -->
+          <circle cx="65" cy="28" r="7" stroke="#b22222" stroke-width="2.5" fill="none"/>
+          <!-- Hat (curved brim) -->
+          <path d="M56 24 Q65 20 74 24" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <!-- Body (curved, leaning into climb) -->
+          <path d="M65 35 Q63 46 62 58" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Backpack (rounded) -->
+          <path d="M67 38 Q73 38 74 42 Q76 48 74 52 Q72 54 67 52" stroke="#b22222" stroke-width="2" fill="none"/>
+          <!-- Walking stick -->
+          <path d="M50 48 Q47 62 44 84" stroke="#8b0000" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Arm holding stick -->
+          <path d="M63 44 Q56 46 50 48" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Other arm swinging -->
+          <path d="M63 44 Q70 50 74 56" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs on slope -->
+          <path d="M62 58 Q55 66 50 72" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M62 58 Q68 64 72 70" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Boots -->
+          <path d="M50 72 Q46 73 44 72" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M72 70 Q76 71 78 70" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- 5. Sitting with cat, gazing at mountains — static, bigger -->
+      <div class="figure-cat">
+        <svg viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Mountains -->
+          <path d="M75 78 Q88 50 100 28 Q112 50 125 78" stroke="#b22222" stroke-width="1.8" fill="none"/>
+          <path d="M95 78 Q105 55 112 40 Q119 55 130 78" stroke="#b22222" stroke-width="1.8" fill="none"/>
+          <path d="M85 78 Q98 48 108 32 Q118 48 132 78" stroke="#b22222" stroke-width="1.2" fill="none" opacity="0.35"/>
+          <!-- Snow caps -->
+          <path d="M96 36 Q100 28 104 36" stroke="#b22222" stroke-width="1.2" fill="none" opacity="0.5"/>
+          <path d="M108 46 Q112 40 116 46" stroke="#b22222" stroke-width="1.2" fill="none" opacity="0.5"/>
+          <!-- Ground -->
+          <line x1="8" y1="78" x2="152" y2="78" stroke="#b22222" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Grass tufts -->
+          <path d="M20 78 Q22 74 24 78" stroke="#b22222" stroke-width="1" fill="none" opacity="0.3"/>
+          <path d="M60 78 Q62 74 64 78" stroke="#b22222" stroke-width="1" fill="none" opacity="0.3"/>
+          <!-- Person sitting (curvy body) -->
+          <circle cx="35" cy="46" r="8" stroke="#b22222" stroke-width="2.5" fill="none"/>
+          <path d="M35 54 Q36 62 35 70" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs (sitting, bent — curved) -->
+          <path d="M35 70 Q28 74 26 78 Q30 78 36 76" stroke="#b22222" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Arm resting (curved) -->
+          <path d="M35 60 Q28 65 26 68" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Arm petting cat (curved) -->
+          <path d="M35 60 Q44 62 52 66" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Cat body -->
+          <ellipse cx="60" cy="72" rx="9" ry="6" stroke="#b22222" stroke-width="2" fill="none"/>
+          <!-- Cat head -->
+          <circle cx="68" cy="64" r="5" stroke="#b22222" stroke-width="2" fill="none"/>
+          <!-- Cat ears -->
+          <path d="M64 60 Q65 55 67 59" stroke="#b22222" stroke-width="1.5" fill="none"/>
+          <path d="M69 59 Q71 55 72 60" stroke="#b22222" stroke-width="1.5" fill="none"/>
+          <!-- Cat whiskers -->
+          <line x1="63" y1="64" x2="57" y2="62" stroke="#b22222" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+          <line x1="63" y1="66" x2="57" y2="67" stroke="#b22222" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+          <!-- Cat tail (curly) -->
+          <path d="M51 70 Q45 60 48 52 Q50 49 52 52" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- 6. Working on laptop — static, top-left -->
+      <div class="figure-laptop">
+        <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Chair -->
+          <path d="M30 90 Q30 78 32 70" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M60 90 Q60 78 58 70" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Seat -->
+          <path d="M28 70 Q45 72 62 70" stroke="#b22222" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Desk surface -->
+          <path d="M38 52 Q55 50 82 52" stroke="#b22222" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Desk legs -->
+          <line x1="42" y1="52" x2="42" y2="90" stroke="#b22222" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="78" y1="52" x2="78" y2="90" stroke="#b22222" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Laptop base -->
+          <path d="M50 52 Q58 51 72 52" stroke="#b22222" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Laptop screen -->
+          <path d="M52 52 Q52 38 54 32 Q62 30 70 32 Q72 38 72 52" stroke="#b22222" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Screen content lines -->
+          <line x1="56" y1="38" x2="66" y2="38" stroke="#b22222" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+          <line x1="56" y1="42" x2="64" y2="42" stroke="#b22222" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+          <line x1="56" y1="46" x2="68" y2="46" stroke="#b22222" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+          <!-- Head -->
+          <circle cx="40" cy="24" r="8" stroke="#b22222" stroke-width="2.5" fill="none"/>
+          <!-- Body sitting (curved) -->
+          <path d="M40 32 Q42 48 40 68" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Arms reaching to laptop (curved) -->
+          <path d="M40 44 Q46 46 52 50" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M40 44 Q48 48 54 50" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs (sitting, bent under desk) -->
+          <path d="M40 68 Q34 76 30 82" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M40 68 Q46 74 48 80" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Feet -->
+          <path d="M30 82 Q27 83 25 82" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M48 80 Q51 81 53 80" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- 7. AI Agent — cute robot stick figure looking around, bottom-center-right -->
+      <div class="figure-agent">
+        <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Head group (animated — looks around) -->
+          <g class="agent-head">
+            <!-- Antenna -->
+            <line x1="50" y1="18" x2="50" y2="8" stroke="#b22222" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="5" r="3" stroke="#b22222" stroke-width="1.5" fill="none"/>
+            <!-- Head (rounded square — robot-like) -->
+            <rect x="34" y="18" width="32" height="26" rx="8" ry="8" stroke="#b22222" stroke-width="2.5" fill="none"/>
+            <!-- Eyes (big, curious) -->
+            <circle cx="43" cy="30" r="4" stroke="#b22222" stroke-width="2" fill="none"/>
+            <circle cx="57" cy="30" r="4" stroke="#b22222" stroke-width="2" fill="none"/>
+            <!-- Pupils (animated with head) -->
+            <circle cx="45" cy="30" r="1.5" fill="#b22222"/>
+            <circle cx="59" cy="30" r="1.5" fill="#b22222"/>
+            <!-- Cute smile -->
+            <path d="M44 37 Q50 41 56 37" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          </g>
+          <!-- Neck -->
+          <line x1="50" y1="44" x2="50" y2="50" stroke="#b22222" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Body -->
+          <path d="M50 50 Q51 62 50 74" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Arms (one waving, one relaxed) -->
+          <path d="M50 56 Q38 52 30 46" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M30 46 Q28 42 32 40" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M50 56 Q62 60 68 66" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs -->
+          <path d="M50 74 Q42 86 36 96" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M50 74 Q58 86 64 96" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Feet -->
+          <path d="M36 96 Q32 97 30 96" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <path d="M64 96 Q68 97 70 96" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <!-- Sparkle/thought dots (curiosity) -->
+          <circle cx="22" cy="20" r="1.5" fill="#b22222" opacity="0.5"/>
+          <circle cx="78" cy="16" r="1" fill="#b22222" opacity="0.4"/>
+          <circle cx="76" cy="24" r="1.5" fill="#b22222" opacity="0.35"/>
+        </svg>
+      </div>
+
+      <!-- 8. Azure Cloud doodle — blue cloud symbol, top center -->
+      <div class="doodle-azure">
+        <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Azure cloud shape -->
+          <path d="M30 58 Q14 58 14 46 Q14 36 26 34 Q24 22 36 16 Q48 10 60 18 Q66 8 80 10 Q94 12 96 28 Q108 30 110 42 Q114 54 104 58 Z" stroke="#0078d4" stroke-width="2.5" fill="none" opacity="0.9"/>
+          <!-- Inner highlight puffs -->
+          <path d="M36 46 Q44 38 54 42" stroke="#0078d4" stroke-width="1.2" fill="none" opacity="0.3"/>
+          <path d="M64 38 Q76 32 88 40" stroke="#0078d4" stroke-width="1.2" fill="none" opacity="0.3"/>
+          <!-- Small Azure "A" hint -->
+          <path d="M54 36 L60 24 L66 36" stroke="#0078d4" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.5"/>
+          <line x1="56" y1="32" x2="64" y2="32" stroke="#0078d4" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+      </div>
+
+      <!-- 9. Data Transfer between laptops — bottom center -->
+      <div class="doodle-transfer">
+        <svg viewBox="0 0 160 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Laptop 1 (left) -->
+          <rect x="6" y="38" width="40" height="26" rx="3" stroke="#555" stroke-width="2" fill="none"/>
+          <!-- Screen -->
+          <rect x="10" y="42" width="32" height="14" rx="2" stroke="#555" stroke-width="1.2" fill="none" opacity="0.5"/>
+          <!-- Screen lines -->
+          <line x1="14" y1="47" x2="28" y2="47" stroke="#555" stroke-width="1" stroke-linecap="round" opacity="0.35"/>
+          <line x1="14" y1="51" x2="24" y2="51" stroke="#555" stroke-width="1" stroke-linecap="round" opacity="0.25"/>
+          <!-- Base -->
+          <line x1="2" y1="64" x2="50" y2="64" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- Laptop 2 (right) -->
+          <rect x="114" y="38" width="40" height="26" rx="3" stroke="#555" stroke-width="2" fill="none"/>
+          <rect x="118" y="42" width="32" height="14" rx="2" stroke="#555" stroke-width="1.2" fill="none" opacity="0.5"/>
+          <line x1="122" y1="47" x2="136" y2="47" stroke="#555" stroke-width="1" stroke-linecap="round" opacity="0.35"/>
+          <line x1="122" y1="51" x2="132" y2="51" stroke="#555" stroke-width="1" stroke-linecap="round" opacity="0.25"/>
+          <line x1="110" y1="64" x2="158" y2="64" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- Data packets flying left-to-right -->
+          <g class="data-packets-lr">
+            <rect x="58" y="42" width="8" height="5" rx="1.5" stroke="#0078d4" stroke-width="1.5" fill="none"/>
+            <rect x="74" y="42" width="8" height="5" rx="1.5" stroke="#0078d4" stroke-width="1.5" fill="none"/>
+            <rect x="90" y="42" width="8" height="5" rx="1.5" stroke="#0078d4" stroke-width="1.5" fill="none"/>
+          </g>
+          <!-- Arrow right -->
+          <path d="M54 44 L106 44" stroke="#0078d4" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+          <path d="M102 40 L108 44 L102 48" stroke="#0078d4" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+
+          <!-- Data packets flying right-to-left -->
+          <g class="data-packets-rl">
+            <rect x="90" y="53" width="8" height="5" rx="1.5" stroke="#555" stroke-width="1.5" fill="none"/>
+            <rect x="74" y="53" width="8" height="5" rx="1.5" stroke="#555" stroke-width="1.5" fill="none"/>
+            <rect x="58" y="53" width="8" height="5" rx="1.5" stroke="#555" stroke-width="1.5" fill="none"/>
+          </g>
+          <!-- Arrow left -->
+          <path d="M106 56 L54 56" stroke="#555" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+          <path d="M58 52 L52 56 L58 60" stroke="#555" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+      </div>
+
+      <!-- 11. Stargazing pair — two figures sitting together watching stars & shooting star -->
+      <div class="figure-stargazing">
+        <svg viewBox="0 0 150 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Ground -->
+          <path d="M10 95 Q40 92 75 95 Q110 92 140 95" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Grass tufts -->
+          <path d="M18 95 Q20 90 22 95" stroke="#b22222" stroke-width="1" fill="none" opacity="0.3"/>
+          <path d="M100 95 Q102 91 104 95" stroke="#b22222" stroke-width="1" fill="none" opacity="0.3"/>
+          <path d="M125 95 Q127 91 129 95" stroke="#b22222" stroke-width="1" fill="none" opacity="0.3"/>
+
+          <!-- Person 1 (left, slightly taller, hair messy) -->
+          <circle cx="52" cy="56" r="8" stroke="#b22222" stroke-width="2.5" fill="none"/>
+          <!-- Messy hair -->
+          <path d="M46 50 Q44 46 47 44" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M50 49 Q50 44 53 43" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M56 50 Q58 46 56 44" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Body -->
+          <path d="M52 64 Q53 74 52 84" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs (sitting, bent) -->
+          <path d="M52 84 Q44 88 40 94 Q46 94 52 92" stroke="#b22222" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Arm behind person 2 -->
+          <path d="M52 72 Q62 68 72 70" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Other arm resting -->
+          <path d="M52 72 Q44 76 40 80" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+          <!-- Person 2 (right, slightly shorter, round hair/curls) -->
+          <circle cx="72" cy="60" r="7" stroke="#b22222" stroke-width="2.5" fill="none"/>
+          <!-- Curly/round hair -->
+          <path d="M66 55 Q64 50 67 48 Q70 46 73 48 Q76 46 78 48 Q80 50 78 55" stroke="#b22222" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Body (leaning into person 1) -->
+          <path d="M72 67 Q70 76 72 86" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <!-- Legs (sitting) -->
+          <path d="M72 86 Q78 90 82 94 Q76 94 72 92" stroke="#b22222" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Arm resting on lap -->
+          <path d="M72 74 Q78 78 82 80" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+          <!-- Holding hands (between them) -->
+          <path d="M52 80 Q58 82 62 82 Q68 82 72 80" stroke="#b22222" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+          <!-- Stars -->
+          <circle cx="30" cy="20" r="1" fill="#b22222" opacity="0.5"/>
+          <circle cx="55" cy="12" r="1.2" fill="#b22222" opacity="0.45"/>
+          <circle cx="80" cy="8" r="1" fill="#b22222" opacity="0.5"/>
+          <circle cx="105" cy="18" r="1.3" fill="#b22222" opacity="0.4"/>
+          <circle cx="120" cy="30" r="1" fill="#b22222" opacity="0.45"/>
+          <circle cx="95" cy="28" r="0.8" fill="#b22222" opacity="0.35"/>
+          <circle cx="42" cy="30" r="0.8" fill="#b22222" opacity="0.35"/>
+          <circle cx="68" cy="24" r="1" fill="#b22222" opacity="0.4"/>
+          <circle cx="135" cy="15" r="0.8" fill="#b22222" opacity="0.3"/>
+          <circle cx="18" cy="35" r="1" fill="#b22222" opacity="0.35"/>
+
+          <!-- Shooting star (with trail) -->
+          <g class="shooting-star">
+            <line x1="115" y1="8" x2="98" y2="22" stroke="#b22222" stroke-width="2" stroke-linecap="round"/>
+            <line x1="118" y1="6" x2="115" y2="8" stroke="#b22222" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+            <!-- Trail sparkles -->
+            <line x1="120" y1="5" x2="126" y2="3" stroke="#b22222" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+            <line x1="121" y1="8" x2="128" y2="7" stroke="#b22222" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+            <line x1="119" y1="3" x2="124" y2="-1" stroke="#b22222" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- 12. Code Browser doodle — browser window with </> brackets, blue -->
+      <div class="doodle-code">
+        <svg viewBox="0 0 110 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Browser window -->
+          <rect x="8" y="8" width="94" height="74" rx="8" ry="8" stroke="#0078d4" stroke-width="2.5" fill="none"/>
+          <!-- Title bar -->
+          <line x1="8" y1="24" x2="102" y2="24" stroke="#0078d4" stroke-width="2" stroke-linecap="round"/>
+          <!-- Window dots -->
+          <circle cx="20" cy="16" r="2.5" stroke="#0078d4" stroke-width="1.5" fill="none"/>
+          <circle cx="30" cy="16" r="2.5" stroke="#0078d4" stroke-width="1.5" fill="none"/>
+          <circle cx="40" cy="16" r="2.5" stroke="#0078d4" stroke-width="1.5" fill="none"/>
+          <!-- Left angle bracket < -->
+          <path d="M38 40 L24 52 L38 64" stroke="#0078d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <!-- Slash / -->
+          <line x1="48" y1="38" x2="62" y2="66" stroke="#0078d4" stroke-width="3" stroke-linecap="round"/>
+          <!-- Right angle bracket > -->
+          <path d="M72 40 L86 52 L72 64" stroke="#0078d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+
+    </div><!-- end stick-figures-container -->
     <h1>Shivani <span class="highlight">Gowda KS</span></h1>
     <div class="subtitle">Cloud Engineer & ML Enthusiast</div>
     <p style="max-width: 700px; margin: 1rem auto 2rem; font-size: 1rem;">

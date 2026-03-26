@@ -1,0 +1,276 @@
+/* ===== STICK FIGURES — Hero Background Decorations ===== */
+
+/* Container: stays within the hero section area only */
+.stick-figures-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* ---- Broomstick Rider (animated, single) ---- */
+.broomstick-rider {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+  animation: flyBroom 28s linear infinite;
+  opacity: 0.45;
+}
+
+.broomstick-rider svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Slow, gentle left-to-right flight; exits right, wraps back from left */
+@keyframes flyBroom {
+  0%   { top: 3%;  left: -14%; transform: rotate(-3deg); opacity: 0; }
+  3%   { top: 3%;  left: -10%; transform: rotate(-3deg); opacity: 0.45; }
+  20%  { top: 7%;  left: 18%;  transform: rotate(2deg); }
+  40%  { top: 1%;  left: 42%;  transform: rotate(-2deg); }
+  60%  { top: 9%;  left: 65%;  transform: rotate(1deg); }
+  80%  { top: 3%;  left: 88%;  transform: rotate(-1deg); }
+  95%  { top: 5%;  left: 108%; transform: rotate(0deg); opacity: 0.45; }
+  97%  { top: 5%;  left: 112%; transform: rotate(0deg); opacity: 0; }
+  98%  { top: 3%;  left: -14%; transform: rotate(-3deg); opacity: 0; }
+  100% { top: 3%;  left: -14%; transform: rotate(-3deg); opacity: 0; }
+}
+
+/* ---- Walking & Thinking — static, bottom row pos 1 ---- */
+.figure-walking {
+  position: absolute;
+  width: 105px;
+  height: 105px;
+  bottom: 1%;
+  left: 8%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.figure-walking svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Hiking figure — static, bottom row pos 6 ---- */
+.figure-hiking {
+  position: absolute;
+  width: 135px;
+  height: 135px;
+  bottom: 1%;
+  left: 90%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.figure-hiking svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Sitting with cat — static, bottom row pos 2 ---- */
+.figure-cat {
+  position: absolute;
+  width: 155px;
+  height: 155px;
+  bottom: 0%;
+  left: 25%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.figure-cat svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Working on laptop — static, top-left ---- */
+.figure-laptop {
+  position: absolute;
+  width: 105px;
+  height: 105px;
+  top: 5%;
+  left: 3%;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.figure-laptop svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- AI Agent — cute robot looking around, bottom row pos 5 ---- */
+.figure-agent {
+  position: absolute;
+  width: 105px;
+  height: 105px;
+  bottom: 1%;
+  left: 74%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.figure-agent svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Agent head look-around animation — pivots from neck (cx=50, cy=44) */
+.agent-head {
+  transform-origin: 50px 44px;
+  animation: agentLookAround 6s ease-in-out infinite;
+}
+
+@keyframes agentLookAround {
+  0%   { transform: rotate(0deg); }
+  15%  { transform: rotate(12deg); }   /* look right */
+  30%  { transform: rotate(0deg); }
+  45%  { transform: rotate(-12deg); }  /* look left */
+  55%  { transform: rotate(-5deg) translateY(-2px); }  /* glance up-left */
+  65%  { transform: rotate(0deg); }
+  78%  { transform: rotate(6deg) translateY(2px); }     /* peek down-right */
+  90%  { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* ---- Azure Cloud doodle — blue, top center ---- */
+.doodle-azure {
+  position: absolute;
+  width: 110px;
+  height: 80px;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.4;
+  animation: floatAzure 8s ease-in-out infinite;
+}
+
+.doodle-azure svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes floatAzure {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-6px); }
+}
+
+/* ---- Data Transfer doodle — bottom row pos 3 ---- */
+.doodle-transfer {
+  position: absolute;
+  width: 150px;
+  height: 80px;
+  bottom: 1%;
+  left: 42%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.38;
+}
+
+.doodle-transfer svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Animate data packets flowing left-to-right */
+.data-packets-lr {
+  animation: packetsLR 3s linear infinite;
+}
+
+@keyframes packetsLR {
+  0%   { opacity: 0.8; transform: translateX(-8px); }
+  50%  { opacity: 1;   transform: translateX(4px); }
+  100% { opacity: 0.8; transform: translateX(-8px); }
+}
+
+/* Animate data packets flowing right-to-left */
+.data-packets-rl {
+  animation: packetsRL 3s linear infinite;
+}
+
+@keyframes packetsRL {
+  0%   { opacity: 0.8; transform: translateX(8px); }
+  50%  { opacity: 1;   transform: translateX(-4px); }
+  100% { opacity: 0.8; transform: translateX(8px); }
+}
+
+/* ---- Stargazing pair — two figures watching stars, top-right ---- */
+.figure-stargazing {
+  position: absolute;
+  width: 140px;
+  height: 120px;
+  top: 4%;
+  right: 1%;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.figure-stargazing svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Shooting star streaks across and fades */
+.shooting-star {
+  animation: shootStar 6s ease-in-out infinite;
+  transform-origin: 115px 8px;
+}
+
+@keyframes shootStar {
+  0%   { opacity: 0; transform: translate(20px, -10px); }
+  40%  { opacity: 0; transform: translate(20px, -10px); }
+  50%  { opacity: 0.9; transform: translate(0, 0); }
+  65%  { opacity: 0.7; transform: translate(-8px, 5px); }
+  75%  { opacity: 0; transform: translate(-16px, 10px); }
+  100% { opacity: 0; transform: translate(20px, -10px); }
+}
+
+/* ---- Code Browser doodle — blue, bottom row pos 4 ---- */
+.doodle-code {
+  position: absolute;
+  width: 90px;
+  height: 74px;
+  bottom: 1%;
+  left: 58%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.35;
+  animation: tiltCode 7s ease-in-out infinite;
+}
+
+.doodle-code svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes tiltCode {
+  0%, 100% { transform: translateX(-50%) rotate(0deg); }
+  25%      { transform: translateX(-50%) rotate(3deg); }
+  75%      { transform: translateX(-50%) rotate(-3deg); }
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 600px) {
+  .figure-walking { left: 2%; width: 70px; height: 70px; }
+  .figure-hiking { right: 2%; width: 90px; height: 90px; }
+  .figure-cat { left: 12%; width: 100px; height: 100px; }
+  .figure-laptop { left: 2%; width: 70px; height: 70px; }
+  .figure-agent { right: 10%; width: 70px; height: 70px; }
+  .doodle-azure { width: 80px; height: 55px; }
+  .doodle-transfer { left: 20%; width: 110px; height: 60px; }
+  .figure-stargazing { right: 1%; width: 100px; height: 85px; top: 3%; }
+  .doodle-code { right: 18%; width: 60px; height: 50px; }
+  .broomstick-rider { width: 110px; height: 110px; }
+  .figure-gazing, .figure-cat { opacity: 0.3; }
+}

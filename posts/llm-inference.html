@@ -1132,3 +1132,27 @@ conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> <
   </script>
 </body>
 </html>
+
+<!-- 1. Stop using copy_() and narrow()
+In PyTorch, we often manage the KV Cache using in-place updates to save memory:
+
+Python
+
+# ❌ DON'T DO THIS FOR ONNX
+key_buffer[:, :, past_len:past_len+seq_len, :] = new_keys 
+Why it fails: ONNX is a static graph. It doesn't understand "mutating" a part of a tensor in place. When the exporter sees this, it tries to create Narrow and Slice nodes that often break or become incredibly slow because they trigger unnecessary memory copies between the GPU and CPU.
+
+The Fix: torch.scatter
+To make your model "ONNX-native," you must treat the buffer update as a Scatter operation. This tells ONNX exactly which "slots" to fill without breaking the graph.
+
+Python
+
+# ✅ DO THIS INSTEAD
+# 1. Create indices for the new tokens
+update_indices = torch.arange(new_len) + past_len
+
+# 2. Expand indices to match the buffer shape [Batch, Heads, Seq, Dim]
+scatter_idx = update_indices.view(1, 1, new_len, 1).expand(batch, heads, -1, dim)
+
+# 3. Perform a functional update (ONNX turns this into ScatterND)
+key_buffer = torch.scatter(key_buffer, 2, scatter_idx, new_k) -->

@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Bare Metal to Containers: A Deep Dive into Virtualization and Docker Internals - Shivani Gowda KS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+  <link rel="stylesheet" href="../css/ai-agent.css">
+  
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Source Serif 4', 'Georgia', serif;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .post-category {
+      background: var(--accent-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-light);
+      background: var(--bg-secondary);
+      padding: 1rem 1rem 1rem 2rem;
+      border-radius: 4px;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .back-to-blog {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px 24px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .highlight-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-left: 4px solid #f39c12;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box.danger {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-left: 4px solid #dc3545;
+    }
+
+    .highlight-box.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-left: 4px solid #28a745;
+    }
+
+    .highlight-box p {
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight-box ul {
+      margin-bottom: 0;
+    }
+
+    .post-content a {
+      color: var(--primary-color);
+      text-decoration: underline;
+      transition: color 0.3s ease;
+    }
+
+    .post-content a:hover {
+      color: var(--accent-color);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .post-content table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .post-title {
+        font-size: 2rem;
+      }
+      
+      .post-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+      
+      .post-content {
+        font-size: 1rem;
+      }
+      
+      .post-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+      
+      .visual-box {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
+
+  <!-- Table of Contents Sidebar -->
+  <nav class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-title">Table of Contents</div>
+    <ul class="toc-list" id="toc-list">
+      <!-- Auto-generated by script -->
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <h1 class="post-title">From Bare Metal to Containers: A Deep Dive into Virtualization and Docker Internals</h1>
+      <div class="post-subtitle">How chroot, namespaces, cgroups, and union filesystems combine to make containers work — and where the cloud fits in</div>
+      <div class="post-meta">
+        <span class="post-category">Technology</span>
+        <span><i class="far fa-calendar"></i> April 21, 2026</span>
+        <span><i class="far fa-clock"></i> 9 min read</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+<p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p>
+      <h2>Why I Wrote This</h2>
+<p>I spent a solid chunk of time recently going back to fundamentals on containerization and cloud infrastructure — not the "run <code>docker run hello-world</code>" tutorial kind, but the <em>why does this actually work</em> kind. These are my consolidated notes. If you've ever wondered what Docker is actually doing under the hood, or why a container starts in milliseconds while a VM takes minutes, this should be useful.</p>
+<hr />
+<h2>1. The Core Philosophy: Virtualization</h2>
+<p><strong>Virtualization</strong> is the act of creating a software-based version of something physical — usually hardware.</p>
+<p>The goal is <strong>efficiency</strong>. A modern server has 64 cores and hundreds of gigabytes of RAM. Running a single application on it is like buying a 20-bedroom house for one person. Virtualization lets us carve that hardware into smaller, isolated "slices" so multiple workloads can share the same machine without stepping on each other.</p>
+<hr />
+<h2>2. The Evolution of Isolation</h2>
+<p>We didn't jump straight from "one app per server" to Docker. The path went through several increasingly sophisticated tools:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tool</th>
+<th style="text-align: left;">Level of Isolation</th>
+<th style="text-align: left;">Key Mechanism</th>
+<th style="text-align: left;">Weakness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>chroot</strong></td>
+<td style="text-align: left;">Filesystem only</td>
+<td style="text-align: left;">Changes the root <code>/</code> pointer to a subdirectory</td>
+<td style="text-align: left;">Process can still see all RAM, CPU, and other PIDs. Root users can escape.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Docker</strong></td>
+<td style="text-align: left;">Complete process</td>
+<td style="text-align: left;">Namespaces + Cgroups + UnionFS</td>
+<td style="text-align: left;">Shared kernel — a kernel bug affects the whole host.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>VMs</strong></td>
+<td style="text-align: left;">Hardware-level</td>
+<td style="text-align: left;">Hypervisor simulates a full computer</td>
+<td style="text-align: left;">Heavy, slow to boot, high RAM/disk overhead.</td>
+</tr>
+</tbody>
+</table>
+<p>Each step in this evolution added a new dimension of isolation.</p>
+<hr />
+<h2>3. The Three Pillars of Docker</h2>
+<p>Docker isn't a single technology — it's a clean wrapper around three Linux kernel features that already existed. Understanding these is the key to understanding <em>why</em> Docker works the way it does.</p>
+<h3>A. Namespaces — The "Blindfold"</h3>
+<p>Namespaces control what a process can <strong>see</strong>.</p>
+<p>When Docker starts a container, it creates several namespaces for that process:</p>
+<ul>
+<li><strong>PID namespace:</strong> The container's first process thinks it is PID 1. It can't see any processes outside its namespace.</li>
+<li><strong>NET namespace:</strong> The container gets its own private network stack — its own IP address, its own routing table, its own ports.</li>
+<li><strong>MNT namespace:</strong> The container sees a private view of the filesystem — not the host's.</li>
+<li><strong>UTS namespace:</strong> The container can have its own hostname, separate from the host.</li>
+</ul>
+<p>The container isn't running in a "virtual machine" — it's a normal Linux process that has been given blinders. It genuinely cannot see what's outside.</p>
+<h3>B. Cgroups — The "Strict Budget"</h3>
+<p>Cgroups (control groups) control what a process can <strong>use</strong>.</p>
+<p>They let you set hard limits on:
+- <strong>RAM</strong> — Container A gets at most 2GB. Even if the host has 64GB free, it cannot take more.
+- <strong>CPU</strong> — Container B gets at most 2 cores worth of time.
+- <strong>Disk I/O</strong> — Throttle read/write bandwidth per container.</p>
+<p>Without cgroups, a runaway container could consume all the host's memory and crash everything. Cgroups are the mechanism that makes containers safe to run side-by-side.</p>
+<h3>C. Union File System — The "Shared Library"</h3>
+<p>This is the most architecturally interesting piece. It controls how files are <strong>stored and shared</strong>.</p>
+<p>The naive approach would be: for every container, copy the entire OS filesystem. A 500MB Ubuntu image × 100 containers = 50GB of wasted disk space. UnionFS solves this with <strong>layering</strong> and <strong>copy-on-write</strong>.</p>
+<hr />
+<h2>4. How Union File System Actually Works</h2>
+<h3>The Technical Reality (No Tracing Paper Needed)</h3>
+<p>There are no physical "layers" stacked inside your hard drive. Your hard drive is a flat surface of bits.</p>
+<p>"Layering" is a <strong>software trick</strong> performed by the Linux kernel using something called a <strong>Union Mount</strong>. Think of it as a <strong>priority search order</strong> over a list of read-only directories.</p>
+<p>Imagine three folders on disk:</p>
+<div class="codehilite"><pre><span></span><code>Folder_A   ← bottom layer (e.g., Ubuntu base image)
+Folder_B   ← middle layer (e.g., Python 3.4 runtime)
+Folder_C   ← top layer   (writable, container-specific changes)
+</code></pre></div>
+
+<p>When a process inside the container asks for <code>index.html</code>, the union filesystem:</p>
+<ol>
+<li>Looks in <code>Folder_C</code> — not there.</li>
+<li>Looks in <code>Folder_B</code> — not there.</li>
+<li>Looks in <code>Folder_A</code> — found! Returns it.</li>
+</ol>
+<p>If the same filename exists in multiple layers, the <strong>higher layer wins</strong>. The lower one is "shadowed" — it still exists on disk, but the container cannot see it.</p>
+<h3>Copy-on-Write: How "Editing" a Read-Only File Works</h3>
+<p>Suppose you're inside a container and you try to edit <code>config.txt</code>, which lives in the read-only <code>Folder_A</code>:</p>
+<ol>
+<li>The kernel says: "You can't edit the original — it's protected."</li>
+<li>It <strong>copies</strong> <code>config.txt</code> from <code>Folder_A</code> into <code>Folder_C</code> (your writable layer).</li>
+<li>It lets you edit the copy in <code>Folder_C</code>.</li>
+<li>From now on, every lookup finds the <code>Folder_C</code> version first — the original in <code>Folder_A</code> is invisible.</li>
+</ol>
+<p>To you, it looks like you edited a file. In reality, you created a new version in a higher-priority folder. This is <strong>Copy-on-Write (CoW)</strong>.</p>
+<h3>Branching: Two Containers, Two Python Versions, One Ubuntu Base</h3>
+<p>Say you have two containers: one needs Python 3.4, the other needs Python 3.1. Here's what Docker actually stores on disk:</p>
+<div class="codehilite"><pre><span></span><code>Ubuntu base image (shared by both containers)
+    ├── Python 3.4 layer  →  Container A&#39;s middleware
+    └── Python 3.1 layer  →  Container B&#39;s middleware
+
+Container A writable layer  (only Container A&#39;s changes)
+Container B writable layer  (only Container B&#39;s changes)
+</code></pre></div>
+
+<p>The Ubuntu files exist <strong>exactly once</strong> on disk. Both containers point to the same directory for Layer 1. When Container A looks up <code>python</code>, its priority search hits the Python 3.4 layer before reaching Ubuntu. Container B hits its Python 3.1 layer. They never interfere.</p>
+<p>If Ubuntu happened to include Python 2.7, it gets silently shadowed by whichever Python is in Layer 2 — it still exists on disk, but neither container can see it.</p>
+<p><strong>The mental model:</strong></p>
+<blockquote>
+<p>Docker treats your hard drive like a Lego set. You have the big "Ubuntu" block at the bottom. You can snap a "Python 3.1" block on top of one tower and a "Python 3.4" block on top of another. They share the base block, but they look different from the outside.</p>
+</blockquote>
+<h3>Why This Matters Practically</h3>
+<ul>
+<li><strong>Storage:</strong> Ubuntu downloaded once, shared across hundreds of containers.</li>
+<li><strong>Speed:</strong> Spinning up a container doesn't copy files — it just creates a new empty writable layer and sets up a search order. That's why containers start in milliseconds.</li>
+<li><strong>Consistency:</strong> The read-only layers are content-addressed by SHA-256 hashes. The same image is byte-for-byte identical everywhere.</li>
+</ul>
+<hr />
+<h2>5. Containers vs. VMs: The Weight Difference</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Virtual Machine</th>
+<th style="text-align: left;">Docker Container</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>OS Kernel</strong></td>
+<td style="text-align: left;">Each VM has its own kernel</td>
+<td style="text-align: left;">All containers share the host kernel</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Boot time</strong></td>
+<td style="text-align: left;">Minutes</td>
+<td style="text-align: left;">Milliseconds</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Disk footprint</strong></td>
+<td style="text-align: left;">GBs</td>
+<td style="text-align: left;">MBs</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Isolation</strong></td>
+<td style="text-align: left;">Hardware-level (strong)</td>
+<td style="text-align: left;">Process-level (good but shared kernel)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Use case</strong></td>
+<td style="text-align: left;">Run different OSes side by side, strong security boundaries</td>
+<td style="text-align: left;">Many instances of the same app, same OS</td>
+</tr>
+</tbody>
+</table>
+<p>The key tradeoff: VMs are heavier but provide stronger isolation because each one has its own kernel. If the host kernel has a bug, a container is vulnerable; a VM is not. This is why production systems often run Docker <strong>inside</strong> a VM — you get both.</p>
+<hr />
+<h2>6. The Cloud Layer: VMware vs. Azure</h2>
+<p>Once you understand VMs and containers, the cloud makes much more sense.</p>
+<h3>VMware — The Private Cloud Tool</h3>
+<p>VMware lets you take your own physical servers and "slice" them into virtual machines using a <strong>hypervisor</strong>. You own and manage everything — the hardware, the hypervisor software, the VMs on top.</p>
+<h3>Azure — Public Cloud</h3>
+<p>Microsoft owns the data centers. You rent their "slices" — VMs, databases, networking — over the internet. You don't touch hardware; you just consume resources.</p>
+<p><strong>2026 context:</strong> VMware (now owned by Broadcom) moved to subscription-only pricing. Many enterprises responded by migrating their VMware workloads into <strong>Azure VMware Solution (AVS)</strong>, which runs VMware on Azure's hardware — eliminating the cost of managing the underlying servers.</p>
+<hr />
+<h2>7. Type 1 vs. Type 2 Hypervisors</h2>
+<p>The <strong>hypervisor</strong> is the software that makes virtualization possible. It sits between the hardware and the VMs, arbitrating who gets what resources.</p>
+<h3>Type 1 — Bare Metal</h3>
+<p>Installed <strong>directly on the physical hardware</strong>, with no host OS in between.</p>
+<p>Examples: <strong>VMware ESXi</strong>, <strong>Microsoft Hyper-V</strong>, <strong>Xen</strong></p>
+<ul>
+<li>The hypervisor <em>is</em> the OS.</li>
+<li>Typically "headless" — no monitor, no desktop GUI. You manage it remotely via a web dashboard or SSH.</li>
+<li>All CPU/RAM goes to running workloads, not to drawing a UI.</li>
+<li>Used in enterprise data centers and cloud providers.</li>
+</ul>
+<h3>Type 2 — Hosted</h3>
+<p>Runs on top of an existing OS (Windows, macOS, Linux).</p>
+<p>Examples: <strong>VirtualBox</strong>, <strong>VMware Workstation</strong></p>
+<ul>
+<li>The host OS (Windows, macOS) loads first, then you launch VMs as apps.</li>
+<li>Easier to use, but slower — every disk or network operation pays a "performance tax" to the host OS.</li>
+<li>Used for local development and testing.</li>
+</ul>
+<p>Azure runs <strong>Type 1 Hyper-V</strong> under the hood (heavily customized). They also offload networking and storage chores to specialized chips called <strong>Azure Boost DPUs</strong>, so the main CPU only runs tenant workloads. The most recent generation uses <strong>Azure Cobalt 100</strong> — custom ARM-based processors Microsoft designed in-house.</p>
+<hr />
+<h2>8. The Grand Architecture</h2>
+<p>If you were building a production system today, the stack would likely look like this:</p>
+<div class="codehilite"><pre><span></span><code>Level 0 │ Physical server (bare metal)
+        │
+Level 1 │ Type 1 Hypervisor (VMware ESXi or Hyper-V)
+        │  → carves hardware into isolated VMs
+        │
+Level 2 │ Virtual Machine
+        │  → its own kernel, own network, own disk
+        │
+Level 3 │ Docker (inside the VM)
+        │  → lightweight containers sharing the VM&#39;s kernel
+        │
+Level 4 │ App in an Alpine Linux container
+        │  → tiny userland (~5MB), just enough to run your code
+</code></pre></div>
+
+<p>This layering gives you:
+- <strong>Security</strong> from the hypervisor (VM isolation with separate kernels)
+- <strong>Speed</strong> from Docker (millisecond startup, minimal overhead)
+- <strong>Efficiency</strong> from the whole stack (many apps on one server, sharing base images)</p>
+<hr />
+<h2>Key Takeaways</h2>
+<ul>
+<li>A Docker container is a normal Linux process that has been <strong>blindfolded</strong> (namespaces), put on a <strong>budget</strong> (cgroups), and given a <strong>curated view of the filesystem</strong> (UnionFS).</li>
+<li>"Layers" in Docker images are a software illusion — they are just directories searched in priority order.</li>
+<li>Copy-on-Write means you never actually modify a base image; you create a private version in your writable layer.</li>
+<li>VMs provide stronger isolation than containers because each VM has an independent kernel.</li>
+<li>Production systems often stack both: Docker inside a VM, getting the security of VMs and the speed of containers.</li>
+<li>Cloud providers like Azure are Type 1 hypervisor operators at massive scale, with custom hardware optimizations on top.</li>
+</ul>
+    </div>
+
+    <div class="post-footer-nav">
+
+
+    </div>
+
+    <div class="post-tags">
+      <span class="tag">Docker</span>
+      <span class="tag">Containers</span>
+      <span class="tag">Virtualization</span>
+      <span class="tag">Linux</span>
+      <span class="tag">Kubernetes</span>
+      <span class="tag">Cloud</span>
+      <span class="tag">Azure</span>
+      <span class="tag">VMware</span>
+      <span class="tag">Systems Programming</span>
+    </div>
+
+  </div>
+
+  <!-- Footer (auto-generated by common.js) -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+  <script src="../js/ai-agent.js"></script>
+
+  <!-- Table of Contents Auto-Generator -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tocList = document.getElementById('toc-list');
+      const postContent = document.querySelector('.post-content');
+      const headings = postContent.querySelectorAll('h2');
+
+      // Generate TOC items
+      headings.forEach((heading, index) => {
+        if (!heading.id) {
+          heading.id = 'section-' + index;
+        }
+
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + heading.id;
+        a.textContent = heading.textContent;
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.querySelectorAll('.toc-list a').forEach(link => link.classList.remove('active'));
+          a.classList.add('active');
+        });
+
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      // Highlight active section on scroll
+      window.addEventListener('scroll', function() {
+        let current = '';
+        headings.forEach(heading => {
+          if (window.scrollY + 150 >= heading.offsetTop) {
+            current = heading.id;
+          }
+        });
+        document.querySelectorAll('.toc-list a').forEach(a => {
+          a.classList.remove('active');
+          if (a.getAttribute('href') === '#' + current) {
+            a.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speeding Up LLMs: Parallelism, Precision, Communication &amp; Kernels | Shivani Gowda KS</title>
+  <meta name="description" content="A comprehensive deep dive into every major technique for speeding up LLM training and inference: all forms of parallelism, reduced-precision numerics, GPU communication optimization, and fused kernel design.">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --text-muted: #999999;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-tertiary: #e9ecef;
+      --surface-color: #f1f3f4;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.05);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background:
+        radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.03) 1px, transparent 0),
+        radial-gradient(ellipse at 0% 0%, rgba(200, 210, 230, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 0%, rgba(220, 200, 210, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, rgba(200, 220, 210, 0.35) 0%, transparent 50%),
+        radial-gradient(ellipse at 0% 100%, rgba(210, 210, 230, 0.3) 0%, transparent 50%),
+        linear-gradient(135deg, #f8f9fc 0%, #f5f6f8 50%, #f9f8f6 100%);
+      background-size: 24px 24px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    .post-content {
+      font-size: 1.05rem;
+      line-height: 1.8;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h4 {
+      font-size: 1.2rem;
+      margin: 1.2rem 0 0.6rem 0;
+      color: var(--secondary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .highlight-box {
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      border-left: 4px solid;
+    }
+
+    .highlight-info {
+      background: #e3f2fd;
+      border-color: #2196f3;
+    }
+
+    .highlight-success {
+      background: #e8f5e9;
+      border-color: #4caf50;
+    }
+
+    .highlight-warning {
+      background: #fff3e0;
+      border-color: #ff9800;
+    }
+
+    .highlight-danger {
+      background: #ffebee;
+      border-color: #f44336;
+    }
+
+    .comparison-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .comparison-box-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .comparison-item {
+      background: var(--bg-secondary);
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .comparison-item h4 {
+      margin-top: 0;
+      color: var(--primary-color);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+    }
+
+    .post-content th, .post-content td {
+      padding: 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border-color);
+    }
+
+    .post-content th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      justify-content: center;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .post-title {
+        font-size: 1.8rem;
+      }
+
+      .comparison-box {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-box-2col {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header></header>
+
+  <!-- Table of Contents Sidebar -->
+  <aside class="toc-sidebar">
+    <div class="toc-title">Contents</div>
+    <ul class="toc-list" id="toc-list">
+      <!-- Auto-generated by JavaScript -->
+    </ul>
+  </aside>
+
+  <div class="container">
+    <article class="post-header">
+      <h1 class="post-title">Speeding Up LLMs: Parallelism, Precision, Communication &amp; Kernels</h1>
+      <p class="post-subtitle">Every major technique for making large model training and inference faster — from distributing work across thousands of GPUs to squeezing every FLOP out of a single chip</p>
+      <div class="post-meta">
+        <span><i class="fas fa-calendar"></i> March 2026</span>
+        <span style="margin: 0 1rem;">•</span>
+        <span><i class="fas fa-clock"></i> 35 min read</span>
+      </div>
+    </article>
+
+    <div class="post-content">
+      <p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog is a work in progress]</p>
+
+      <!-- ================================================================ -->
+      <h2>Let's Start Small: Training a 1 Billion Parameter Model</h2>
+
+      <p>Before we talk about the giant models making headlines, let's ground ourselves. Imagine you want to train a 1 billion parameter model — modest by today's standards, roughly the size of GPT-2 XL. What do you actually need?</p>
+
+      <div class="visual-box">
+<pre>
+What does it take to train a 1B parameter model?
+
+  Model weights  (FP32, 4 bytes/param)          ~4 GB
+  Gradients      (FP32)                          ~4 GB
+  Optimizer states (Adam: master + m + v)        ~12 GB
+  Activations    (depends on batch & seq len)    ~2–8 GB
+  ─────────────────────────────────────────────────────
+  Total GPU memory needed                        ~22–28 GB
+
+  ✅  This fits on a single NVIDIA A100 (80 GB) or even an RTX 4090 (24 GB, tight)
+  ⏱️  Training time: ~1–3 weeks on a single A100 GPU
+  💰  Cloud cost estimate: ~$1,500–$5,000
+</pre>
+      </div>
+
+      <p>That's manageable. One machine, a handful of GPUs, a few days, and a credit card. But now ask: what happens when the model gets 100× or 1000× bigger?</p>
+
+      <!-- ================================================================ -->
+      <h2>Models Have Gotten Enormous</h2>
+
+      <p>The past few years have seen an extraordinary scaling race. Here's how model sizes have grown:</p>
+
+      <div class="visual-box">
+<pre>
+Year   Model              Parameters     What it took
+────────────────────────────────────────────────────────────────────
+2019   GPT-2              1.5B           1 machine, a few weeks
+2020   GPT-3              175B           Thousands of V100s, months
+2022   PaLM               540B           6,144 TPU v4 chips
+2023   GPT-4              ~1.8T (MoE)*   Tens of thousands of A100s
+2023   LLaMA 2            70B            2,048 A100 GPUs, ~21 days
+2024   LLaMA 3            405B           16,384 H100 GPUs
+2024   DeepSeek-V3        671B (MoE)     2,048 H800 GPUs, ~2 months
+2025   LLaMA 4 Behemoth   288B (MoE)*    Massive GPU cluster
+────────────────────────────────────────────────────────────────────
+* rumored / estimated — not officially confirmed
+
+Models grew ~1000× in 6 years. Hardware memory grew ~2.4× (32 GB → 80 GB).
+</pre>
+      </div>
+
+      <p>See the problem? Model size is growing far faster than single-GPU memory. A 70B model needs about <strong>1,120 GB</strong> of memory during training (weights + gradients + optimizer states). A single H100 has 80 GB. Even a full 8-GPU node has only 640 GB — not enough. And 405B? You need <em>dozens</em> of machines just to hold the model in memory, let alone train it efficiently.</p>
+
+      <!-- ================================================================ -->
+      <h2>So How Are They Doing It?</h2>
+
+      <p>The answer isn't a single trick — it's an evolving toolkit of techniques that researchers and engineers have refined over several years. At a high level, there are four big categories:</p>
+
+      <div class="highlight-box highlight-info">
+        <p><strong>1. Parallelism:</strong> Split work — data, model layers, or individual operators — across dozens to thousands of GPUs. Instead of fitting the whole model on one chip, spread it across many.</p>
+        <p><strong>2. Reduced Precision:</strong> Go from FP32 → BF16 → FP8 → FP4 to double (or quadruple) throughput and cut memory, at the cost of numerical range. This has gotten remarkably better — FP8 training used to be considered unstable, and now DeepSeek trains 671B models with it.</p>
+        <p><strong>3. Communication Optimization:</strong> Ring-AllReduce, tree-reduce, and overlapping compute with comms determines how fast gradients travel between chips. At 128+ GPUs, you can spend 30–50% of time just waiting on the network if this isn't done well.</p>
+        <p><strong>4. Fused Kernels:</strong> Keep data in fast on-chip SRAM by fusing sequences of ops into one GPU kernel, eliminating round-trips to HBM. FlashAttention is the poster child.</p>
+      </div>
+
+      <p>Each of these has matured significantly. In 2020, most teams used simple data parallelism and FP16 mixed precision. By 2024, state-of-the-art training runs layer 3D parallelism (TP + PP + DP), ZeRO memory sharding, FP8 arithmetic, fused attention kernels, and overlap every communication with compute. The rest of this post walks through each technique in detail.</p>
+
+      <!-- ================================================================ -->
+      <h2>The Memory Wall — Why One GPU Is Never Enough</h2>
+
+      <p>Let's make the core problem concrete. A transformer model with <em>P</em> parameters stored in FP16 requires 2P bytes just for weights. Adam optimizer states add another 12P bytes (FP32 copy + first moment + second moment). Gradients add 2P more. Activations at a sequence length of 4096 can dwarf all of that. Modern GPU HBM tops out at 80–192 GB per device.</p>
+
+      <div class="visual-box">
+<pre>
+Memory breakdown for a 70B parameter model during FP16 training:
+
+  Parameters   (FP16, 2 bytes/param)        ~140 GB
+  Gradients    (FP16)                        ~140 GB
+  Optimizer states  Adam  (FP32 × 3)        ~840 GB   ← master + m + v
+  ──────────────────────────────────────────────────
+  Total (naïve single-GPU)                  ~1120 GB
+
+  One H100/A100 node  (8 × 80 GB HBM)      =  640 GB   ← still not enough
+
+  Solution → distribute across multiple nodes via parallelism
+</pre>
+      </div>
+
+      <p>The gap between what fits and what we want to train keeps widening. This is why every technique in this post exists — they're different ways of closing that gap.</p>
+
+      <!-- ================================================================ -->
+      <h2>Part 1 — Parallelism</h2>
+
+      <p>Parallelism strategies answer the question: <em>which dimension of the computation do we split?</em> Each strategy has a different communication pattern, memory footprint, and hardware requirement.</p>
+
+      <div class="comparison-box">
+        <div class="comparison-item">
+          <h4>📦 Data Parallelism</h4>
+          <p>Replicate the full model. Split the <em>data batch</em> across GPUs. Sync gradients via AllReduce.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>✂️ Tensor / Operator Parallel</h4>
+          <p>Split individual <em>weight matrices</em> across GPUs. Every GPU works on a slice of each layer.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>🚰 Pipeline Parallel</h4>
+          <p>Split the <em>model depth</em>: assign consecutive layer groups to different GPU stages.</p>
+        </div>
+      </div>
+
+      <div class="comparison-box-2col">
+        <div class="comparison-item">
+          <h4>🧩 Sequence Parallelism</h4>
+          <p>Partition the <em>sequence dimension</em> of activation tensors so activation memory scales with sequence length across ranks.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>🧠 Expert Parallelism</h4>
+          <p>For MoE models: place <em>different experts</em> on different GPUs. Router sends each token to the right device.</p>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <h3>1. Data Parallelism (DP) and Distributed Data Parallelism (DDP)</h3>
+
+      <p>Data Parallelism is the simplest and most widely used form of parallelism. Every worker holds an identical copy of the entire model. Each training step:</p>
+      <ol>
+        <li>The global mini-batch is split into <em>N</em> equal shards, one per GPU.</li>
+        <li>Each GPU runs a full forward and backward pass on its local shard.</li>
+        <li>Gradients are <em>AllReduced</em> (summed and divided by <em>N</em>) across all GPUs.</li>
+        <li>Every GPU applies the identical update — so all replicas stay in sync.</li>
+      </ol>
+
+      <p><strong>PyTorch DDP</strong> (DistributedDataParallel) is the production-grade DP implementation. It overlaps gradient communication with the backward pass using gradient bucketing: as soon as a layer's gradient is ready it is added to a bucket and AllReduced, while the backward pass continues for earlier layers.</p>
+
+      <div class="visual-box">
+<pre>
+Ring-AllReduce  (4 GPUs, gradient tensor G)
+
+Step 1 – Scatter-Reduce (each GPU accumulates 1/N of G)
+  GPU 0 → GPU 1 → GPU 2 → GPU 3
+    ↑                          │
+    └──────────────────────────┘
+
+Step 2 – AllGather (broadcast fully-reduced chunks)
+  GPU 0 ← GPU 1 ← GPU 2 ← GPU 3
+    │                          ↑
+    └──────────────────────────┘
+
+Result: every GPU holds the same fully reduced gradient.
+Bandwidth per GPU: 2 × (N−1)/N × |G|  bytes
+               ≈ 2|G| for large N  (does not grow with N!)
+</pre>
+      </div>
+
+      <div class="highlight-box highlight-warning">
+        <p><strong>Limitation of DP/DDP:</strong> The full model must fit on <em>each</em> GPU. For 70B+ parameter models this is impossible before even considering activations and optimizer states. DDP scales batch size but not model size.</p>
+      </div>
+
+      <p><strong>ZeRO / FSDP</strong> extend DP by sharding the optimizer states, gradients, and parameters themselves across the data-parallel ranks — see the dedicated section below.</p>
+
+      <!-- ================================================================ -->
+      <h3>2. Model Parallelism</h3>
+
+      <p>When a model is too large for a single GPU, we split the <em>model</em> itself. There are several ways to do this.</p>
+
+      <h4>2a. Pipeline Parallelism (PP)</h4>
+
+      <p>Assign consecutive groups of transformer layers ("stages") to different GPU groups. Stage 0 holds layers 0–<em>L/P</em>, stage 1 holds layers <em>L/P</em>–<em>2L/P</em>, and so on. During the forward pass, activations flow through stages like an assembly line. During the backward pass, gradients flow in reverse.</p>
+
+      <div class="visual-box">
+<pre>
+Naïve pipeline (P=4 stages, M=4 micro-batches):
+
+Time →
+Stage 0:  [F0][F1][F2][F3][···idle···][B3][B2][B1][B0]
+Stage 1:      [F0][F1][F2][F3][··idle··][B3][B2][B1][B0]
+Stage 2:          [F0][F1][F2][F3][·idle·][B3][B2][B1][B0]
+Stage 3:              [F0][F1][F2][F3][B3][B2][B1][B0]
+
+Pipeline bubble fraction = (P − 1) / (M + P − 1)
+  → Increase M to reduce the bubble
+  → P=4, M=4: bubble = 3/7 ≈ 43 %
+  → P=4, M=16: bubble = 3/19 ≈ 16 %
+</pre>
+      </div>
+
+      <p><strong>1F1B (one-forward-one-backward) Schedule:</strong> Instead of completing all micro-batch forward passes before starting backward passes, each stage alternates between one forward and one backward micro-batch. This cuts peak activation memory from O(P × M) to O(P) while keeping the same bubble fraction.</p>
+
+      <div class="visual-box">
+<pre>
+1F1B schedule (P=4 stages, reduces peak activation memory):
+
+Stage 0:  [F0][F1][F2][F3][B0][B1][B2][B3]
+Stage 1:      [F0][F1][F2][B0][F3][B1][B2][B3]
+Stage 2:          [F0][F1][B0][B1][F2][F3][B2][B3]
+Stage 3:              [F0][B0][F1][B1][F2][B2][F3][B3]
+
+Activation memory per stage: O(1) micro-batches instead of O(M)
+Same bubble fraction as naïve, but ~P× lower activation peak.
+</pre>
+      </div>
+
+      <h4>2b. Tensor Parallelism (TP) and Operator Parallelism</h4>
+
+      <p>Introduced by Megatron-LM, tensor parallelism splits the weight matrices of <em>each individual layer</em> across multiple GPUs. For a linear layer Y = XA, partition A column-wise so each GPU computes a partial output. The key insight is that Transformers have two natural split points per block: the QKV projection and the MLP.</p>
+
+      <div class="visual-box">
+<pre>
+Multi-Head Attention — Column Parallel + Row Parallel  (TP = 4)
+
+  Original: W_Q, W_K, W_V  [d_model × d_model]
+
+  Column-parallel (no AllReduce after):
+    GPU 0: heads  0–3    → Q₀, K₀, V₀
+    GPU 1: heads  4–7    → Q₁, K₁, V₁
+    GPU 2: heads  8–11   → Q₂, K₂, V₂
+    GPU 3: heads 12–15   → Q₃, K₃, V₃
+
+  Each GPU computes full self-attention for its head subset.
+
+  Row-parallel output projection W_O:
+    GPU 0–3 each produce partial output  →  AllReduce  →  full output
+
+  Communication per attention layer: 1 AllReduce (after output proj)
+
+────────────────────────────────────────────────────────
+MLP / FFN — Column Parallel + Row Parallel  (TP = 4)
+
+  F = GeLU(X W₁) W₂
+
+  Column-parallel W₁ (split output dim):
+    GPU 0: X W₁₀  →  GeLU  →  hidden₀
+    GPU 1: X W₁₁  →  GeLU  →  hidden₁
+    (no communication needed after GeLU)
+
+  Row-parallel W₂ (split input dim):
+    GPU 0–3 each compute partial output  →  AllReduce  →  full Y
+
+  Communication per MLP: 1 AllReduce
+</pre>
+      </div>
+
+      <div class="highlight-box highlight-warning">
+        <p><strong>TP requires high-bandwidth intra-node interconnects (NVLink, AMD XGMI).</strong> Each AllReduce is on the critical path of every layer forward pass. Over slow inter-node Ethernet or even InfiniBand, TP overhead dominates. In practice, TP degree is limited to 4 or 8 (the number of GPUs per physical node sharing NVLink).</p>
+      </div>
+
+      <h4>2c. Expert Parallelism (EP) — Mixture of Experts</h4>
+
+      <p>Mixture-of-Experts (MoE) models (Mixtral, DeepSeek-V2/V3, rumoured GPT-4) replace the dense FFN in each Transformer block with <em>E</em> independent "expert" FFNs and a learned router. Each token is sent to the top-<em>K</em> experts (typically K=2). Expert Parallelism assigns different experts to different GPUs.</p>
+
+      <div class="visual-box">
+<pre>
+MoE Token Routing  (E=8 experts, EP=8 GPUs, K=2)
+
+Each GPU owns exactly 1 expert.
+Input tokens arrive at each GPU (from TP + PP stage).
+
+  ┌─ Router (learned MLP) on each GPU ─┐
+  │  softmax over E experts              │
+  │  select top-2 expert indices         │
+  └──────────────────────────────────────┘
+           │
+           ▼
+  All-to-All DISPATCH   ← tokens travel to their expert GPUs
+           │   (each token may go to up to 2 different GPUs)
+           ▼
+  FFN computation on each GPU (only the local expert)
+           │
+           ▼
+  All-to-All COMBINE    ← results return to originating GPU
+           │
+           ▼
+  Weighted sum of K=2 expert outputs, continue normal flow
+
+Communication cost per MoE layer: 2 × All-to-All
+Load imbalance risk → auxiliary load-balancing loss required
+(without it, the router routes everything to 1–2 experts → collapse)
+</pre>
+      </div>
+
+      <p>DeepSeek-V3 demonstrated that carefully tuned MoE with fine-grained expert granularity (<em>fine-grained MoE</em>) can match or exceed dense model quality at a fraction of the activated FLOP count per token, enabling cost-effective training at 671B total parameters.</p>
+
+      <h4>2d. Sequence Parallelism (SP)</h4>
+
+      <p>Tensor Parallelism does not partition activations — every TP rank holds the full sequence in tensors like LayerNorm inputs and Dropout outputs, so activation memory still scales as O(seq_len × d_model) per TP rank. Sequence Parallelism (introduced in Megatron-LM v3) fixes this by partitioning the activation tensors along the sequence dimension between TP-parallel regions.</p>
+
+      <div class="visual-box">
+<pre>
+Without SP (TP = 4):
+  After MLP AllReduce: tensor is [seq_len × d_model] on EACH rank
+  LayerNorm, Dropout etc. each process the full sequence → redundant
+
+With SP (TP = 4):
+  Between TP regions:   [seq_len/4 × d_model] per rank
+  → AllGather before column-parallel ops  (reconstitute full seq)
+  → ReduceScatter after row-parallel ops  (scatter back over seq dim)
+
+Net result:
+  Activation memory for non-TP ops reduced by a factor of TP degree
+  Same total communication volume as TP alone (AllGather + ReduceScatter
+  ≡ AllReduce in bandwidth cost)
+</pre>
+      </div>
+
+      <!-- ================================================================ -->
+      <h3>3D Parallelism: Combining DP + TP + PP</h3>
+
+      <p>For models exceeding a single node, all three dimensions are layered. The cluster is organized as a three-dimensional grid: TP within a node (NVLink), PP across nodes (InfiniBand point-to-point), and DP across replica groups (InfiniBand AllReduce / ZeRO).</p>
+
+      <div class="visual-box">
+<pre>
+128-GPU cluster   (TP = 4, PP = 8, DP = 4)
+Total GPUs = 4 × 8 × 4 = 128 ✓
+
+  DP replica 0                                DP replica 1 ...
+  ┌────────────────────────────────────────┐  ┌──────────────
+  │   Pipeline Stage 0  (layers  0–11)     │  │
+  │   [GPU 0][GPU 1][GPU 2][GPU 3]  TP=4   │  │  [GPU 32]...
+  ├────────────────────────────────────────┤  ├──────────────
+  │   Pipeline Stage 1  (layers 12–23)     │  │
+  │   [GPU 4][GPU 5][GPU 6][GPU 7]  TP=4   │  │  [GPU 36]...
+  │  ...                                   │  │
+  ├────────────────────────────────────────┤  │
+  │   Pipeline Stage 7  (layers 84–95)     │  │
+  │  [GPU28][GPU29][GPU30][GPU31]   TP=4   │  │  [GPU 60]...
+  └────────────────────────────────────────┘  └──────────────
+
+  Interconnect hierarchy:
+    TP communication  →  NVLink    (600 GB/s bidirectional, intra-node)
+    PP send/recv      →  InfiniBand 400 Gb/s  (inter-node, p2p)
+    DP AllReduce/ZeRO →  InfiniBand  (inter-node)
+</pre>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Dimension</th><th>What it splits</th><th>Interconnect</th><th>Typical degree</th><th>Main cost</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Tensor Parallel (TP)</strong></td><td>Operators within a layer</td><td>NVLink / XGMI</td><td>2, 4, 8</td><td>1 AllReduce per layer</td></tr>
+            <tr><td><strong>Pipeline Parallel (PP)</strong></td><td>Layer groups (depth)</td><td>InfiniBand p2p</td><td>4, 8, 16, 32</td><td>Bubble + activation transfer</td></tr>
+            <tr><td><strong>Data Parallel (DP)</strong></td><td>Batch width</td><td>InfiniBand</td><td>Unlimited</td><td>1 AllReduce per step</td></tr>
+            <tr><td><strong>Sequence Parallel (SP)</strong></td><td>Sequence activations</td><td>NVLink (co-located w/ TP)</td><td>= TP degree</td><td>AllGather + ReduceScatter</td></tr>
+            <tr><td><strong>Expert Parallel (EP)</strong></td><td>MoE expert routing</td><td>InfiniBand</td><td>= num experts</td><td>2 × All-to-All</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ================================================================ -->
+      <h2>Part 2 — Trading Precision for Speed</h2>
+
+      <p>Arithmetic units in GPUs are not one-size-fits-all. Each generation of hardware provides dedicated circuits for different numeric formats. Moving from FP32 to lower-precision formats achieves three things simultaneously: (1) each arithmetic op fires faster, (2) twice as many numbers fit in the same memory, and (3) twice as much data moves through the memory bus per cycle.</p>
+
+      <h3>The Floating-Point Formats</h3>
+
+      <div class="visual-box">
+<pre>
+Format     Sign  Exponent  Mantissa  Total     Max value       Notes
+─────────────────────────────────────────────────────────────────────────
+FP64        1      11        52       64 bit   ~1.8 × 10³⁰⁸    Scientific
+FP32        1       8        23       32 bit   ~3.4 × 10³⁸     Training default
+FP16        1       5        10       16 bit   65504           Narrow range!
+BF16        1       8         7       16 bit   ~3.4 × 10³⁸     Same range as FP32
+TF32        1       8        10       19 bit   ~3.4 × 10³⁸     A100 Tensor Core internal
+FP8 E4M3    1       4         3        8 bit   448             High precision, low range
+FP8 E5M2    1       5         2        8 bit   57344           Low precision, wider range
+FP4 (NVfp4) 1      2         1        4 bit   6               Extremely coarse
+─────────────────────────────────────────────────────────────────────────
+E = exponent bits, M = mantissa bits
+</pre>
+      </div>
+
+      <p><strong>BF16 is the preferred training format</strong> today because it has the same dynamic range as FP32 (same 8-bit exponent) but half the memory and double the throughput. Unlike FP16, it almost never overflows during backward passes, eliminating the need for loss scaling.</p>
+
+      <p>FP8 has two variants with different trade-offs: <strong>E4M3</strong> has more mantissa bits and is preferred for activations and weights (higher precision), while <strong>E5M2</strong> has a wider dynamic range and is used for gradients.</p>
+
+      <h3>GPU FLOP Rates Across Generations (NVIDIA)</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>GPU</th><th>Year</th><th>FP32 (TFLOPS)</th><th>BF16 / FP16 (TFLOPS)</th><th>FP8 (TFLOPS)</th><th>INT8 (TOPS)</th><th>HBM (GB)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>A100 SXM4</td><td>2020</td><td>19.5</td><td>312 (with sparsity: 624)</td><td>—</td><td>624</td><td>80</td></tr>
+            <tr><td>H100 SXM5</td><td>2022</td><td>67</td><td>989 (w/ sparsity: 1979)</td><td>1979 (w/ sparsity: 3958)</td><td>3958</td><td>80</td></tr>
+            <tr><td>H200 SXM</td><td>2024</td><td>67</td><td>989</td><td>1979</td><td>3958</td><td>141 HBM3e</td></tr>
+            <tr><td>B100 SXM</td><td>2024</td><td>~70</td><td>~1800</td><td>~3500</td><td>~7000</td><td>192 HBM3e</td></tr>
+            <tr><td>B200 SXM</td><td>2025</td><td>~90</td><td>~2250 (FP4: ~4500)</td><td>~4500</td><td>~9000</td><td>192 HBM3e</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box highlight-info">
+        <p><strong>Key trend:</strong> Going from FP32 → FP16/BF16 gives ~16× raw throughput on Tensor Cores (FP32 still uses CUDA cores). Going from FP16 → FP8 doubles it again. FP4 (NVfp4, introduced on Blackwell) doubles it once more. Each halving of bit-width doubles arithmetic density — as long as the algorithms remain numerically stable.</p>
+      </div>
+
+      <h3>GPU FLOP Rates Across Generations (AMD Instinct)</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>GPU</th><th>Year</th><th>FP32 (TFLOPS)</th><th>BF16 / FP16 (TFLOPS)</th><th>FP8 (TFLOPS)</th><th>HBM (GB)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>MI250X</td><td>2021</td><td>47.9</td><td>383 (FP16)</td><td>—</td><td>128</td></tr>
+            <tr><td>MI300X</td><td>2023</td><td>163.4</td><td>1307 (FP16/BF16)</td><td>2614</td><td>192</td></tr>
+            <tr><td>MI325X</td><td>2024</td><td>163.4</td><td>1307</td><td>2614</td><td>256 HBM3e</td></tr>
+            <tr><td>MI350X</td><td>2025</td><td>~180</td><td>~1400</td><td>~2800</td><td>288 HBM3e</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>AMD's MI300X is particularly notable for having the largest HBM capacity in the industry (192 GB on one device), enabling it to hold an entire 70B parameter model in FP16 on a single card. This changes the multi-GPU topology requirements dramatically — a 70B model can be served from a single MI300X without any model parallelism.</p>
+
+      <h3>FP8 Training — The DeepSeek Breakthrough</h3>
+
+      <p>For most of ML history, FP8 was considered usable only for inference (quantization). Training in FP8 was thought to be unstable due to the extremely limited numeric range causing gradient underflow and overflow.</p>
+
+      <p>DeepSeek's <strong>FP8 Mixed Precision Training</strong> framework (demonstrated in DeepSeek-V3, 2024) showed that FP8 training <em>is</em> stable if done carefully:</p>
+
+      <ul>
+        <li><strong>Fine-grained quantization:</strong> Instead of one global scale per tensor, use per-128-element group scales. This prevents any single large value from wasting the entire numeric range.</li>
+        <li><strong>Selective precision:</strong> Use FP8 E4M3 for forward pass weights and activations; use FP8 E5M2 for gradients (wider range); keep the optimizer states and master weights in BF16/FP32.</li>
+        <li><strong>Accumulation in FP32:</strong> Matrix multiply accumulates in FP32 even when inputs are FP8 — the Tensor Core hardware supports this natively.</li>
+        <li><strong>Loss scaling is still needed</strong> for E5M2 gradient format but coarser than FP16.</li>
+      </ul>
+
+      <p>Result: approximately <strong>2× training throughput</strong> over BF16 on the same hardware, with negligible quality degradation. DeepSeek-V3 (671B MoE) was trained entirely in this regime.</p>
+
+      <div class="highlight-box highlight-success">
+        <p><strong>Bottom line on precision:</strong> FP32 → BF16 is safe and universally recommended. BF16 → FP8 requires careful per-group scaling but delivers another ~2× gain. FP4/NVfp4 (Blackwell onwards) is primarily for inference quantization today, delivering ~4× over FP16 at the cost of heavier calibration.</p>
+      </div>
+
+      <h3>NVfp4 — NVIDIA's Latest Format</h3>
+
+      <p>Introduced with the Blackwell architecture (B100/B200, 2024–2025), NVfp4 is a 4-bit floating-point format with 1 sign bit, 2 exponent bits, and 1 mantissa bit. NVIDIA's announcement positions NVfp4 as the primary format for <em>inference</em> workloads on Blackwell, enabling up to <strong>20 PFLOPS per B200</strong> for 4-bit operations. The format requires per-group (block) scaling factors stored in higher precision (typically FP8) to maintain acceptable accuracy. For details see <a href="https://developer.nvidia.com/blog/blackwell-architecture" rel="noopener noreferrer">NVIDIA's Blackwell architecture announcement</a>.</p>
+
+      <!-- ================================================================ -->
+      <h2>Part 3 — Optimizing GPU-to-GPU Communication</h2>
+
+      <p>At scale, the network between GPUs can become the bottleneck entirely. A 128-GPU training run of a large model may spend 30–50% of wall-clock time in collective operations. Understanding and minimizing this cost is an engineering discipline of its own.</p>
+
+      <h3>Collective Communication Primitives</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Primitive</th><th>What it does</th><th>Used in</th><th>Volume per GPU</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>AllReduce</strong></td><td>Reduce across all ranks; all get the result</td><td>DP gradient sync</td><td>2(N−1)/N × |T|</td></tr>
+            <tr><td><strong>ReduceScatter</strong></td><td>Reduce across ranks; each gets its own shard</td><td>ZeRO-2/3 grad reduce, SP</td><td>(N−1)/N × |T|</td></tr>
+            <tr><td><strong>AllGather</strong></td><td>Each rank contributes shard; all get full tensor</td><td>ZeRO-3 param gather, SP</td><td>(N−1)/N × |T|</td></tr>
+            <tr><td><strong>All-to-All</strong></td><td>Each rank sends unique slice to each other rank</td><td>Expert Parallelism (MoE)</td><td>(N−1)/N × |T|</td></tr>
+            <tr><td><strong>Broadcast</strong></td><td>One rank sends to all others</td><td>Init, checkpoint load</td><td>(N−1)/N × |T|</td></tr>
+            <tr><td><strong>Send / Recv</strong></td><td>Point-to-point between two ranks</td><td>Pipeline stage handoff</td><td>1 × activation size</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Ring-AllReduce vs. Tree / Hierarchical Reduction</h3>
+
+      <div class="comparison-box-2col">
+        <div class="comparison-item">
+          <h4>Ring-AllReduce</h4>
+          <p>GPUs arranged in a logical ring. Each sends and receives in two phases (scatter-reduce, then all-gather). <strong>Bandwidth-optimal</strong>: each GPU uses exactly 2(N−1)/N × |T| bytes. Latency grows as O(N) — slow for very large N when latency is the bottleneck (small tensors).</p>
+        </div>
+        <div class="comparison-item">
+          <h4>Tree / Recursive Halving</h4>
+          <p>GPUs arranged in a tree (binary or k-ary). <strong>Latency-optimal</strong>: O(log₂ N) rounds. But each non-leaf GPU handles data from both subtrees → bandwidth demand on the root doubles with each level. Best for small tensors where latency dominates.</p>
+        </div>
+      </div>
+
+      <div class="visual-box">
+<pre>
+Hierarchical AllReduce (commonly used in multi-node clusters):
+
+Within each node (fast NVLink):
+  GPU 0, 1, 2, 3  →  intra-node Ring-AllReduce
+
+Between nodes (InfiniBand, one "leader" per node):
+  Node 0 leader, Node 1 leader, ... Node 7 leader
+                 ↘      ↙
+              inter-node AllReduce  (Tree or Ring over 8 leaders)
+
+                 ↓
+  Each leader AllGathers result back to intra-node GPUs
+
+Benefits: inter-node traffic reduced by factor of GPUs-per-node (e.g. 8×)
+</pre>
+      </div>
+
+      <h3>Overlapping Communication with Computation</h3>
+
+      <p>The most impactful optimization is to <em>hide</em> communication latency behind compute. If the AllReduce for layer N's gradient can be issued while the backward pass is still computing layer N−1's gradient, the two operations run in parallel and communication cost is essentially free if the compute takes longer.</p>
+
+      <ul>
+        <li><strong>PyTorch DDP bucket overlap:</strong> Gradients are added to a communication bucket immediately as they are computed. Once the bucket is full, AllReduce is triggered asynchronously. The backward pass continues for earlier layers while the bucket flies over the network.</li>
+        <li><strong>ZeRO-3 prefetch:</strong> While computing the forward pass for layer N, ZeRO-3 prefetches (AllGather) the weights for layer N+1 in the background.</li>
+        <li><strong>PP micro-batch overlap:</strong> While stage K is running a forward pass on micro-batch M+1, it can simultaneously send activations from micro-batch M to stage K+1 via a persistent CUDA stream.</li>
+      </ul>
+
+      <h3>Hardware Progress: Interconnects Over 5 GPU Generations</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Generation</th><th>GPU</th><th>Year</th><th>Intra-node Bandwidth</th><th>Inter-node (NIC)</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Volta</td><td>V100 SXM2</td><td>2017</td><td>NVLink 2.0 — 300 GB/s (6 links)</td><td>100 Gb/s IB HDR</td><td>First NVLink gen for HPC</td></tr>
+            <tr><td>Ampere</td><td>A100 SXM4</td><td>2020</td><td>NVLink 3.0 — 600 GB/s (12 links)</td><td>200 Gb/s IB HDR100</td><td>NVSwitch 2: any-to-any</td></tr>
+            <tr><td>Hopper</td><td>H100 SXM5</td><td>2022</td><td>NVLink 4.0 — 900 GB/s (18 links)</td><td>400 Gb/s IB NDR</td><td>NVSwitch 3; DGX H100 = 900 GB/s all-to-all</td></tr>
+            <tr><td>Hopper+</td><td>H200 SXM</td><td>2024</td><td>NVLink 4.0 — 900 GB/s</td><td>400 Gb/s IB NDR</td><td>Same interconnect, HBM3e memory</td></tr>
+            <tr><td>Blackwell</td><td>B200 SXM</td><td>2025</td><td>NVLink 5.0 — 1800 GB/s</td><td>800 Gb/s IB XDR</td><td>NVSwitch 4; GB200 NVLink Domain: 130 TB/s</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>4a. Intra-Node Interconnects</h3>
+
+      <div class="comparison-box">
+        <div class="comparison-item">
+          <h4>NVLink (NVIDIA)</h4>
+          <p>Proprietary point-to-point serial links between NVIDIA GPUs on the same server. NVSwitch provides a non-blocking crossbar for all-to-all communication within a node. NVLink 5 (Blackwell) delivers 1800 GB/s bidirectional bandwidth per GPU.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>XGMI / Infinity Fabric (AMD)</h4>
+          <p>AMD's equivalent of NVLink. MI300X uses a unified HBM + chiplet design so 8 GPU dies share memory through Infinity Fabric at ~896 GB/s aggregate — and uniquely, all 192 GB of HBM is shared as a single address space.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>PCIe (Open Standard)</h4>
+          <p>The fallback when neither NVLink nor XGMI is available (consumer GPUs, mixed-vendor servers). PCIe 5.0 ×16 provides 128 GB/s bidirectional — about 10× slower than NVLink 4. TP over PCIe is inadvisable for production training.</p>
+        </div>
+      </div>
+
+      <h3>4b. Inter-Node Interconnects</h3>
+
+      <div class="comparison-box-2col">
+        <div class="comparison-item">
+          <h4>InfiniBand (typically NVIDIA / Mellanox)</h4>
+          <p>Industry standard for HPC clusters. InfiniBand NDR (400 Gb/s per port) is currently dominant. NDR200 (200 Gb/s) and HDR (200 Gb/s) are common in A100 clusters. NVIDIA SHARP (Scalable Hierarchical AllReduce Protocol) offloads AllReduce onto the InfiniBand switch fabric itself, eliminating CPU/GPU involvement in collective ops — up to 2× effective bandwidth for large AllReduces.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>Ethernet (with RDMA — RoCE)</h4>
+          <p>RDMA over Converged Ethernet (RoCE) delivers InfiniBand-level latency over standard 100/400 GbE infrastructure. Used extensively by cloud providers (AWS EFA, Azure InfiniBand, Google Jupiter fabric). More accessible than dedicated IB but higher tail latency. Hyperscalers like Google and Meta run their largest training clusters on custom Ethernet fabrics with RDMA.</p>
+        </div>
+      </div>
+
+      <div class="highlight-box highlight-info">
+        <p><strong>The 75% rule:</strong> Going from FP32 to FP8 cuts communication volume to 25% of the original (4× fewer bytes per parameter), which effectively quadruples the amount of computation that can be hidden behind a fixed communication window. This is one reason DeepSeek's FP8 training was so effective at scale — not just raw compute, but proportionally less network pressure.</p>
+      </div>
+
+      <!-- ================================================================ -->
+      <h2>Part 4 — ZeRO: Zero Redundancy Optimizer</h2>
+
+      <p>Standard Data Parallelism stores identical copies of all optimizer states, gradients, and parameters on every GPU. For a 70B model with Adam, that's ~840 GB per replica — wasted. ZeRO (introduced by Microsoft DeepSpeed) partitions all of this across DP ranks.</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Stage</th><th>What is Partitioned</th><th>Memory per GPU (N GPUs)</th><th>Extra Communication</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>ZeRO-1</strong></td><td>Optimizer states (m, v, fp32 master copy)</td><td>16M/N + 4M ≈ 4M for large N</td><td>None (AllGather at param update)</td></tr>
+            <tr><td><strong>ZeRO-2</strong></td><td>Optimizer states + Gradients</td><td>2M/N + 2M ≈ 2M for large N</td><td>ReduceScatter gradients</td></tr>
+            <tr><td><strong>ZeRO-3 / FSDP</strong></td><td>Optimizer states + Gradients + Parameters</td><td>16M/N bytes (~1/N of naïve)</td><td>AllGather params forward &amp; backward</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="visual-box">
+<pre>
+ZeRO-3 forward pass for one layer (N = 64 GPUs, layer L):
+
+1. AllGather W_L          (all 64 GPUs reconstruct full layer weights)
+2. Forward through W_L    (local computation, full weight in HBM temporarily)
+3. Discard non-owned W_L  (each GPU only keeps its 1/64 shard)
+
+ZeRO-3 backward pass:
+4. AllGather W_L again    (reconstruct for gradient computation)
+5. Compute ∂L/∂W_L
+6. ReduceScatter ∂L/∂W_L (each GPU accumulates grad shard it owns)
+7. Optimizer step on owned shard only
+
+Memory benefit: storing only 1/N of weights + optimizer states
+Communication cost: 3 AllGather + 1 ReduceScatter per layer per step
+           (comparable to AllReduce in naïve DDP — 2 passes instead of 1)
+</pre>
+      </div>
+
+      <h3>PyTorch FSDP (Fully Sharded Data Parallel)</h3>
+
+      <p>FSDP is PyTorch's native ZeRO-3 implementation. FSDP2 (PyTorch 2.4+) is built on the DTensor abstraction and is fully compatible with <code>torch.compile</code>.</p>
+
+      <div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">FSDP</span><span class="p">,</span>
+    <span class="n">MixedPrecision</span><span class="p">,</span>
+    <span class="n">ShardingStrategy</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp.wrap</span> <span class="kn">import</span> <span class="n">transformer_auto_wrap_policy</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+
+<span class="n">mp_policy</span> <span class="o">=</span> <span class="n">MixedPrecision</span><span class="p">(</span>
+    <span class="n">param_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
+    <span class="n">reduce_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
+    <span class="n">buffer_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">auto_wrap</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+    <span class="n">transformer_auto_wrap_policy</span><span class="p">,</span>
+    <span class="n">transformer_layer_cls</span><span class="o">=</span><span class="p">{</span><span class="n">TransformerDecoderLayer</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">FSDP</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">sharding_strategy</span><span class="o">=</span><span class="n">ShardingStrategy</span><span class="o">.</span><span class="n">FULL_SHARD</span><span class="p">,</span>  <span class="c1"># ZeRO-3</span>
+    <span class="n">auto_wrap_policy</span><span class="o">=</span><span class="n">auto_wrap</span><span class="p">,</span>
+    <span class="n">mixed_precision</span><span class="o">=</span><span class="n">mp_policy</span><span class="p">,</span>
+    <span class="n">use_orig_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># required for torch.compile</span>
+<span class="p">)</span>
+</code></pre></div>
+
+      <!-- ================================================================ -->
+      <h2>Part 5 — Fused Kernels and the GPU Memory Hierarchy</h2>
+
+      <h3>5a. GPU Memory Hierarchy: Registers → L1 → L2 → HBM</h3>
+
+      <p>The single most important thing to understand about GPU performance is that <em>memory bandwidth, not raw arithmetic</em>, is usually the bottleneck for transformer operations. The GPU has a deep memory hierarchy where bandwidth and capacity trade off dramatically:</p>
+
+      <div class="visual-box">
+<pre>
+GPU Memory Hierarchy  (H100 SXM5 approximate values)
+
+Level           Capacity      Bandwidth         Latency
+──────────────────────────────────────────────────────────────
+Registers       ~256 KB/SM    ~100 TB/s (est.)  1 cycle
+L1 / Shared     192 KB/SM     ~30 TB/s          ~20 cycles
+L2 Cache        50 MB total   ~10 TB/s          ~100 cycles
+HBM (VRAM)      80 GB         3.35 TB/s         ~600 cycles
+NVLink (peer)   —             900 GB/s          ~5 µs
+PCIe (host)     —             64 GB/s (Gen5)    ~µs
+──────────────────────────────────────────────────────────────
+
+SM = Streaming Multiprocessor (H100 has 132 SMs)
+The ratio of L1 bandwidth to HBM bandwidth is ~10:1
+A register read costs ~1 cycle; an HBM load costs ~600 cycles
+</pre>
+      </div>
+
+      <p>Every time a kernel reads from HBM, it incurs a ~600-cycle latency. A naïve implementation of even a simple operation like RMSNorm reads input from HBM, writes normalised output back to HBM, then a downstream kernel reads it again. Each round-trip wastes bandwidth and cycles.</p>
+
+      <h3>5b. What Happens Inside the GPU: A Step-by-Step Example (RMSNorm)</h3>
+
+      <p>RMSNorm normalises each input vector <em>x</em> by its root-mean-square. The formula is: <code>y = x / RMS(x) * weight</code>, where <code>RMS(x) = sqrt(mean(x²) + ε)</code>.</p>
+
+      <p>Consider a transformer hidden state of shape [batch=1, seq=4096, d=4096] in BF16. The unfused sequence of operations would be:</p>
+
+      <div class="visual-box">
+<pre>
+Naïve (unfused) RMSNorm — data movement:
+
+  HBM → registers:    load x          [4096 × 4096 × 2 bytes = 32 MB]
+  HBM ← registers:    write x²        [32 MB]   ← pointless temporary
+  HBM → registers:    load x²         [32 MB]
+  HBM ← registers:    write mean(x²)  [per-row scalar = negligible]
+  HBM → registers:    load x again    [32 MB]
+  HBM → registers:    load weight     [4096 × 2 bytes ≈ 8 KB]
+  HBM ← registers:    write y         [32 MB]
+
+  Total HBM bytes moved: ~160 MB  for 32 MB of useful data (5× overhead)
+
+Fused kernel — data movement:
+
+  HBM → SRAM / registers: load x once  [32 MB]
+  Compute in registers:
+    - sum squares  (single pass, register accumulator)
+    - compute 1/sqrt(acc/N + ε)
+    - multiply each element by weight
+  SRAM / registers → HBM: write y      [32 MB]
+
+  Total HBM bytes moved: ~64 MB  (2×, just read + write)
+  Speedup from fusion alone: ~2.5–3×
+</pre>
+      </div>
+
+      <p>This pattern — load once, keep in registers / L1, do all math, write once — is the core idea behind every high-performance GPU kernel. The GPU has thousands of registers per SM; intermediate values should live there, not in HBM.</p>
+
+      <h3>5c. Kernel Fusion — Reducing Cache Misses</h3>
+
+      <p>Kernel fusion merges multiple consecutive GPU operations into a single kernel launch so that intermediate tensors never leave the register file or L1 cache. Common fusions in transformer workloads:</p>
+
+      <div class="comparison-box">
+        <div class="comparison-item">
+          <h4>LayerNorm / RMSNorm + activation</h4>
+          <p>Fuse the normalisation, scale/bias, and the first non-linearity of the MLP (GeLU/SiLU) into one kernel. Eliminates 2–3 HBM round-trips per token.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>QKV projection + split</h4>
+          <p>Fuse three separate matmuls (W_Q, W_K, W_V) into a single batched GEMM, then split the output in registers. Avoids three separate HBM reads of the input activations.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>Softmax + dropout + attention matmul</h4>
+          <p>The canonical example: Flash Attention fuses the entire O(N²) attention score computation, including softmax numerics stability tricks, into tiles that fit in L1/SRAM and never materialise the full N×N score matrix in HBM.</p>
+        </div>
+      </div>
+
+      <div class="highlight-box highlight-success">
+        <p><strong>Case study — Flash Attention:</strong> The standard attention implementation reads the full Q, K, V matrices from HBM, writes the N×N attention score matrix to HBM, reads it back for softmax, writes again, reads V, computes output. For seq_len=4096, d=128, this is gigabytes of HBM traffic per layer. Flash Attention (Dao et al., 2022) uses tiling: load small blocks of Q, K, V into L1/SRAM, compute partial softmax with a running statistic, accumulate the output — all without ever materialising the full score matrix in HBM. Result: <strong>3–8× speedup over naïve attention</strong> and O(N) rather than O(N²) HBM memory usage for activations. Flash Attention 2 (2023) further improved GPU utilisation by restructuring the tile loop to reduce warp synchronisation overhead; Flash Attention 3 (2024) exploits H100's asynchronous memory pipeline for near-peak throughput.</p>
+      </div>
+
+      <h3>GPU Cache Size Progress (NVIDIA, Last 5 Generations)</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>GPU</th><th>Year</th><th>L1 / Shared per SM</th><th>L2 Cache (total)</th><th>SMs</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>V100</td><td>2017</td><td>128 KB (configurable)</td><td>6 MB</td><td>80</td><td>Volta, first tensor cores</td></tr>
+            <tr><td>A100</td><td>2020</td><td>192 KB (configurable)</td><td>40 MB</td><td>108</td><td>6.7× L2 over V100; sparsity</td></tr>
+            <tr><td>H100 SXM</td><td>2022</td><td>228 KB (configurable)</td><td>50 MB</td><td>132</td><td>Transformer Engine with FP8</td></tr>
+            <tr><td>H200</td><td>2024</td><td>228 KB</td><td>50 MB</td><td>132</td><td>Same chip, HBM3e memory</td></tr>
+            <tr><td>B200</td><td>2025</td><td>~256 KB (est.)</td><td>~100 MB (est.)</td><td>~160</td><td>Blackwell; 2nd-gen Transformer Engine</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The rapid growth of L2 cache from 6 MB (V100) to 50 MB (H100) means that for smaller models or smaller batch sizes, the entire weight matrix of a given layer may fit in L2, making subsequent accesses nearly as fast as L1. Flash Attention on H100 benefits significantly from this larger L2 for caching K and V blocks.</p>
+
+      <!-- ================================================================ -->
+      <h2>Case Study — DeepSpeed and its Modes</h2>
+
+      <p>DeepSpeed (Microsoft) is the most widely adopted framework for combining parallelism, ZeRO, and communication optimization. It wraps a PyTorch model in a <code>DeepSpeedEngine</code> that handles all collective ops automatically.</p>
+
+      <h3>ZeRO Modes in DeepSpeed</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Mode</th><th>What's Sharded</th><th>Best For</th><th>Typical Overhead</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>ZeRO-1</strong></td><td>Optimizer states</td><td>Models fitting per-GPU with full params + grads</td><td>~0% (async AllGather)</td></tr>
+            <tr><td><strong>ZeRO-2</strong></td><td>Optimizer states + Gradients</td><td>Models needing grad sharding, fast single-node</td><td>~5–10%</td></tr>
+            <tr><td><strong>ZeRO-3</strong></td><td>Optimizer states + Gradients + Parameters</td><td>100B+ models; multi-node</td><td>~10–20%</td></tr>
+            <tr><td><strong>ZeRO-Infinity</strong></td><td>ZeRO-3 + CPU/NVMe offload</td><td>Extremely large models on limited GPU memory</td><td>CPU bandwidth bound</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Quick Start: DeepSpeed ZeRO-3</h3>
+
+      <div class="codehilite"><pre><span></span><code><span class="c1"># ds_config.json</span>
+<span class="p">{</span>
+  <span class="s2">"zero_optimization"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"stage"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"overlap_comm"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="s2">"reduce_scatter"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="s2">"reduce_bucket_size"</span><span class="p">:</span> <span class="mi">500000000</span><span class="p">,</span>
+    <span class="s2">"allgather_bucket_size"</span><span class="p">:</span> <span class="mi">500000000</span><span class="p">,</span>
+    <span class="s2">"offload_optimizer"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"device"</span><span class="p">:</span> <span class="s2">"cpu"</span><span class="p">,</span> <span class="s2">"pin_memory"</span><span class="p">:</span> <span class="kc">true</span> <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">"bf16"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"enabled"</span><span class="p">:</span> <span class="kc">true</span> <span class="p">},</span>
+  <span class="s2">"gradient_clipping"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+  <span class="s2">"train_micro_batch_size_per_gpu"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="s2">"gradient_accumulation_steps"</span><span class="p">:</span> <span class="mi">8</span>
+<span class="p">}</span>
+</code></pre></div>
+
+      <div class="codehilite"><pre><span></span><code><span class="c1"># Launch 8-GPU training</span>
+deepspeed --num_gpus 8 train.py \
+  --deepspeed ds_config.json \
+  --model_name_or_path meta-llama/Llama-3-70b
+</code></pre></div>
+
+      <h3>DeepSpeed 3D Hybrid Parallel (Megatron + ZeRO)</h3>
+
+      <p>DeepSpeed integrates directly with Megatron-LM to enable 3D parallelism: TP + PP from Megatron, ZeRO for the DP dimension. The <code>deepspeed.runtime.hybrid_engine</code> also supports seamless training-to-inference switching, reusing the same sharded checkpoint without conversion.</p>
+
+      <!-- ================================================================ -->
+      <h2>Part 6 — Inference Speed-Up</h2>
+
+      <p>Training optimizations maximise throughput (tokens per second per dollar over a long run). Inference optimizations maximise <em>both</em> throughput and latency for online serving. The constraints are different: you may not have large batch sizes, you need low p99 latency, and you serve from a fixed checkpoint.</p>
+
+      <h3>1. Quantization</h3>
+
+      <p>Quantization reduces the bit-width of stored weights (and optionally activations) at inference time. Unlike training-time mixed precision, inference quantization is applied to a <em>trained</em> model and can tolerate more aggressive compression because the weights are fixed.</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Bits</th><th>Memory vs FP16</th><th>Quality Impact</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>GPTQ</td><td>4-bit (INT4)</td><td>~4×</td><td>Very low (calibrated)</td><td>Weight-only quant; RTN with gradient correction</td></tr>
+            <tr><td>AWQ</td><td>4-bit (INT4)</td><td>~4×</td><td>Very low</td><td>Protects salient weights; activation-aware scaling</td></tr>
+            <tr><td>SmoothQuant</td><td>INT8 W8A8</td><td>~2×</td><td>Minimal</td><td>Shifts quantization difficulty from activations to weights</td></tr>
+            <tr><td>GGUF Q4_K_M</td><td>4-bit</td><td>~4×</td><td>Low for 7B+</td><td><code>llama.cpp</code> format; runs on CPU + GPU mixed</td></tr>
+            <tr><td>FP8 (inference)</td><td>8-bit</td><td>~2×</td><td>Near-zero</td><td>Native H100/B200 Tensor Core support</td></tr>
+            <tr><td>NVfp4</td><td>4-bit</td><td>~4×</td><td>Low with block scaling</td><td>Blackwell native; best throughput currently available</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box highlight-info">
+        <p><strong>Weight-only vs. W8A8:</strong> Weight-only quantization (INT4/FP4 weights, FP16 activations) solves the <em>memory bandwidth bottleneck</em> at small batch sizes — fewer bytes to load per token. Weight+activation quantization (W8A8) also improves <em>compute throughput</em> via INT8 or FP8 tensor core usage, beneficial at large batch sizes where arithmetic rather than bandwidth is the limit.</p>
+      </div>
+
+      <h3>2. KV Cache Management</h3>
+
+      <p>During autoregressive decoding, the Key and Value tensors for all previous tokens must be retained in GPU memory (the KV cache). For a 7B model at seq_len=4096 with FP16, the KV cache per request is roughly 512 MB — and it grows with every generated token. With many concurrent requests this dominates GPU memory usage.</p>
+
+      <ul>
+        <li><strong>PagedAttention (vLLM):</strong> Manages the KV cache like OS virtual memory — pages of fixed size are allocated on demand and can be non-contiguous in physical GPU memory. Enables much higher batch sizes by eliminating KV cache fragmentation. Achieves near-zero wasted cache memory.</li>
+        <li><strong>Multi-Query Attention (MQA) / Grouped Query Attention (GQA):</strong> Share K and V heads across multiple query heads (MQA shares globally; GQA shares within groups). Reduces KV cache size by up to 8× with minimal quality impact — used in LLaMA 3, Mistral, Gemma.</li>
+        <li><strong>KV Cache Quantization:</strong> Store the KV cache in INT8 or FP8 instead of FP16. Halves KV memory with marginal quality impact for most tasks.</li>
+      </ul>
+
+      <h3>3. Other Inference Optimisation Techniques</h3>
+
+      <ul>
+        <li><strong>Speculative Decoding:</strong> Use a small draft model to generate K candidate tokens quickly, then verify all K tokens with the large model in a single parallel forward pass. Achieves 2–4× wall-clock speedup when draft acceptance rate is high.</li>
+        <li><strong>Continuous Batching:</strong> Instead of waiting for all sequences in a batch to finish, insert new requests as slots open. Keeps the GPU busy and improves throughput by up to 10× over static batching. Core to vLLM and TensorRT-LLM serving.</li>
+        <li><strong>Tensor Parallelism for Inference:</strong> Same TP concepts as training but without gradient communication overhead — just AllReduce in the forward pass. Allows sub-500ms first-token latency for 70B models on 4–8 GPUs.</li>
+        <li><strong>Activation Checkpointing (inference context):</strong> Not needed at inference — you do not backpropagate. Full activations are computed and immediately consumed. Flash Attention's O(N) activation memory is beneficial here too for long contexts.</li>
+      </ul>
+
+      <!-- ================================================================ -->
+      <h2>Choosing Your Strategy</h2>
+
+      <div class="comparison-box-2col">
+        <div class="comparison-item">
+          <h4>📐 Model fits on 1 GPU</h4>
+          <p>Use <strong>DDP</strong> for training. For inference: quantize to INT4/FP8, use Flash Attention, enable continuous batching.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>📐 Model fits on 1 node (8 × 80 GB)</h4>
+          <p>Use <strong>FSDP / ZeRO-3</strong> for training. For inference: tensor parallel across 2–8 GPUs or serve on a single MI300X (192 GB).</p>
+        </div>
+        <div class="comparison-item">
+          <h4>📐 Model requires multi-node</h4>
+          <p>Add <strong>Pipeline Parallelism</strong> inter-node + TP intra-node. Use Megatron-LM or DeepSpeed Hybrid Parallel. For inference: TensorRT-LLM with TP+PP.</p>
+        </div>
+        <div class="comparison-item">
+          <h4>📐 MoE model</h4>
+          <p>Add <strong>Expert Parallelism</strong>. Use DeepSpeed MoE or Megablocks for load-balanced dispatch. FP8 + fine-grained quantization (DeepSeek-V3 style) highly recommended.</p>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <h2>Common Pitfalls</h2>
+
+      <div class="highlight-box highlight-danger">
+        <p><strong>Things that will ruin your training run:</strong></p>
+        <ul>
+          <li><strong>TP over slow interconnect:</strong> Never set TP > 1 between nodes connected only by InfiniBand or Ethernet. AllReduce on the critical path will dominate.</li>
+          <li><strong>Pipeline bubble dominates:</strong> Micro-batch count M must be significantly larger than pipeline stages P. Rule of thumb: M ≥ 2P. With M = P you waste ~50% of GPU time in bubbles.</li>
+          <li><strong>ZeRO-3 with tiny models:</strong> AllGather overhead per forward pass is proportional to param count. For small models relative to cluster size, ZeRO-1/2 may yield higher throughput.</li>
+          <li><strong>Expert collapse in MoE:</strong> Without an auxiliary load-balancing loss, the router puts all tokens through 1–2 experts and the rest go idle. Monitor expert utilisation during training.</li>
+          <li><strong>FP16 overflow without loss scaling:</strong> FP16 max is 65504. A single gradient larger than this goes to infinity and corrupts the run. Always use loss scaling or switch to BF16.</li>
+          <li><strong>Gradient accumulation + pipeline:</strong> Gradients must be accumulated consistently across all micro-batches before the optimizer step. Incorrect accumulation logic leads to silent numerical divergence.</li>
+          <li><strong>KV cache OOM in inference:</strong> Naïve static KV cache allocation fills up GPU memory fast. Use PagedAttention or limit max sequence lengths per request.</li>
+        </ul>
+      </div>
+
+      <!-- ================================================================ -->
+      <h2>Key Takeaways</h2>
+
+      <ol>
+        <li><strong>Parallelism is compositional:</strong> DP + TP + PP + SP + EP can all be combined. Each dimension solves a different bottleneck. The right mix depends on model size, cluster topology, and sequence length.</li>
+        <li><strong>Interconnect dictates which parallelism is practical:</strong> TP needs NVLink / XGMI; DP and PP can tolerate InfiniBand. PCIe between GPUs is a last resort.</li>
+        <li><strong>BF16 is the universal training format today.</strong> FP8 doubles throughput over BF16 and is production-ready with proper per-group scaling (DeepSeek proved it at 671B scale).</li>
+        <li><strong>Memory bandwidth, not FLOP count, limits most transformer ops.</strong> Kernel fusion and Flash Attention reduce HBM round-trips and are almost universally beneficial.</li>
+        <li><strong>ZeRO / FSDP eliminate memory redundancy in DP</strong> at comparable communication cost. Use ZeRO-3 / FSDP for any model that doesn't fit in GPU memory without sharding.</li>
+        <li><strong>Inference and training require different strategies.</strong> Quantization (INT4/FP8), KV cache management, speculative decoding, and continuous batching are inference-specific levers.</li>
+        <li><strong>The field moves extremely fast:</strong> Flash Attention 3, FSDP2, FP8 training, NVfp4, and Blackwell all emerged within the last two years. The hardware–software co-evolution continues.</li>
+      </ol>
+
+      <!-- ================================================================ -->
+      <h2>Resources</h2>
+      <ul>
+        <li><strong>Megatron-LM:</strong> <a href="https://arxiv.org/abs/2104.04473">Efficient Large-Scale Language Model Training on GPU Clusters (Narayanan et al., 2021)</a></li>
+        <li><strong>ZeRO:</strong> <a href="https://arxiv.org/abs/1910.02054">ZeRO: Memory Optimizations Toward Training Trillion Parameter Models (Rajbhandari et al., 2020)</a></li>
+        <li><strong>Flash Attention:</strong> <a href="https://arxiv.org/abs/2205.14135">FlashAttention: Fast and Memory-Efficient Exact Attention (Dao et al., 2022)</a></li>
+        <li><strong>Flash Attention 2:</strong> <a href="https://arxiv.org/abs/2307.08691">FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning (Dao, 2023)</a></li>
+        <li><strong>DeepSeek-V3:</strong> <a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3 Technical Report (DeepSeek-AI, 2024)</a></li>
+        <li><strong>PagedAttention / vLLM:</strong> <a href="https://arxiv.org/abs/2309.06180">Efficient Memory Management for Large Language Model Serving (Kwon et al., 2023)</a></li>
+        <li><strong>PyTorch FSDP:</strong> <a href="https://pytorch.org/docs/stable/fsdp.html">pytorch.org/docs/stable/fsdp</a></li>
+        <li><strong>DeepSpeed:</strong> <a href="https://www.deepspeed.ai/">deepspeed.ai</a></li>
+        <li><strong>Hardware deep-dive:</strong> <a href="cpu-gpu-npu-llm-inference.html">CPU vs GPU vs NPU: Running LLMs Across Different Hardware</a></li>
+        <li><strong>Attention mechanisms:</strong> <a href="grouped-query-attention-llm-efficiency.html">Grouped Query Attention &amp; LLM Efficiency</a></li>
+        <li><strong>KV cache:</strong> <a href="kv-caching-llm-inference-optimization.html">KV Caching and LLM Inference Optimization</a></li>
+      </ul>
+
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="post-footer-nav">
+      <a href="cpu-gpu-npu-llm-inference.html" class="nav-btn nav-btn-prev">
+        <i class="fas fa-arrow-left"></i>
+        <div class="nav-btn-text">
+          <span class="nav-label">Previous Post</span>
+          <span class="nav-title">CPU vs GPU vs NPU: Running LLMs Across Different Hardware</span>
+        </div>
+      </a>
+      <div class="nav-btn nav-btn-next nav-btn-placeholder" aria-hidden="true">
+        <div class="nav-btn-text">
+          <span class="nav-label">Next Post</span>
+          <span class="nav-title">You're reading the newest post</span>
+        </div>
+        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+      </div>
+    </div>
+
+    <div class="post-tags">
+      <span class="tag">Distributed Training</span>
+      <span class="tag">Parallelism</span>
+      <span class="tag">Data Parallelism</span>
+      <span class="tag">Tensor Parallelism</span>
+      <span class="tag">Pipeline Parallelism</span>
+      <span class="tag">Sequence Parallelism</span>
+      <span class="tag">Expert Parallelism</span>
+      <span class="tag">ZeRO</span>
+      <span class="tag">FSDP</span>
+      <span class="tag">FP8</span>
+      <span class="tag">BF16</span>
+      <span class="tag">Quantization</span>
+      <span class="tag">Flash Attention</span>
+      <span class="tag">Fused Kernels</span>
+      <span class="tag">NVLink</span>
+      <span class="tag">InfiniBand</span>
+      <span class="tag">DeepSpeed</span>
+      <span class="tag">Megatron-LM</span>
+      <span class="tag">KV Cache</span>
+      <span class="tag">LLM</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+
+  <!-- Table of Contents Auto-Generator -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tocList = document.getElementById('toc-list');
+      const postContent = document.querySelector('.post-content');
+      const headings = postContent.querySelectorAll('h2');
+
+      headings.forEach((heading, index) => {
+        if (!heading.id) {
+          heading.id = 'section-' + index;
+        }
+
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + heading.id;
+        a.textContent = heading.textContent;
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.querySelectorAll('.toc-list a').forEach(link => link.classList.remove('active'));
+          a.classList.add('active');
+        });
+
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      window.addEventListener('scroll', function() {
+        let current = '';
+        headings.forEach(heading => {
+          const sectionTop = heading.offsetTop;
+          const scrollPos = window.scrollY + 150;
+          if (scrollPos >= sectionTop) {
+            current = heading.id;
+          }
+        });
+        document.querySelectorAll('.toc-list a').forEach(a => {
+          a.classList.remove('active');
+          if (a.getAttribute('href') === '#' + current) {
+            a.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

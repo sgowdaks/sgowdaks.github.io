@@ -122,22 +122,22 @@
     //         "Transformers"
     //     ]
     // },
-    {
-        "id": "positional-embeddings-transformers",
-        "title": "Positional Embeddings in Transformers",
-        "date": "2024-12-01",
-        "category": "tech",
-        "categoryLabel": "Technology",
-        "excerpt": "A deep dive into exporting Qwen language models to ONNX and building a production-ready C++ inference engine with GPU acceleration achieving 12+ tokens/sec.",
-        "tags": [
-            "LLM",
-            "ONNX",
-            "C++",
-            "GPU",
-            "Performance",
-            "AI"
-        ]
-    },
+    // {
+    //     "id": "positional-embeddings-transformers",
+    //     "title": "Positional Embeddings in Transformers",
+    //     "date": "2024-12-01",
+    //     "category": "tech",
+    //     "categoryLabel": "Technology",
+    //     "excerpt": "A deep dive into exporting Qwen language models to ONNX and building a production-ready C++ inference engine with GPU acceleration achieving 12+ tokens/sec.",
+    //     "tags": [
+    //         "LLM",
+    //         "ONNX",
+    //         "C++",
+    //         "GPU",
+    //         "Performance",
+    //         "AI"
+    //     ]
+    // },
     {
         "id": "distributed-training-parallelism",
         "title": "Distributed Training & Parallelism for Large Transformer Models",

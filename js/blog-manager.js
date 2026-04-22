@@ -89,39 +89,39 @@
             "AI"
         ]
     },
-    {
-        "id": "cpu-gpu-npu-llm-inference",
-        "title": "CPU vs GPU vs NPU: Running LLMs Across Different Hardware",
-        "date": "2024-12-03",
-        "category": "tech",
-        "categoryLabel": "Technology",
-        "excerpt": "A deep dive into running LLM inference on CPUs, GPUs, and NPUs—understanding what hardware to use when, with practical examples on Intel and Qualcomm platforms.",
-        "tags": [
-            "LLM",
-            "NPU",
-            "Hardware",
-            "Intel",
-            "Qualcomm",
-            "Performance",
-            "Edge AI"
-        ]
-    },
-    {
-        "id": "flash-attention-vs-kernel-fusion",
-        "title": "Flash Attention vs Kernel Fusion: What's the Difference and Why It Matters",
-        "date": "2024-12-02",
-        "category": "tech",
-        "categoryLabel": "Technology",
-        "excerpt": "Understanding two distinct optimization techniques that both make transformers faster—but in fundamentally different ways. Learn the key differences between algorithmic redesign and compiler optimization.",
-        "tags": [
-            "LLM",
-            "Flash Attention",
-            "Optimization",
-            "GPU",
-            "Performance",
-            "Transformers"
-        ]
-    },
+    // {
+    //     "id": "cpu-gpu-npu-llm-inference",
+    //     "title": "CPU vs GPU vs NPU: Running LLMs Across Different Hardware",
+    //     "date": "2024-12-03",
+    //     "category": "tech",
+    //     "categoryLabel": "Technology",
+    //     "excerpt": "A deep dive into running LLM inference on CPUs, GPUs, and NPUs—understanding what hardware to use when, with practical examples on Intel and Qualcomm platforms.",
+    //     "tags": [
+    //         "LLM",
+    //         "NPU",
+    //         "Hardware",
+    //         "Intel",
+    //         "Qualcomm",
+    //         "Performance",
+    //         "Edge AI"
+    //     ]
+    // },
+    // {
+    //     "id": "flash-attention-vs-kernel-fusion",
+    //     "title": "Flash Attention vs Kernel Fusion: What's the Difference and Why It Matters",
+    //     "date": "2024-12-02",
+    //     "category": "tech",
+    //     "categoryLabel": "Technology",
+    //     "excerpt": "Understanding two distinct optimization techniques that both make transformers faster—but in fundamentally different ways. Learn the key differences between algorithmic redesign and compiler optimization.",
+    //     "tags": [
+    //         "LLM",
+    //         "Flash Attention",
+    //         "Optimization",
+    //         "GPU",
+    //         "Performance",
+    //         "Transformers"
+    //     ]
+    // },
     {
         "id": "positional-embeddings-transformers",
         "title": "Positional Embeddings in Transformers",

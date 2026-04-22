@@ -141,7 +141,7 @@
     {
         "id": "distributed-training-parallelism",
         "title": "Distributed Training & Parallelism for Large Transformer Models",
-        "date": "2024-12-01",
+        "date": "2026-03-21",
         "category": "tech",
         "categoryLabel": "Technology",
         "excerpt": "A deep dive into distributed training strategies for large transformer models - data parallelism, tensor parallelism, pipeline parallelism, ZeRO, FSDP, and how frameworks like DeepSpeed and Megatron-LM put it all together.",

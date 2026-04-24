@@ -6,6 +6,12 @@
 (function() {
   'use strict';
 
+  // ===== THEME — apply saved preference immediately to prevent FOUC =====
+  var savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+
   // Determine the current page for active navigation
   function getCurrentPage() {
     const path = window.location.pathname;
@@ -33,6 +39,10 @@
           <a href="${rootPath}index.html" class="${currentPage === 'home' ? 'active' : ''}">Home</a>
           <a href="${rootPath}blog.html" class="${currentPage === 'blog' ? 'active' : ''}">Blog</a>
         </nav>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+          <i class="fas fa-moon icon-moon"></i>
+          <i class="fas fa-sun icon-sun"></i>
+        </button>
       </div>
     `;
   }
@@ -56,6 +66,22 @@
     const footer = document.querySelector('footer');
     if (footer && !footer.querySelector('p')) {
       footer.innerHTML = generateFooter();
+    }
+
+    // Wire up dark mode toggle
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function() {
+        const html = document.documentElement;
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+          html.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'light');
+        } else {
+          html.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+        }
+      });
     }
   });
 })();

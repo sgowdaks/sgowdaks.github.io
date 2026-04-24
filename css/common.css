@@ -247,3 +247,148 @@ footer p {
     font-size: 0.7rem;
   }
 }
+
+/* ===== DARK MODE TOGGLE BUTTON ===== */
+.header-content {
+  position: relative;
+}
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
+}
+
+.theme-toggle .icon-moon { display: inline; }
+.theme-toggle .icon-sun  { display: none; }
+
+html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+html[data-theme="dark"] .theme-toggle .icon-sun  { display: inline; }
+
+/* ===== DARK MODE — CSS VARIABLES ===== */
+html[data-theme="dark"] {
+  --primary-color: #c8c8c8;
+  --secondary-color: #999999;
+  --accent-color: #888888;
+  --success-color: #777777;
+  --warning-color: #666666;
+  --text-color: #e8e8e8;
+  --text-light: #aaaaaa;
+  --text-muted: #aaaaaa;
+  --text-dim: #666666;
+  --bg-color: #121212;
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2a2a2a;
+  --surface-color: #1e1e1e;
+  --border-color: #3a3a3a;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --glow: 0 0 20px rgba(200, 200, 200, 0.05);
+  --gradient: linear-gradient(135deg, #c8c8c8, #999999);
+  --gradient-primary: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+  --gradient-accent: linear-gradient(135deg, #c8c8c8, #999999);
+}
+
+/* Smooth transition when switching themes */
+html[data-theme="dark"] body,
+html[data-theme="dark"] header,
+html[data-theme="dark"] footer,
+html:not([data-theme="dark"]) body,
+html:not([data-theme="dark"]) header,
+html:not([data-theme="dark"]) footer {
+  transition: background-color 0.25s ease, color 0.25s ease,
+              border-color 0.25s ease;
+}
+
+/* ===== DARK MODE — HARDCODED COLOR OVERRIDES ===== */
+
+/* Code blocks in post pages */
+html[data-theme="dark"] .post-content pre {
+  background: #1e2430 !important;
+  border-color: #3a3a3a !important;
+}
+
+html[data-theme="dark"] .post-content pre code {
+  color: #cdd9e5 !important;
+  background: none !important;
+}
+
+html[data-theme="dark"] .post-content code {
+  background: #2a2a2a !important;
+  color: #f0883e !important;
+}
+
+/* visual-box (monospace ASCII diagrams) */
+html[data-theme="dark"] .visual-box {
+  background: #1e1e1e !important;
+  border-color: #3a3a3a !important;
+  color: #cdd9e5 !important;
+}
+
+/* Zebra-stripe table rows */
+html[data-theme="dark"] .post-content table tbody tr:nth-child(even) {
+  background: #222222 !important;
+}
+
+/* highlight-box variants */
+html[data-theme="dark"] .highlight-box {
+  background: #2a2a1a !important;
+  border-color: #4a4a28 !important;
+  color: #e8e8e8 !important;
+}
+
+html[data-theme="dark"] .highlight-box.danger {
+  background: #2a1a1a !important;
+  border-color: #4a2828 !important;
+}
+
+html[data-theme="dark"] .highlight-box.success {
+  background: #1a2a1a !important;
+  border-color: #284a28 !important;
+}
+
+html[data-theme="dark"] .highlight-box.info {
+  background: #1a1e2a !important;
+  border-color: #28304a !important;
+}
+
+html[data-theme="dark"] .highlight-box.warning {
+  background: #2a2a1a !important;
+  border-color: #4a4a28 !important;
+}
+
+/* index.html hero section in dark mode */
+html[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%) !important;
+}
+
+/* blog.html hero section */
+html[data-theme="dark"] section.hero {
+  background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%) !important;
+}
+
+/* Inline highlighted table row (flash-attention post) */
+html[data-theme="dark"] tr[style*="background: #fff3cd"],
+html[data-theme="dark"] tr[style*="background:#fff3cd"] {
+  background: #2a2a1a !important;
+}

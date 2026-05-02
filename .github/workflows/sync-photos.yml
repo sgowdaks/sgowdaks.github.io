@@ -1,0 +1,39 @@
+name: Sync Photos Gallery
+
+on:
+  schedule:
+    # Every Monday at 07:00 UTC
+    - cron: '0 7 * * 1'
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run photo sync script
+        run: python sync-photos.py
+
+      - name: Commit & push if anything changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add about-me.html photos-data.json
+          if git diff --staged --quiet; then
+            echo "Nothing changed — skipping commit"
+          else
+            git commit -m "chore: sync photos gallery [skip ci]"
+            git push
+          fi

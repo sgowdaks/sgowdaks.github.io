@@ -8,6 +8,24 @@
 
   const blogPosts = [
     {
+        "id": "docker-compose-networking-deep-dive",
+        "title": "Docker Compose and Container Networking: How Linux Wires It All Together",
+        "date": "2026-05-05",
+        "category": "tech",
+        "categoryLabel": "Technology",
+        "excerpt": "A continuation of the Docker internals series — how Docker Compose differs from docker run, and what Linux actually does when Docker creates a network: bridges, veth pairs, IPAM, iptables, and the SDN on your laptop.",
+        "tags": [
+            "Docker",
+            "Docker Compose",
+            "Networking",
+            "Linux",
+            "Containers",
+            "Systems Programming",
+            "SDN",
+            "iptables"
+        ]
+    },
+    {
         "id": "containers-virtualization-deep-dive",
         "title": "From Bare Metal to Containers: A Deep Dive into Virtualization and Docker Internals",
         "date": "2026-04-21",
@@ -89,59 +107,10 @@
             "AI"
         ]
     },
-    // {
-    //     "id": "cpu-gpu-npu-llm-inference",
-    //     "title": "CPU vs GPU vs NPU: Running LLMs Across Different Hardware",
-    //     "date": "2024-12-03",
-    //     "category": "tech",
-    //     "categoryLabel": "Technology",
-    //     "excerpt": "A deep dive into running LLM inference on CPUs, GPUs, and NPUs—understanding what hardware to use when, with practical examples on Intel and Qualcomm platforms.",
-    //     "tags": [
-    //         "LLM",
-    //         "NPU",
-    //         "Hardware",
-    //         "Intel",
-    //         "Qualcomm",
-    //         "Performance",
-    //         "Edge AI"
-    //     ]
-    // },
-    // {
-    //     "id": "flash-attention-vs-kernel-fusion",
-    //     "title": "Flash Attention vs Kernel Fusion: What's the Difference and Why It Matters",
-    //     "date": "2024-12-02",
-    //     "category": "tech",
-    //     "categoryLabel": "Technology",
-    //     "excerpt": "Understanding two distinct optimization techniques that both make transformers faster—but in fundamentally different ways. Learn the key differences between algorithmic redesign and compiler optimization.",
-    //     "tags": [
-    //         "LLM",
-    //         "Flash Attention",
-    //         "Optimization",
-    //         "GPU",
-    //         "Performance",
-    //         "Transformers"
-    //     ]
-    // },
-    // {
-    //     "id": "positional-embeddings-transformers",
-    //     "title": "Positional Embeddings in Transformers",
-    //     "date": "2024-12-01",
-    //     "category": "tech",
-    //     "categoryLabel": "Technology",
-    //     "excerpt": "A deep dive into exporting Qwen language models to ONNX and building a production-ready C++ inference engine with GPU acceleration achieving 12+ tokens/sec.",
-    //     "tags": [
-    //         "LLM",
-    //         "ONNX",
-    //         "C++",
-    //         "GPU",
-    //         "Performance",
-    //         "AI"
-    //     ]
-    // },
     {
         "id": "distributed-training-parallelism",
         "title": "Distributed Training & Parallelism for Large Transformer Models",
-        "date": "2026-03-21",
+        "date": "2024-12-01",
         "category": "tech",
         "categoryLabel": "Technology",
         "excerpt": "A deep dive into distributed training strategies for large transformer models - data parallelism, tensor parallelism, pipeline parallelism, ZeRO, FSDP, and how frameworks like DeepSpeed and Megatron-LM put it all together.",

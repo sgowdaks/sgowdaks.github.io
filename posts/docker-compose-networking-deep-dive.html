@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docker Compose and Container Networking: How Linux Wires It All Together - Shivani Gowda KS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+  <link rel="stylesheet" href="../css/ai-agent.css">
+
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Source Serif 4', 'Georgia', serif;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .post-category {
+      background: var(--accent-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-light);
+      background: var(--bg-secondary);
+      padding: 1rem 1rem 1rem 2rem;
+      border-radius: 4px;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .back-to-blog {
+      text-align: center;
+      padding: 2rem 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px 24px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .highlight-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-left: 4px solid #f39c12;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box.danger {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-left: 4px solid #dc3545;
+    }
+
+    .highlight-box.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-left: 4px solid #28a745;
+    }
+
+    .highlight-box p {
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight-box ul {
+      margin-bottom: 0;
+    }
+
+    .post-content a {
+      color: var(--primary-color);
+      text-decoration: underline;
+      transition: color 0.3s ease;
+    }
+
+    .post-content a:hover {
+      color: var(--accent-color);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .post-content table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .post-title {
+        font-size: 2rem;
+      }
+
+      .post-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+
+      .post-content {
+        font-size: 1rem;
+      }
+
+      .post-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+
+      .visual-box {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
+
+  <!-- Table of Contents Sidebar -->
+  <nav class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-title">Table of Contents</div>
+    <ul class="toc-list" id="toc-list">
+      <!-- auto-generated by script below -->
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <h1 class="post-title">Docker Compose and Container Networking: How Linux Wires It All Together</h1>
+      <div class="post-subtitle">A continuation of the Docker internals series — from <code>docker run</code> to Compose, and from bridge interfaces to iptables rules</div>
+      <div class="post-meta">
+        <span class="post-category">Technology</span>
+        <span><i class="far fa-calendar"></i> May 5, 2026</span>
+        <span><i class="far fa-clock"></i> 10 min read</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+<p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p>
+
+<h2>The Starting Point</h2>
+<p>In the <a href="containers-virtualization-deep-dive.html">previous post</a>, I covered what Docker actually is under the hood — namespaces for isolation, cgroups for resource limits, and Union File Systems for layered storage. One piece I left untouched was <strong>networking</strong>: how do containers actually talk to each other, and how does that story evolve from raw <code>docker run</code> all the way to Docker Compose?</p>
+<p>Let's build up from first principles. Start with a concrete problem.</p>
+<hr />
+
+<h2>1. The Problem: Two Containers Need to Talk</h2>
+<p>Say you want to run a web app and a database. They live in separate containers. How do you get them to communicate?</p>
+<p>The first thing you might try is just running both containers and hoping they can reach each other. And they sort of can — because Docker automatically attaches every container to something called the <strong>default bridge network</strong>.</p>
+
+<h3>The Default Bridge</h3>
+<p>When Docker is installed, it creates a network named <code>bridge</code> automatically. Every container you start with a bare <code>docker run</code> lands on this network. You can inspect it:</p>
+<pre><code>docker network inspect bridge</code></pre>
+<p>You'll see all your running containers listed in there, each with an IP like <code>172.17.0.2</code>, <code>172.17.0.3</code>, and so on. They <em>can</em> ping each other by IP. So the communication works, technically.</p>
+
+<h3>What Linux Actually Created</h3>
+<p>The default bridge is not a fiction — it's a real Linux network interface. Run <code>ip addr</code> on the host and you'll see <code>docker0</code>, a bridge interface sitting at <code>172.17.0.1</code>. Each container gets a <strong>veth pair</strong> (a virtual ethernet cable): one end in the host namespace plugged into <code>docker0</code>, the other end renamed to <code>eth0</code> inside the container's network namespace. Traffic flows through this bridge.</p>
+
+<h3>Drawbacks of the Default Bridge</h3>
+<div class="highlight-box danger">
+  <p><strong>No DNS.</strong> The default bridge does not provide name resolution. You cannot reach a container by its name — you must hardcode the IP address (<code>172.17.0.3</code>). But IPs are assigned dynamically. Every time a container restarts, it may get a different IP. Your app's config breaks.</p>
+  <p><strong>No isolation.</strong> Every container on the host is on the same default bridge. A misconfigured app container can reach your database container, your cache, and anything else running on the same host — whether you intended that or not.</p>
+  <p><strong>Not configurable.</strong> You cannot define custom subnets, MTU sizes, or any per-network settings on the default bridge.</p>
+</div>
+<p>So the default bridge gets you off the ground but falls apart the moment you need anything real. The next step is creating your own network.</p>
+<hr />
+
+<h2>2. The User-Defined Bridge — <code>my-manual-net</code></h2>
+<p>Docker lets you create your own bridge network:</p>
+<pre><code>docker network create my-manual-net</code></pre>
+<p>Then start your containers explicitly on it:</p>
+<pre><code>docker run -d --name db --network my-manual-net postgres:15
+docker run -d --name app --network my-manual-net my-web-app</code></pre>
+<p>Now your app container can reach the database with just <code>db:5432</code> — no hardcoded IPs. Docker's embedded DNS server, which runs inside each user-defined network, resolves the container name to its current IP automatically.</p>
+
+<h3>What Linux Creates When You Run <code>docker network create</code></h3>
+<p>When you run that command, Docker talks directly to the Linux kernel and sets up several real networking structures:</p>
+
+<h3>A. The Virtual Switch — the Bridge Interface</h3>
+<p>A new bridge interface appears on the host, named something like <code>br-5f3a2c...</code>. Run <code>ip addr</code> and you'll see it. This is a software Layer 2 switch — the hub that every container on this network "plugs into."</p>
+
+<h3>B. The Virtual Ethernet Pair — veth</h3>
+<p>When a container starts on <code>my-manual-net</code>, Docker creates a <strong>veth pair</strong>: a virtual patch cable with two ends. One end stays in the host's network namespace and gets plugged into <code>br-5f3a2c...</code>. The other end is injected into the container's private network namespace and renamed to <code>eth0</code>. Data written into one end comes out the other — like a real Ethernet cable.</p>
+
+<h3>C. IP Address Management — IPAM</h3>
+<p>Docker assigns a dedicated subnet to your network (e.g., <code>172.18.0.0/16</code>) and acts as a DHCP server within it. Each container gets a unique IP from that pool. The bridge interface itself (<code>172.18.0.1</code>) is the Gateway.</p>
+
+<h3>D. NAT and Firewall Rules — iptables</h3>
+<p>Docker also programs your host's <strong>iptables</strong>. Two rules matter:</p>
+<ul>
+  <li><strong>Masquerade (NAT):</strong> Outbound packets from containers are rewritten to look like they come from the host's physical IP, so they can reach the internet.</li>
+  <li><strong>Isolation rules:</strong> Containers on <code>my-manual-net</code> are blocked from talking directly to containers on other user-defined networks. Each network is its own firewall zone.</li>
+</ul>
+
+<h3>How Containers Talk to Each Other on This Network</h3>
+<p>Container-to-container traffic inside the same network does <em>not</em> go through iptables. It stays on the bridge:</p>
+<pre><code>Container A (eth0: 172.18.0.2)
+    │
+    │  veth pair — virtual cable
+    │
+br-5f3a2c... (the Bridge — acts as a Layer 2 switch)
+    │
+    │  veth pair for Container B
+    │
+Container B (eth0: 172.18.0.3)
+
+→  iptables is NOT involved. ARP + Bridge handles it entirely.</code></pre>
+
+<p>Container A sends an ARP broadcast asking "Who has 172.18.0.3?". The bridge knows which veth is connected to Container B and forwards the packet down that wire. Direct. Efficient. No kernel routing table involved.</p>
+
+<p>iptables only enters the picture when a container needs to reach the internet:</p>
+<pre><code>Container A (172.18.0.2)  →  google.com
+    │
+    │  Bridge → Gateway (172.18.0.1)
+    │
+    │  iptables MASQUERADE: rewrite source IP to host's IP
+    │
+Host's WiFi / Ethernet  →  Internet</code></pre>
+
+<div class="highlight-box success">
+  <p><strong>To see exactly what Docker built, run:</strong></p>
+  <p><code>docker network inspect my-manual-net</code></p>
+  <p>The JSON output shows the exact Subnet, Gateway, and every container currently "plugged into" that virtual switch.</p>
+</div>
+
+<h3>Drawbacks of the User-Defined Bridge</h3>
+<p>This is a significant improvement over the default bridge. But as soon as your stack grows beyond two containers, cracks start to show.</p>
+<div class="highlight-box danger">
+  <p><strong>Everything is manual.</strong> You have to remember to create the network first, then pass <code>--network my-manual-net</code> to every single <code>docker run</code> command. Miss it once and a container ends up on the wrong network with no way to reach the others.</p>
+  <p><strong>You manage startup order.</strong> If you start the app before the database is ready, the app crashes trying to connect. You have to script the ordering yourself.</p>
+  <p><strong>Flags accumulate fast.</strong> A real container might need <code>--name</code>, <code>--network</code>, <code>-p</code>, <code>-v</code>, <code>-e</code>, <code>--restart</code>. A three-container stack turns into three long commands that you have to keep somewhere and remember to run in the right order.</p>
+  <p><strong>Nothing is reproducible.</strong> If you lose your shell history, you don't know exactly how that running container was configured. Someone else on your team has to ask you. A README that documents the commands is just documentation debt.</p>
+  <p><strong>Cleanup is tedious.</strong> To tear down the stack you have to stop each container, remove each container, and then remove the network — separately, in the right order.</p>
+</div>
+<hr />
+
+<h2>3. Docker Compose — Solving Every Drawback</h2>
+<p>Docker Compose is the answer to all of the above. It is a <strong>declarative</strong> tool — instead of issuing imperative commands one by one, you describe the desired state of your entire stack in a single <code>docker-compose.yml</code> file, and Compose figures out how to make it happen.</p>
+
+<p>The same two-container setup from above looks like this:</p>
+<pre><code>services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: secret
+
+  app:
+    image: my-web-app
+    ports:
+      - "8080:80"
+    depends_on:
+      - db</code></pre>
+
+<p>Then:</p>
+<pre><code>docker compose up     # starts everything
+docker compose down   # stops and removes everything, including the network</code></pre>
+
+<h3>How Compose Solves Each Drawback</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Drawback of manual approach</th>
+      <th>What Compose does instead</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Must manually create the network</td>
+      <td>Compose creates a user-defined bridge for the project automatically</td>
+    </tr>
+    <tr>
+      <td>Must pass <code>--network</code> to every container</td>
+      <td>All services in the file are joined to that network by default</td>
+    </tr>
+    <tr>
+      <td>Must manage startup order yourself</td>
+      <td><code>depends_on</code> declares ordering; Compose handles it</td>
+    </tr>
+    <tr>
+      <td>Long, forgettable <code>docker run</code> commands</td>
+      <td>All config lives in the YAML file, committed to version control</td>
+    </tr>
+    <tr>
+      <td>Not portable — others must ask you</td>
+      <td>Share the <code>docker-compose.yml</code> — that's the full spec</td>
+    </tr>
+    <tr>
+      <td>Teardown requires multiple manual steps</td>
+      <td><code>docker compose down</code> removes containers, networks, everything at once</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>The Isolation Is Identical</h3>
+<p>One thing worth stating clearly: <strong>Compose does not change how containers are isolated.</strong> Every container still gets its own namespaces and cgroups. The network Compose creates is still a user-defined bridge — the same Linux bridge, veth pairs, IPAM, and iptables rules described above. Compose is purely a management and orchestration layer on top of the same kernel primitives.</p>
+
+<h3>This Is a Software Defined Network on Your Laptop</h3>
+<p>Stepping back, what you end up with — whether through manual commands or Compose — is a full <strong>Software Defined Network (SDN)</strong> running on your machine. Your laptop's kernel is doing all of it.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Physical Equivalent</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong><code>br-xxxx</code></strong></td>
+      <td>A Physical Switch</td>
+      <td>Connects all containers together at Layer 2</td>
+    </tr>
+    <tr>
+      <td><strong><code>veth</code> pair</strong></td>
+      <td>An Ethernet Cable</td>
+      <td>Plugs the container into the switch</td>
+    </tr>
+    <tr>
+      <td><strong>iptables</strong></td>
+      <td>A Firewall / NAT Router</td>
+      <td>Internet access and cross-network isolation</td>
+    </tr>
+    <tr>
+      <td><strong>DNS (user-defined networks)</strong></td>
+      <td>A Phonebook</td>
+      <td>Resolves service names like <code>db</code> to container IPs</td>
+    </tr>
+  </tbody>
+</table>
+<hr />
+
+<h2>Key Takeaways</h2>
+<ul>
+  <li>The <strong>default bridge</strong> lets containers communicate by IP but gives you no DNS and no isolation — it breaks down immediately in any real scenario.</li>
+  <li>A <strong>user-defined bridge</strong> (<code>docker network create</code>) fixes both: you get DNS by container name and proper isolation. Under the hood, Docker creates a real Linux bridge interface, veth pairs, IPAM subnets, and iptables rules.</li>
+  <li>Container-to-container traffic on the same bridge is handled by ARP and the bridge itself — iptables is never involved.</li>
+  <li>iptables only comes into play for outbound internet traffic (NAT) and cross-network firewall rules.</li>
+  <li>The user-defined bridge still requires you to manually wire everything together with long <code>docker run</code> commands — which doesn't scale.</li>
+  <li><strong>Docker Compose</strong> solves every operational drawback: it creates the user-defined network automatically, joins all services to it, handles startup ordering, and tears everything down with a single command.</li>
+  <li>Compose changes nothing about the underlying isolation — it's a management layer over the exact same Linux kernel primitives.</li>
+</ul>
+    </div>
+
+    <div class="post-footer-nav">
+      <a href="containers-virtualization-deep-dive.html" class="nav-btn nav-btn-prev">
+        <i class="fas fa-arrow-left"></i>
+        <div class="nav-btn-text">
+          <span class="nav-label">Previous Post</span>
+          <span class="nav-title">From Bare Metal to Containers: A Deep Dive into Virtualization and Docker Internals</span>
+        </div>
+      </a>
+      <div class="nav-btn-placeholder"></div>
+    </div>
+
+    <div class="post-tags">
+      <span class="tag">Docker</span>
+      <span class="tag">Docker Compose</span>
+      <span class="tag">Networking</span>
+      <span class="tag">Linux</span>
+      <span class="tag">Containers</span>
+      <span class="tag">Systems Programming</span>
+      <span class="tag">SDN</span>
+      <span class="tag">iptables</span>
+    </div>
+
+  </div>
+
+  <!-- Footer (auto-generated by common.js) -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+  <script src="../js/ai-agent.js"></script>
+
+  <!-- Table of Contents Auto-Generator -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tocList = document.getElementById('toc-list');
+      const postContent = document.querySelector('.post-content');
+      const headings = postContent.querySelectorAll('h2');
+
+      headings.forEach((heading, index) => {
+        if (!heading.id) {
+          heading.id = 'section-' + index;
+        }
+
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + heading.id;
+        a.textContent = heading.textContent;
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.querySelectorAll('.toc-list a').forEach(link => link.classList.remove('active'));
+          a.classList.add('active');
+        });
+
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      window.addEventListener('scroll', function() {
+        let current = '';
+        headings.forEach(heading => {
+          if (window.scrollY + 150 >= heading.offsetTop) {
+            current = heading.id;
+          }
+        });
+        document.querySelectorAll('.toc-list a').forEach(a => {
+          a.classList.remove('active');
+          if (a.getAttribute('href') === '#' + current) {
+            a.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

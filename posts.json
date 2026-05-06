@@ -146,5 +146,23 @@
       "VMware",
       "Systems Programming"
     ]
+  },
+  {
+    "id": "docker-compose-networking-deep-dive",
+    "title": "Docker Compose and Container Networking: How Linux Wires It All Together",
+    "date": "2026-05-05",
+    "category": "tech",
+    "categoryLabel": "Technology",
+    "excerpt": "A continuation of the Docker internals series — how Docker Compose differs from docker run, and what Linux actually does when Docker creates a network: bridges, veth pairs, IPAM, iptables, and the SDN on your laptop.",
+    "tags": [
+      "Docker",
+      "Docker Compose",
+      "Networking",
+      "Linux",
+      "Containers",
+      "Systems Programming",
+      "SDN",
+      "iptables"
+    ]
   }
 ]

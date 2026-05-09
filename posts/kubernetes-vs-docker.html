@@ -1,0 +1,695 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kubernetes vs Docker: From a Single Box to a Fleet - Shivani Gowda KS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Common Styles -->
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/blog-post.css">
+  <link rel="stylesheet" href="../css/ai-agent.css">
+
+  <style>
+    :root {
+      --primary-color: #333333;
+      --secondary-color: #555555;
+      --accent-color: #666666;
+      --text-color: #222222;
+      --text-light: #666666;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dee2e6;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-color);
+      line-height: 1.7;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Source Serif 4', 'Georgia', serif;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .post-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .post-subtitle {
+      font-style: italic;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .post-meta {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .post-category {
+      background: var(--accent-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .post-content h2 {
+      font-size: 1.8rem;
+      margin: 2rem 0 1rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content h3 {
+      font-size: 1.4rem;
+      margin: 1.5rem 0 0.8rem 0;
+      color: var(--primary-color);
+    }
+
+    .post-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-content ul, .post-content ol {
+      margin: 1rem 0 1.5rem 2rem;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid var(--primary-color);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-light);
+      background: var(--bg-secondary);
+      padding: 1rem 1rem 1rem 2rem;
+      border-radius: 4px;
+    }
+
+    .post-content code {
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      color: #d73a49;
+    }
+
+    .post-content pre {
+      background: #f6f8fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border-color);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+      color: #24292e;
+    }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      background: var(--bg-secondary);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 12px 24px;
+      background: var(--gradient);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .highlight-box {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-left: 4px solid #f39c12;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .highlight-box.danger {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-left: 4px solid #dc3545;
+    }
+
+    .highlight-box.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-left: 4px solid #28a745;
+    }
+
+    .highlight-box p {
+      margin-bottom: 0.5rem;
+    }
+
+    .highlight-box ul {
+      margin-bottom: 0;
+    }
+
+    .post-content a {
+      color: var(--primary-color);
+      text-decoration: underline;
+      transition: color 0.3s ease;
+    }
+
+    .post-content a:hover {
+      color: var(--accent-color);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .post-content table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .visual-box {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .post-title {
+        font-size: 2rem;
+      }
+
+      .post-meta {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+      }
+
+      .post-content {
+        font-size: 1rem;
+      }
+
+      .post-content pre {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+
+      .visual-box {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header (auto-generated by common.js) -->
+  <header></header>
+
+  <!-- Table of Contents Sidebar -->
+  <nav class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-title">Table of Contents</div>
+    <ul class="toc-list" id="toc-list">
+      <!-- auto-generated by script below -->
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="post-header">
+      <h1 class="post-title">Kubernetes vs Docker: From a Single Box to a Fleet</h1>
+      <div class="post-subtitle">A continuation of the Docker internals series — what happens when one container host is no longer enough, and what Kubernetes actually does under the hood</div>
+      <div class="post-meta">
+        <span class="post-category">Technology</span>
+        <span><i class="far fa-calendar"></i> May 5, 2026</span>
+        <span><i class="far fa-clock"></i> 12 min read</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+<p style="font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 2rem;">[Disclaimer: This blog was written solely for my understanding purpose only. Any mistakes found that need to be addressed, please feel free to reach out to me.]</p>
+
+<h2>Where the Previous Posts Left Off</h2>
+<p>In the <a href="containers-virtualization-deep-dive.html">first post</a> of this series, I covered what a container actually is — namespaces, cgroups, and Union File Systems. In the <a href="docker-compose-networking-deep-dive.html">second post</a>, I covered how containers talk to each other — default bridges, user-defined networks, veth pairs, iptables, and how Docker Compose automates all the wiring.</p>
+<p>Both of those posts lived in a world with one assumption baked in: <strong>one machine</strong>. Everything ran on a single host. That assumption is fine for development. It breaks down the moment you need to run your app reliably at scale.</p>
+<p>That's where Kubernetes enters.</p>
+<hr />
+
+<h2>1. The Problem Docker Compose Can't Solve</h2>
+<p>Imagine your web app is running as three Docker containers behind Compose on a single server. Traffic spikes. The server's CPU hits 100%. You have two options: manually SSH in and restart things, or spin up another server and figure out how to spread load across both. Neither is acceptable for a production service that needs to be up 24/7.</p>
+<p>Compose is a single-host tool. It has no concept of multiple servers, no ability to move containers between machines, and no understanding of whether a container is actually healthy or just running. If a container crashes, Compose can restart it — but only if you're still on the same machine. If the machine itself goes down, your app is gone.</p>
+<p>This is the gap Kubernetes fills.</p>
+<hr />
+
+<h2>2. Docker Creates Containers. Kubernetes Manages Them.</h2>
+<p>This is the single most important distinction to internalize. Docker and Kubernetes are not competing products — they are tools for different levels of the same stack.</p>
+<ul>
+  <li><strong>Docker</strong> answers: "How do I package and run a single application in an isolated environment?"</li>
+  <li><strong>Kubernetes</strong> answers: "How do I run thousands of containers, across dozens of servers, reliably, with automatic failover and scaling?"</li>
+</ul>
+<p>A good analogy: if you are moving houses, Docker is the <strong>standardised cardboard box</strong> — it packages your things so they survive transport identically. Kubernetes is the <strong>logistics manager and crane operator at a shipping port</strong> — it decides which ship each box goes on, reroutes boxes when a ship is delayed, and makes sure nothing gets lost.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Docker (+ Compose)</th>
+      <th>Kubernetes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Primary goal</strong></td>
+      <td>Run containers on one host</td>
+      <td>Orchestrate containers across a cluster</td>
+    </tr>
+    <tr>
+      <td><strong>Scope</strong></td>
+      <td>Single machine</td>
+      <td>Many machines (nodes)</td>
+    </tr>
+    <tr>
+      <td><strong>Scaling</strong></td>
+      <td>Manual</td>
+      <td>Automatic (horizontal auto-scaling)</td>
+    </tr>
+    <tr>
+      <td><strong>Self-healing</strong></td>
+      <td>Restart on same host only</td>
+      <td>Restart, reschedule to healthy nodes</td>
+    </tr>
+    <tr>
+      <td><strong>Load balancing</strong></td>
+      <td>Not built in</td>
+      <td>Built in, across all nodes</td>
+    </tr>
+    <tr>
+      <td><strong>Rolling updates</strong></td>
+      <td>Manual</td>
+      <td>Zero-downtime by default</td>
+    </tr>
+    <tr>
+      <td><strong>Complexity</strong></td>
+      <td>Low — easy for developers</td>
+      <td>High — requires operational expertise</td>
+    </tr>
+  </tbody>
+</table>
+<hr />
+
+<h2>3. How They Work Together in Practice</h2>
+<p>In a 2026 production workflow, Docker and Kubernetes are almost always used together in sequence:</p>
+
+<pre><code>Developer writes code
+    │
+    ▼
+docker build → creates a container image
+    │
+    ▼
+docker push → uploads image to a registry (Docker Hub, ACR, ECR)
+    │
+    ▼
+Kubernetes pulls the image
+    │
+    ▼
+Kubernetes decides which node has capacity
+    │
+    ▼
+Container starts running on that node</code></pre>
+
+<p>Docker handles the "what" — it defines and builds the container. Kubernetes handles the "where and how" — it decides which server to run it on, keeps it running, and scales it up or down based on demand.</p>
+
+<hr />
+
+<h2>4. The Kubernetes Architecture: What's Actually Running</h2>
+<p>Kubernetes operates as a <strong>cluster</strong> — a set of machines (called <strong>nodes</strong>) that it treats as a unified pool of compute.</p>
+
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                    Control Plane                        │
+│   API Server │ Scheduler │ Controller Manager │ etcd    │
+└─────────────────────────────────────────────────────────┘
+         │              │              │
+    ┌────┴───┐      ┌───┴────┐    ┌───┴────┐
+    │ Node 1 │      │ Node 2 │    │ Node 3 │
+    │kubelet │      │kubelet │    │kubelet │
+    │  Pod   │      │  Pod   │    │  Pod   │
+    │  Pod   │      │  Pod   │    │        │
+    └────────┘      └────────┘    └────────┘</code></pre>
+
+<ul>
+  <li><strong>Control Plane:</strong> The brain. Watches the cluster state, runs the scheduler, and reconciles "desired state" with "actual state."</li>
+  <li><strong>Nodes:</strong> Worker machines — physical or virtual — that actually run your containers.</li>
+  <li><strong>kubelet:</strong> An agent on every node that talks to the Control Plane and starts/stops containers as instructed.</li>
+  <li><strong>etcd:</strong> A distributed key-value store that holds all cluster state. If Kubernetes is the brain, etcd is the long-term memory.</li>
+</ul>
+<hr />
+
+<h2>5. The Pod: Kubernetes' Atomic Unit</h2>
+<p>Docker's unit is the <strong>container</strong>. Kubernetes' unit is the <strong>Pod</strong>.</p>
+<p>A Pod is a group of one or more containers that are always scheduled together on the same node. They share some resources but keep others isolated. This is where the namespace knowledge from the previous posts becomes directly applicable.</p>
+
+<h3>Which Namespaces Are Shared Inside a Pod?</h3>
+<p>When Kubernetes starts a Pod, it doesn't just launch your containers. It first starts a hidden container called the <strong>Pause container</strong> (also called the Infra container). This container does essentially nothing — it just holds namespaces open. Your actual application containers then join those namespaces.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Namespace</th>
+      <th>Shared in a Pod?</th>
+      <th>Effect</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Network</strong></td>
+      <td>Yes</td>
+      <td>All containers share one IP and port space. They reach each other via <code>localhost</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>IPC</strong></td>
+      <td>Yes</td>
+      <td>Containers can use shared memory and message queues.</td>
+    </tr>
+    <tr>
+      <td><strong>UTS</strong></td>
+      <td>Yes</td>
+      <td>All containers in the Pod share the same hostname.</td>
+    </tr>
+    <tr>
+      <td><strong>PID</strong></td>
+      <td>No (by default)</td>
+      <td>Each container sees its own PID 1. Enable <code>shareProcessNamespace: true</code> to make the Pause container PID 1 and let containers signal each other's processes.</td>
+    </tr>
+    <tr>
+      <td><strong>Mount (MNT)</strong></td>
+      <td>No</td>
+      <td>Each container has its own isolated filesystem (UnionFS). Files are shared only via explicit Volumes.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Why the Pause Container?</h3>
+<p>In plain Docker, if you want two containers to share a network namespace, you start one, then start the second with <code>--net=container:name</code>. If the first container dies, the second loses its network too.</p>
+<p>Kubernetes solves this with the Pause container. The network namespace is owned by the Pause container, not by any of your application containers. Your app containers come and go without affecting the namespace. The Pod's IP address stays stable for its entire lifetime.</p>
+
+<pre><code>Pod
+├── Pause container  ←  owns the Network/IPC/UTS namespaces
+├── Container A      ←  joins the Pause container's namespaces
+└── Container B      ←  joins the Pause container's namespaces
+
+Container A → localhost:5432 → Container B
+(no networking hop, no bridge, no iptables — pure loopback)</code></pre>
+
+<h3>The PID Namespace in Detail</h3>
+<p>By default, both containers in a Pod see their own process as PID 1 and cannot see each other's processes in <code>ps</code> or <code>top</code>. When you set <code>shareProcessNamespace: true</code> in the Pod spec:</p>
+<ol>
+  <li>The Pause container becomes PID 1 for the entire Pod.</li>
+  <li>All other containers become children of that Pause process.</li>
+  <li>Container A can see Container B's processes and send signals to them — useful for debug sidecars that need to attach to a running process.</li>
+</ol>
+<p>This is an opt-in because it breaks the isolation assumption most apps are written against. Use it only when you explicitly need cross-container process visibility.</p>
+
+<h3>The Sidecar Pattern</h3>
+<p>Shared namespaces inside a Pod enable a powerful architectural pattern: the <strong>sidecar</strong>. You run a small helper container alongside your main application in the same Pod. Common examples:</p>
+<ul>
+  <li>A log-shipping container that reads log files your app writes (via a shared Volume)</li>
+  <li>A metrics collector that scrapes your app's <code>localhost:8080/metrics</code> endpoint</li>
+  <li>An Envoy proxy that intercepts all network traffic for the app container</li>
+</ul>
+<p>The sidecar has no idea where the app is — it's just <code>localhost</code>. The app has no idea the sidecar exists. They share a network and optionally a filesystem, but their process trees and images remain entirely separate.</p>
+
+<h3>How Containers in a Pod Communicate</h3>
+<p>There are three channels, each using a different shared resource:</p>
+<ul>
+  <li><strong>Over the network:</strong> Use <code>localhost:&lt;PORT&gt;</code>. No bridge, no veth, no iptables — pure loopback. One constraint: two containers in the same Pod cannot bind to the same port.</li>
+  <li><strong>Over the filesystem:</strong> Mount namespaces are <em>not</em> shared. Each container has its own UnionFS and cannot see the other's files by default. To share files, define a Kubernetes <strong>Volume</strong> at the Pod level and mount it into both containers. For example, an <code>emptyDir</code> volume mounted at <code>/var/log</code> in Container A and <code>/data/logs</code> in Container B gives both access to the same directory.</li>
+  <li><strong>Over memory:</strong> IPC is shared. Containers can use SystemV shared memory or POSIX message queues to pass data without going through the network at all.</li>
+</ul>
+<hr />
+
+<h2>6. The Runtime: Where the Linux Primitives Actually Live</h2>
+<p>"Kubernetes containers are lighter" is often repeated but rarely explained. The claim is actually three separate claims bundled together, and they are not all equally true.</p>
+
+<h3>Claim 1: The isolation is lighter — False</h3>
+<p>At the kernel level, a container running in Kubernetes is identical to one running in Docker. The same namespaces, the same cgroups, the same UnionFS. There is no special lighter kernel magic for Kubernetes. 100MB of RAM in a Docker container is 100MB of RAM in a Kubernetes Pod.</p>
+
+<h3>Claim 2: The management daemon is lighter — True</h3>
+<p>The management <em>path</em> to start a container changed significantly.</p>
+<p><strong>The old path (via Docker daemon):</strong></p>
+<pre><code>kubelet  →  Docker daemon  →  containerd  →  runC  →  Linux kernel</code></pre>
+<p>The Docker daemon is a full-featured suite: CLI, API server, build system, volume manager, image registry client. Kubernetes doesn't need any of that — it just needs to start a process. Running the Docker daemon on every cluster node was overhead for no benefit.</p>
+<p><strong>The modern path (via CRI):</strong></p>
+<pre><code>kubelet  →  containerd  →  runC  →  Linux kernel</code></pre>
+<p>Kubernetes defines a <strong>Container Runtime Interface (CRI)</strong> — a minimal API for "start this container." <code>containerd</code> and <code>CRI-O</code> implement it directly. The tool that actually calls into the Linux kernel — <code>runC</code> — is the same in both paths. The container you get is byte-for-byte identical. What's different is the size of the management layer above it.</p>
+
+<div class="highlight-box success">
+  <p><strong>The practical difference:</strong> On a 500-node cluster, dropping the Docker daemon means 500 fewer heavy background processes consuming memory and CPU. That's real headroom returned to workloads.</p>
+</div>
+
+<h3>Claim 3: Kubernetes images are lighter — Depends on how you build them</h3>
+<p>When people say Kubernetes containers are lightweight, they are often actually talking about <strong>how teams build images for production</strong>, not anything Kubernetes itself does.</p>
+<ul>
+  <li><strong>Docker dev workflow:</strong> Use a full Ubuntu or Debian image with <code>curl</code>, <code>vim</code>, <code>bash</code>, and debugging tools installed. Convenient for interactive exploration.</li>
+  <li><strong>Kubernetes prod workflow:</strong> Use <strong>Distroless</strong> images or statically compiled binaries. These images contain <em>nothing</em> but the compiled application — no shell, no package manager, no utilities. A Go binary that might normally live in a 400MB Ubuntu image ships in a 10MB distroless image instead.</li>
+</ul>
+<p>Kubernetes makes this practical because it handles logging, metrics, and debugging externally — via sidecar containers, Prometheus exporters, and <code>kubectl exec</code> into ephemeral debug containers. Your main container doesn't need to include those tools.</p>
+<hr />
+
+<h2>7. What Kubernetes Gives You That Docker Cannot</h2>
+
+<h3>Self-Healing</h3>
+<p>If a container crashes, Kubernetes restarts it automatically. If the <em>node</em> running it crashes, Kubernetes reschedules the Pod onto a healthy node. Docker Compose can restart a crashed container — but only on the same host, and only if that host is still up.</p>
+
+<h3>Horizontal Scaling</h3>
+<p>You can tell Kubernetes: "I want 10 copies of this Pod." It spreads them across nodes. When traffic drops, it scales back down. You can tie this to CPU or memory metrics with the Horizontal Pod Autoscaler — no manual intervention needed.</p>
+
+<h3>Rolling Updates with Zero Downtime</h3>
+<p>When you push a new version of your app, Kubernetes replaces Pods one at a time — bringing up a new Pod, waiting until it passes its health check, then terminating an old one. Your users never see downtime. Docker has no equivalent of this.</p>
+
+<h3>Service Discovery and Load Balancing</h3>
+<p>Kubernetes assigns a stable <strong>Service</strong> DNS name to a group of Pods. When you scale from 2 to 10 replicas, the Service automatically load-balances across all 10. The calling service doesn't know or care how many Pods are behind it.</p>
+
+<h3>Declarative State</h3>
+<p>You describe what you want (e.g., "3 replicas of this image, with these env vars, on nodes with at least 4GB RAM") in a YAML file. Kubernetes continuously reconciles reality against that description. If something drifts — a Pod dies, a node is replaced — Kubernetes fixes it without being asked.</p>
+<hr />
+
+<h2>8. When to Use What</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Situation</th>
+      <th>Right tool</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Learning, local dev, testing a single image</td>
+      <td><code>docker run</code></td>
+    </tr>
+    <tr>
+      <td>Multi-container app on one machine (dev or small prod)</td>
+      <td>Docker Compose</td>
+    </tr>
+    <tr>
+      <td>Production app needing uptime, scaling, multi-node</td>
+      <td>Kubernetes</td>
+    </tr>
+    <tr>
+      <td>Dozens of microservices with independent scaling needs</td>
+      <td>Kubernetes</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Kubernetes is not always the right answer. It is operationally complex and genuinely overkill for a small project or a team of one or two. Docker Compose handles a surprising amount of real-world load if your bottleneck is a single server. The jump to Kubernetes makes sense when you need multi-node resilience, automatic scaling, or zero-downtime deployments — and when you have the operational capacity to manage a cluster.</p>
+<hr />
+
+<h2>Key Takeaways</h2>
+<ul>
+  <li>Docker and Kubernetes are not competitors — Docker builds containers, Kubernetes runs fleets of them across many machines.</li>
+  <li>Docker Compose is a single-host tool. It cannot spread load across servers, reschedule to healthy nodes, or auto-scale. That's the gap Kubernetes fills.</li>
+  <li>Kubernetes' atomic unit is the <strong>Pod</strong>, not the container. A Pod groups containers that must run together and share a Network, IPC, and UTS namespace via the Pause container.</li>
+  <li>Containers inside a Pod communicate over <code>localhost</code> — no bridge, no veth, no iptables involved.</li>
+  <li>The move from Docker daemon to CRI (<code>containerd</code>) didn't change how containers are isolated — namespaces and cgroups are identical. It removed the unnecessary overhead of the Docker daemon from every cluster node.</li>
+  <li>The Linux primitives from the previous posts — namespaces, cgroups, UnionFS — are the same at the bottom of every container, whether it's started by <code>docker run</code>, Docker Compose, or Kubernetes.</li>
+</ul>
+    </div>
+
+    <div class="post-footer-nav">
+      <a href="docker-compose-networking-deep-dive.html" class="nav-btn nav-btn-prev">
+        <i class="fas fa-arrow-left"></i>
+        <div class="nav-btn-text">
+          <span class="nav-label">Previous Post</span>
+          <span class="nav-title">Docker Compose and Container Networking: How Linux Wires It All Together</span>
+        </div>
+      </a>
+      <div class="nav-btn-placeholder"></div>
+    </div>
+
+    <div class="post-tags">
+      <span class="tag">Kubernetes</span>
+      <span class="tag">Docker</span>
+      <span class="tag">Containers</span>
+      <span class="tag">Orchestration</span>
+      <span class="tag">Linux</span>
+      <span class="tag">Systems Programming</span>
+      <span class="tag">Cloud</span>
+      <span class="tag">containerd</span>
+    </div>
+
+  </div>
+
+  <!-- Footer (auto-generated by common.js) -->
+  <footer></footer>
+
+  <!-- Scripts -->
+  <script src="../js/common.js"></script>
+  <script src="../js/ai-agent.js"></script>
+
+  <!-- Table of Contents Auto-Generator -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tocList = document.getElementById('toc-list');
+      const postContent = document.querySelector('.post-content');
+      const headings = postContent.querySelectorAll('h2');
+
+      headings.forEach((heading, index) => {
+        if (!heading.id) {
+          heading.id = 'section-' + index;
+        }
+
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + heading.id;
+        a.textContent = heading.textContent;
+        a.addEventListener('click', function(e) {
+          e.preventDefault();
+          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          document.querySelectorAll('.toc-list a').forEach(link => link.classList.remove('active'));
+          a.classList.add('active');
+        });
+
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      window.addEventListener('scroll', function() {
+        let current = '';
+        headings.forEach(heading => {
+          if (window.scrollY + 150 >= heading.offsetTop) {
+            current = heading.id;
+          }
+        });
+        document.querySelectorAll('.toc-list a').forEach(a => {
+          a.classList.remove('active');
+          if (a.getAttribute('href') === '#' + current) {
+            a.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

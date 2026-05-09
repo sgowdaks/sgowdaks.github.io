@@ -26,6 +26,24 @@
         ]
     },
     {
+        "id": "kubernetes-vs-docker",
+        "title": "Kubernetes vs Docker: From a Single Box to a Fleet",
+        "date": "2026-05-08",
+        "category": "tech",
+        "categoryLabel": "Technology",
+        "excerpt": "What happens when one container host is no longer enough — how Kubernetes differs from Docker, what the Pod model actually is, how the Pause container works, and why the move from Docker daemon to containerd changed nothing about container isolation.",
+        "tags": [
+            "Kubernetes",
+            "Docker",
+            "Containers",
+            "Orchestration",
+            "Linux",
+            "Systems Programming",
+            "Cloud",
+            "containerd"
+        ]
+    },
+    {
         "id": "containers-virtualization-deep-dive",
         "title": "From Bare Metal to Containers: A Deep Dive into Virtualization and Docker Internals",
         "date": "2026-04-21",
